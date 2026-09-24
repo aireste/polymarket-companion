@@ -96,7 +96,6 @@ export function AskPanel() {
             Ask anything about today&apos;s markets. It reads live Polymarket data, checks the news, and does the edge math for you.
           </p>
         </div>
-        <span className="ask-badge">Live AI</span>
       </div>
 
       <div className="ask-log" ref={scrollRef} aria-live="polite">

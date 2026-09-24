@@ -4,17 +4,22 @@ const STEPS = [
   {
     n: 1,
     h: "Browse today's markets",
-    p: "Use the side tabs — Today, Hot, Coin-flips, Soon — to filter live Polymarket markets down to the ones worth a look.",
+    p: "Use the side tabs (Today, Hot, Coin-flips, Soon) or the stat cards to filter live Polymarket markets down to the ones worth a look.",
   },
   {
     n: 2,
-    h: "Open one to see why",
-    p: "Tap any market for its live odds and signal: momentum, liquidity, how close to 50/50, and how soon it resolves.",
+    h: "Open one for the read",
+    p: "Tap any market for its live odds and signal: momentum, liquidity, how close to 50/50, and time to resolution. Enter your own probability or tap Ask Claude to get the edge, a suggested stake, and the hedge.",
   },
   {
     n: 3,
-    h: "Find the edge & hedge",
-    p: "Enter your own probability or tap Ask Claude, then see the edge, a suggested stake on your bankroll, and the opposing leg to hedge.",
+    h: "Or just ask",
+    p: "Use Ask HedgePredict to ask anything in plain English, like “best coin-flips today?” It reads live markets, checks the news, and does the edge math for you.",
+  },
+  {
+    n: 4,
+    h: "Take it to your own AI",
+    p: "Connect HedgePredict to Claude, Claude Code, or ChatGPT with the MCP endpoint, and let your assistant call the same engine. See “Use in your own AI” below.",
   },
 ];
 
