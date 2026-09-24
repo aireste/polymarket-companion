@@ -35,16 +35,32 @@ export function HedgeCalc() {
 
   const a = "a" in result ? result.a : null;
   const money = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
+  const [open, setOpen] = useState(false);
 
   return (
-    <section className="hedge" id="hedge-calc" aria-label="Hedge calculator">
-      <div className="hedge-head">
-        <h2>Hedge calculator</h2>
-        <p className="hedge-sub">
-          Plan a hedge on any bet. Enter your stake and both prices to see the hedge that locks it, and your profit or loss each way. Just math, no account.
-        </p>
-      </div>
+    <section
+      className={`hedge collapse${open ? " open" : ""}`}
+      id="hedge-calc"
+      aria-label="Hedge calculator"
+    >
+      <button
+        type="button"
+        className="collapse-trigger"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="collapse-titles">
+          <span className="collapse-title">Hedge calculator</span>
+          <span className="collapse-sub">
+            Plan a hedge on any bet: see the lock and your profit or loss each way.
+          </span>
+        </span>
+        <span className="collapse-chev" aria-hidden>
+          ▾
+        </span>
+      </button>
 
+      <div className="collapse-body">
       <div className="hedge-inputs">
         <label className="hfield">
           <span>Your stake</span>
@@ -152,6 +168,7 @@ export function HedgeCalc() {
       <p className="hedge-foot">
         Binary-market math (each share pays $1 on a win). Decision support, not financial advice.
       </p>
+      </div>
     </section>
   );
 }

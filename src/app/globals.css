@@ -2049,6 +2049,82 @@ body {
   }
 }
 
+/* ── Collapsible sections (compact; expand on click) ── */
+.collapse-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.collapse-titles {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.collapse-title {
+  font-size: 1.18rem;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.collapse-sub {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  max-width: 60ch;
+}
+.collapse-chev {
+  flex: none;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: transform 0.22s var(--ease);
+}
+.collapse.open .collapse-chev {
+  transform: rotate(180deg);
+}
+.collapse-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+.collapse-body {
+  display: none;
+}
+.collapse.open .collapse-body {
+  display: block;
+}
+/* Dark connect card: light text on the trigger. */
+.connect .collapse-title {
+  color: var(--on-dark);
+}
+.connect .collapse-sub {
+  color: var(--on-dark-soft);
+}
+.connect .collapse-chev {
+  color: var(--on-dark-soft);
+}
+/* On mobile these are dedicated tabs, so always show them expanded. */
+@media (max-width: 720px) {
+  .collapse-body {
+    display: block !important;
+  }
+  .collapse-chev {
+    display: none;
+  }
+  .collapse-trigger {
+    cursor: default;
+  }
+}
+
 /* ── Hedge calculator ── */
 .hedge {
   background: var(--paper-2);

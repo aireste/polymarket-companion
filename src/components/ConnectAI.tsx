@@ -86,22 +86,34 @@ function useCopy() {
 
 export function ConnectAI() {
   const [active, setActive] = useState<ClientId>("claude");
+  const [open, setOpen] = useState(false);
   const { copied, copy } = useCopy();
   const tab = CLIENTS.find((c) => c.id === active)!;
 
   return (
-    <section className="connect" id="connect" aria-label="Use HedgePredict in your own AI">
-      <div className="connect-intro">
-        <p className="connect-eyebrow">The second door</p>
-        <h2 className="connect-h">Bring HedgePredict into your own AI.</h2>
-        <p className="connect-lede">
-          This dashboard is one way in. The same engine also runs as a tool your
-          assistant can call, so it does the ranking, the live reads, and the
-          edge math from inside a normal conversation. Same URL works in any MCP
-          client.
-        </p>
-      </div>
+    <section
+      className={`connect collapse${open ? " open" : ""}`}
+      id="connect"
+      aria-label="Use HedgePredict in your own AI"
+    >
+      <button
+        type="button"
+        className="collapse-trigger"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="collapse-titles">
+          <span className="collapse-title">Bring HedgePredict into your own AI</span>
+          <span className="collapse-sub">
+            Connect the same engine to Claude, Claude Code, or ChatGPT and let your assistant call it.
+          </span>
+        </span>
+        <span className="collapse-chev" aria-hidden>
+          ▾
+        </span>
+      </button>
 
+      <div className="collapse-body">
       <div className="connect-url">
         <span className="connect-url-k">MCP endpoint</span>
         <code className="connect-url-v">{MCP_URL}</code>
@@ -187,6 +199,7 @@ export function ConnectAI() {
         Open access, reads public market data, and never places trades. AI
         recommendations run on the host&apos;s own model credits.
       </p>
+      </div>
     </section>
   );
 }
