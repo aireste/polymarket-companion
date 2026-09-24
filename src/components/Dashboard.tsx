@@ -10,6 +10,7 @@ import { ConnectAI } from "./ConnectAI";
 import { AskPanel } from "./AskPanel";
 import { MobileTabs } from "./MobileTabs";
 import { LiveNow } from "./LiveNow";
+import { HedgeCalc } from "./HedgeCalc";
 import { isLive } from "@/lib/format";
 
 
@@ -22,7 +23,7 @@ interface PlaysResponse {
 export type FilterId = "all" | "live" | "hot" | "coinflip" | "soon";
 
 /** Mobile-only destinations for the bottom tab bar. */
-export type MobileView = "markets" | "ask" | "connect";
+export type MobileView = "markets" | "ask" | "hedge" | "connect";
 
 const FILTER_TABS: { id: FilterId; label: string }[] = [
   { id: "all", label: "Today" },
@@ -200,6 +201,7 @@ export function Dashboard() {
         filter={filter}
         onFilter={railFilter}
         onAsk={() => scrollToId("ask-panel")}
+        onHedge={() => scrollToId("hedge-calc")}
         onConnect={() => scrollToId("connect")}
         onHelp={openGuide}
       />
@@ -354,6 +356,10 @@ export function Dashboard() {
             </ol>
           )}
         </section>
+
+        <div data-mv="hedge">
+          <HedgeCalc />
+        </div>
 
         <div data-mv="connect">
           <ConnectAI />

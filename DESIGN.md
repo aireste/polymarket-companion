@@ -53,9 +53,14 @@ Lime stays a pop: an accent card, active nav, the strongest signal, primary data
   Soon); at the base, "Use in your own AI", How it works, and the Polymarket
   link. Active item highlighted.
 - **Mobile is tabbed like Flighty**: the rail is replaced by a floating bottom
-  tab bar of THREE destinations (Markets / Ask / Your AI). Each tap swaps the
-  visible view instantly (no scroll slide). Inside Markets, the four filters live
-  as a chip row; the desktop stat cards are hidden on mobile.
+  tab bar of destinations (Markets / Ask / Hedge / Your AI). Each tap swaps the
+  visible view instantly (no scroll slide). Inside Markets, the filters live as a
+  chip row; the desktop stat cards are hidden on mobile. Sections are tagged
+  `data-mv` and hidden per active `data-view` on `.main`.
+- **Hedge calculator**: a standalone deterministic tool (no AI, no probability).
+  Inputs = stake + both prices; outputs = the full-lock hedge stake, P/L each
+  way, and an arbitrage flag when prices sum under 100c. Engine: `analyzeHedge`
+  in scoring.ts.
 - **Workspace** (light): big bold page title + a dark pill refresh button; a row
   of soft rounded **stat cards** (one lime) summarizing today; then a large white
   **panel** containing the ranked market rows. Tap a row to expand the edge/hedge

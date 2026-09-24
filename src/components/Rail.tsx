@@ -52,6 +52,11 @@ const icons = {
       <path d="M8.1 10.9 15.9 7.1M8.1 13.1 15.9 16.9" strokeLinecap="round" />
     </svg>
   ),
+  hedge: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M12 4v16M4 8h16M7 8l-3 6a3 3 0 0 0 6 0L7 8zm10 0l-3 6a3 3 0 0 0 6 0l-3-6z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
   help: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
       <circle cx="12" cy="12" r="8.4" />
@@ -78,6 +83,7 @@ export function Rail({
   filter,
   onFilter,
   onAsk,
+  onHedge,
   onConnect,
   onHelp,
 }: {
@@ -85,6 +91,7 @@ export function Rail({
   /** Set the filter and scroll the market list into view. */
   onFilter: (f: FilterId) => void;
   onAsk: () => void;
+  onHedge: () => void;
   onConnect: () => void;
   onHelp: () => void;
 }) {
@@ -110,6 +117,10 @@ export function Rail({
         </button>
       ))}
       <span className="rail-spacer" />
+      <button className="rail-btn rail-ext" onClick={onHedge} aria-label="Hedge calculator">
+        {icons.hedge}
+        <span className="rail-label">Hedge calc</span>
+      </button>
       <button
         className="rail-btn rail-ext"
         onClick={onConnect}

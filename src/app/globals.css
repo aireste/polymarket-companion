@@ -2039,6 +2039,182 @@ body {
   }
 }
 
+/* ── Hedge calculator ── */
+.hedge {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 1.3rem 1.4rem 1.2rem;
+  margin-top: 1.3rem;
+  min-width: 0;
+}
+.hedge-head h2 {
+  font-size: 1.18rem;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+}
+.hedge-sub {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  max-width: 62ch;
+}
+.hedge-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+  margin-top: 1.1rem;
+}
+@media (max-width: 560px) {
+  .hedge-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+.hfield {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.hfield > span:first-child {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.hinput {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--paper-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  padding: 0 0.7rem;
+}
+.hinput:focus-within {
+  border-color: var(--accent-ink);
+}
+.hinput i {
+  color: var(--ink-faint);
+  font-style: normal;
+  font-family: var(--font-mono);
+}
+.hinput input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0.6rem 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.hinput input:focus {
+  outline: none;
+}
+.hedge-error {
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--neg-ink);
+}
+.hedge-result {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 1rem;
+}
+.hedge-lock {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.hedge-lock-k {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+.hedge-lock-v {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.hedge-lock-sub {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+.hedge-outcomes {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+.hedge-oc {
+  flex: 1;
+  min-width: 8rem;
+  background: var(--paper-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  padding: 0.85rem 1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+.hedge-oc-k {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.hedge-oc-v {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.hedge .pos {
+  color: var(--pos-ink);
+}
+.hedge .neg {
+  color: var(--neg-ink);
+}
+.hedge-verdict {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+.hedge-verdict b {
+  font-weight: 650;
+}
+.hedge-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+.hedge-tag.arb {
+  color: var(--pos-ink);
+  background: color-mix(in oklch, var(--pos-ink) 15%, var(--paper-2));
+}
+.hedge-custom {
+  max-width: 16rem;
+  margin-top: 0.2rem;
+}
+.hedge-foot {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+
 /* ── Live now highlight strip ── */
 .livenow {
   margin-bottom: 1.3rem;
@@ -2204,7 +2380,7 @@ body {
     border: 0;
     cursor: pointer;
     color: var(--on-dark-soft);
-    padding: 0.35rem 0.95rem;
+    padding: 0.35rem 0.7rem;
     border-radius: 14px;
     font-family: var(--font-sans);
     font-size: 0.62rem;
@@ -2227,17 +2403,11 @@ body {
     outline-offset: 2px;
   }
 
-  /* Show one view at a time: hide sections belonging to the other tabs. */
-  .main[data-view="markets"] [data-mv="ask"],
-  .main[data-view="markets"] [data-mv="connect"] {
-    display: none;
-  }
-  .main[data-view="ask"] [data-mv="markets"],
-  .main[data-view="ask"] [data-mv="connect"] {
-    display: none;
-  }
-  .main[data-view="connect"] [data-mv="markets"],
-  .main[data-view="connect"] [data-mv="ask"] {
+  /* Show one view at a time: hide every section not on the active tab. */
+  .main[data-view="markets"] [data-mv]:not([data-mv="markets"]),
+  .main[data-view="ask"] [data-mv]:not([data-mv="ask"]),
+  .main[data-view="hedge"] [data-mv]:not([data-mv="hedge"]),
+  .main[data-view="connect"] [data-mv]:not([data-mv="connect"]) {
     display: none;
   }
 

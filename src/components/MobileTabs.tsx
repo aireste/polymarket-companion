@@ -13,6 +13,11 @@ const icons = {
       <path d="M5 6h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-6l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" strokeLinejoin="round" />
     </svg>
   ),
+  hedge: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M12 4v16M4 8h16M7 8l-3 6a3 3 0 0 0 6 0L7 8zm10 0l-3 6a3 3 0 0 0 6 0l-3-6z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
   connect: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
       <circle cx="6" cy="12" r="2.4" />
@@ -26,6 +31,7 @@ const icons = {
 const TABS: { id: MobileView; label: string; icon: keyof typeof icons }[] = [
   { id: "markets", label: "Markets", icon: "markets" },
   { id: "ask", label: "Ask", icon: "ask" },
+  { id: "hedge", label: "Hedge", icon: "hedge" },
   { id: "connect", label: "Your AI", icon: "connect" },
 ];
 

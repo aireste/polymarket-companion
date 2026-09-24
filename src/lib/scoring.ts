@@ -182,6 +182,86 @@ export interface PlayAnalysis {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* 3. HEDGE LAYER — deterministic hedge planning (no probability)      */
+/* ------------------------------------------------------------------ */
+
+export interface HedgeInput {
+  /** Your stake on the side you're backing, USD. */
+  stakeA: number;
+  /** The price you got on your side, in (0,1). */
+  priceA: number;
+  /** Current price of the hedge (opposing) side, in (0,1). */
+  priceB: number;
+  /** Optional custom stake on the hedge side. Omit for a full lock. */
+  hedgeStakeB?: number;
+}
+
+export interface HedgeAnalysis {
+  /** Shares bought on your side (each pays $1 if it wins). */
+  sharesA: number;
+  payoutA: number;
+  /** Stake on the other side that equalizes payouts (a full lock). */
+  fullLockStakeB: number;
+  /** The hedge stake actually used (custom, or the full-lock amount). */
+  hedgeStakeB: number;
+  sharesB: number;
+  payoutB: number;
+  totalStaked: number;
+  /** Net P/L if your side wins. */
+  profitIfWin: number;
+  /** Net P/L if it loses (the other side wins). */
+  profitIfLose: number;
+  /** Guaranteed floor = the worse of the two outcomes. */
+  floor: number;
+  /** Prices sum under $1 -> a locked-profit arbitrage exists. */
+  isArb: boolean;
+  /** Payouts are equal either way (a full lock). */
+  isFullyLocked: boolean;
+}
+
+/**
+ * Plan a hedge with pure mechanics, no probability required. Binary market:
+ * one "share" pays $1 if that side wins. Buy equal shares on both sides to lock
+ * an outcome; when the two prices sum under $1 the lock is a guaranteed profit.
+ */
+export function analyzeHedge(input: HedgeInput): HedgeAnalysis {
+  const { stakeA, priceA, priceB } = input;
+  if (!(priceA > 0 && priceA < 1))
+    throw new Error("Your price must be between 0 and 100¢.");
+  if (!(priceB > 0 && priceB < 1))
+    throw new Error("The other side's price must be between 0 and 100¢.");
+  if (!(stakeA >= 0)) throw new Error("Stake must be 0 or more.");
+
+  const round = (x: number) => Math.round(x * 100) / 100;
+
+  const sharesA = stakeA / priceA; // each share pays $1 if your side wins
+  const payoutA = sharesA;
+  const fullLockStakeB = sharesA * priceB; // equal shares on the other side
+  const hedgeStakeB =
+    input.hedgeStakeB != null && input.hedgeStakeB >= 0
+      ? input.hedgeStakeB
+      : fullLockStakeB;
+  const sharesB = priceB > 0 ? hedgeStakeB / priceB : 0;
+  const payoutB = sharesB;
+  const totalStaked = stakeA + hedgeStakeB;
+
+  return {
+    sharesA: round(sharesA),
+    payoutA: round(payoutA),
+    fullLockStakeB: round(fullLockStakeB),
+    hedgeStakeB: round(hedgeStakeB),
+    sharesB: round(sharesB),
+    payoutB: round(payoutB),
+    totalStaked: round(totalStaked),
+    profitIfWin: round(payoutA - totalStaked),
+    profitIfLose: round(payoutB - totalStaked),
+    floor: round(Math.min(payoutA, payoutB) - totalStaked),
+    isArb: priceA + priceB < 1,
+    isFullyLocked: Math.abs(sharesA - sharesB) < 0.01,
+  };
+}
+
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
 /**
