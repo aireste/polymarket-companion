@@ -83,6 +83,7 @@ export function Dashboard() {
   const [now, setNow] = useState(() => Date.now());
   const [showGuide, setShowGuide] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [mobileView, setMobileView] = useState<MobileView>("markets");
 
   // Mobile tab tap: swap the visible view and snap to the top (no scroll slide).
@@ -129,6 +130,11 @@ export function Dashboard() {
     return () => clearInterval(t);
   }, []);
 
+  // Collapse the list back to a short preview whenever the filter changes.
+  useEffect(() => {
+    setShowAll(false);
+  }, [filter]);
+
   const src = plays ?? [];
   const kpi = useMemo(() => {
     const coinflips = src.filter(isCoinflip).length;
@@ -158,6 +164,10 @@ export function Dashboard() {
     const list = plays ? applyFilter(plays, filter) : [];
     return featured ? list.filter((p) => p.id !== featured.id) : list;
   }, [plays, filter, featured]);
+  // Keep the list short by default so it doesn't clog the page; "See more" opens it.
+  const PREVIEW_COUNT = 4;
+  const shown = showAll ? view : view.slice(0, PREVIEW_COUNT);
+  const hiddenCount = view.length - shown.length;
   const tab = TABS[filter];
   const panelRef = useRef<HTMLElement>(null);
   // Stat cards change the filter in place; don't yank the page down.
@@ -321,7 +331,7 @@ export function Dashboard() {
 
           {plays && !error && view.length > 0 && (
             <ol className="plays">
-              {view.map((play, i) => (
+              {shown.map((play, i) => (
                 <PlayEntry
                   key={play.id}
                   play={play}
@@ -333,6 +343,19 @@ export function Dashboard() {
                 />
               ))}
             </ol>
+          )}
+
+          {plays && !error && view.length > PREVIEW_COUNT && (
+            <button
+              className="see-more"
+              onClick={() => setShowAll((s) => !s)}
+              aria-expanded={showAll}
+            >
+              {showAll ? "Show less" : `See ${hiddenCount} more`}
+              <span className="see-more-chev" aria-hidden>
+                ▾
+              </span>
+            </button>
           )}
         </section>
 
