@@ -9,7 +9,6 @@ import { FeaturedMarket } from "./FeaturedMarket";
 import { ConnectAI } from "./ConnectAI";
 import { AskPanel } from "./AskPanel";
 import { MobileTabs } from "./MobileTabs";
-import { LiveNow } from "./LiveNow";
 import { HedgeCalc } from "./HedgeCalc";
 import { isLive } from "@/lib/format";
 
@@ -20,7 +19,7 @@ interface PlaysResponse {
   error?: string;
 }
 
-export type FilterId = "all" | "live" | "hot" | "coinflip" | "soon";
+export type FilterId = "all" | "live" | "hot" | "coinflip";
 
 /** Mobile-only destinations for the bottom tab bar. */
 export type MobileView = "markets" | "ask" | "hedge" | "connect";
@@ -30,7 +29,6 @@ const FILTER_TABS: { id: FilterId; label: string }[] = [
   { id: "live", label: "Live" },
   { id: "hot", label: "Hot" },
   { id: "coinflip", label: "Coin-flips" },
-  { id: "soon", label: "Soon" },
 ];
 
 const TABS: Record<FilterId, { label: string; caption: string }> = {
@@ -38,16 +36,7 @@ const TABS: Record<FilterId, { label: string; caption: string }> = {
   live: { label: "Live", caption: "Games happening right now" },
   hot: { label: "Hot", caption: "Most active in the last 24h" },
   coinflip: { label: "Coinflip", caption: "Near 50/50, where a read matters most" },
-  soon: { label: "Soon", caption: "Starting or resolving soonest" },
 };
-
-/** Soon = the market's real moment (game start for sports, else close) is within a week. */
-function isSoon(p: PlayDTO): boolean {
-  const iso = p.gameStartTime ?? p.endDate;
-  if (!iso) return false;
-  const days = (new Date(iso).getTime() - Date.now()) / 86_400_000;
-  return days >= 0 && days <= 7;
-}
 
 /** A genuine coin-flip: no outcome is a strong favorite (top price <= 60%). */
 function isCoinflip(p: PlayDTO): boolean {
@@ -72,8 +61,6 @@ function applyFilter(plays: PlayDTO[], f: FilterId): PlayDTO[] {
       return [...plays].sort((a, b) => b.volume24hr - a.volume24hr);
     case "coinflip":
       return plays.filter(isCoinflip).sort((a, b) => b.volume24hr - a.volume24hr);
-    case "soon":
-      return plays.filter(isSoon).sort((a, b) => whenMs(a) - whenMs(b));
     default:
       return plays;
   }
@@ -145,12 +132,8 @@ export function Dashboard() {
   const src = plays ?? [];
   const kpi = useMemo(() => {
     const coinflips = src.filter(isCoinflip).length;
-    const soon = src.filter(isSoon).length;
-    const avgMomentum =
-      src.length > 0
-        ? src.reduce((a, p) => a + p.signals.momentum, 0) / src.length
-        : 0;
-    return { markets: src.length, coinflips, soon, avgMomentum };
+    const live = src.filter((p) => isLive(p.gameStartTime)).length;
+    return { markets: src.length, coinflips, live };
   }, [src]);
 
   // Feature a market people can actually read: liquid, not a longshot, with a
@@ -232,10 +215,6 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div data-mv="markets">
-          <LiveNow plays={src} />
-        </div>
-
         {featured && (
           <div data-mv="markets">
             <FeaturedMarket key={featured.id} play={featured} />
@@ -268,14 +247,14 @@ export function Dashboard() {
             <span className="kpi-go">See coin-flips →</span>
           </button>
           <button
-            className={`kpi grad-c${filter === "soon" ? " active" : ""}`}
-            onClick={() => goToFilter("soon")}
-            aria-pressed={filter === "soon"}
+            className={`kpi grad-c${filter === "live" ? " active" : ""}`}
+            onClick={() => goToFilter("live")}
+            aria-pressed={filter === "live"}
           >
-            <div className="kpi-k">Resolving soon</div>
-            <div className="kpi-v">{plays ? kpi.soon : "—"}</div>
-            <div className="kpi-sub">within 7 days</div>
-            <span className="kpi-go">See resolving soon →</span>
+            <div className="kpi-k">Live now</div>
+            <div className="kpi-v">{plays ? kpi.live : "—"}</div>
+            <div className="kpi-sub">games on right now</div>
+            <span className="kpi-go">See live games →</span>
           </button>
         </section>
 

@@ -76,7 +76,6 @@ const NAV: { id: FilterId; label: string; icon: keyof typeof icons }[] = [
   { id: "live", label: "Live", icon: "live" },
   { id: "hot", label: "Hot", icon: "hot" },
   { id: "coinflip", label: "Coin-flips", icon: "coinflip" },
-  { id: "soon", label: "Soon", icon: "soon" },
 ];
 
 export function Rail({

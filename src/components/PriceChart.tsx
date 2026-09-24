@@ -128,16 +128,18 @@ export function PriceChart({ points }: { points: HistoryPoint[] }) {
             vectorEffect="non-scaling-stroke"
           />
         )}
-        <circle
-          cx={hover ? hover.x : last[0]}
-          cy={hover ? hover.y : last[1]}
-          r="4.5"
-          fill="var(--chart-line)"
-          stroke="var(--paper-2)"
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-        />
       </svg>
+
+      {/* Endpoint marker as an HTML dot so it stays a true circle — an SVG
+          circle would be stretched into an oval by preserveAspectRatio="none". */}
+      <span
+        className="chart-dot"
+        style={{
+          left: `${((hover ? hover.x : last[0]) / W) * 100}%`,
+          top: `${((hover ? hover.y : last[1]) / H) * 100}%`,
+        }}
+        aria-hidden
+      />
 
       {hp && (
         <div
