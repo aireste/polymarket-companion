@@ -42,9 +42,7 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     <section className="featured" aria-label="Featured market">
       <div className="featured-top">
         <div className="featured-lead">
-          <span className="featured-eyebrow">
-            {isLive(play.gameStartTime) ? "Live now" : "Top signal today"}
-          </span>
+          <span className="featured-eyebrow">Top signal today</span>
           <h2 className="featured-q">
             {isLive(play.gameStartTime) && <span className="live-badge">LIVE</span>}
             {play.question}

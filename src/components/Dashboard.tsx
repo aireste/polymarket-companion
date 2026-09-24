@@ -9,6 +9,7 @@ import { FeaturedMarket } from "./FeaturedMarket";
 import { ConnectAI } from "./ConnectAI";
 import { AskPanel } from "./AskPanel";
 import { MobileTabs } from "./MobileTabs";
+import { LiveNow } from "./LiveNow";
 import { isLive } from "@/lib/format";
 
 
@@ -227,6 +228,10 @@ export function Dashboard() {
               {loading ? "Refreshing" : "Refresh"}
             </button>
           </div>
+        </div>
+
+        <div data-mv="markets">
+          <LiveNow plays={src} />
         </div>
 
         {featured && (
