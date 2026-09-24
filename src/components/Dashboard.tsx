@@ -158,11 +158,9 @@ export function Dashboard() {
   }, [plays, filter, featured]);
   const tab = TABS[filter];
   const panelRef = useRef<HTMLElement>(null);
+  // Change the filter in place; don't yank the page down to the panel.
   const goToFilter = useCallback((f: FilterId) => {
     setFilter(f);
-    requestAnimationFrame(() =>
-      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    );
   }, []);
 
   return (
