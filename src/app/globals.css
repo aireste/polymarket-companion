@@ -2039,6 +2039,113 @@ body {
   }
 }
 
+/* ── Mobile tabbed views (Flighty-style) ── */
+.mobile-tabs {
+  display: none;
+}
+.mobile-filters {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  /* Replace the left rail with a bottom tab bar of destinations. */
+  .rail {
+    display: none;
+  }
+  /* Stat cards duplicate the filter chips on mobile; hide them here. */
+  .kpis {
+    display: none;
+  }
+
+  .mobile-tabs {
+    display: flex;
+    position: fixed;
+    left: 50%;
+    bottom: calc(0.7rem + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    gap: 0.15rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--dark-2);
+    background: color-mix(in oklch, var(--dark) 90%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: 0 10px 34px -10px oklch(0.2 0.01 130 / 0.5);
+    z-index: 40;
+    max-width: calc(100vw - 1.5rem);
+  }
+  .mtab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--on-dark-soft);
+    padding: 0.35rem 0.95rem;
+    border-radius: 14px;
+    font-family: var(--font-sans);
+    font-size: 0.62rem;
+    font-weight: 500;
+    transition: color 0.16s var(--ease), background 0.16s var(--ease);
+  }
+  .mtab svg {
+    width: 21px;
+    height: 21px;
+  }
+  .mtab:hover {
+    color: var(--on-dark);
+  }
+  .mtab.active {
+    color: var(--dark);
+    background: var(--accent);
+  }
+  .mtab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Show one view at a time: hide sections belonging to the other tabs. */
+  .main[data-view="markets"] [data-mv="ask"],
+  .main[data-view="markets"] [data-mv="connect"] {
+    display: none;
+  }
+  .main[data-view="ask"] [data-mv="markets"],
+  .main[data-view="ask"] [data-mv="connect"] {
+    display: none;
+  }
+  .main[data-view="connect"] [data-mv="markets"],
+  .main[data-view="connect"] [data-mv="ask"] {
+    display: none;
+  }
+
+  /* Filter chip row inside the Markets view. */
+  .mobile-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+  }
+  .mfilter {
+    font-family: var(--font-sans);
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    background: var(--paper-2);
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    padding: 0.45rem 0.95rem;
+    cursor: pointer;
+    transition: background 0.16s var(--ease), color 0.16s var(--ease),
+      border-color 0.16s var(--ease);
+  }
+  .mfilter.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;

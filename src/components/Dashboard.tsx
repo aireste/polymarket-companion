@@ -8,6 +8,7 @@ import { HowItWorks } from "./HowItWorks";
 import { FeaturedMarket } from "./FeaturedMarket";
 import { ConnectAI } from "./ConnectAI";
 import { AskPanel } from "./AskPanel";
+import { MobileTabs } from "./MobileTabs";
 
 
 interface PlaysResponse {
@@ -17,6 +18,16 @@ interface PlaysResponse {
 }
 
 export type FilterId = "all" | "hot" | "coinflip" | "soon";
+
+/** Mobile-only destinations for the bottom tab bar. */
+export type MobileView = "markets" | "ask" | "connect";
+
+const FILTER_TABS: { id: FilterId; label: string }[] = [
+  { id: "all", label: "Today" },
+  { id: "hot", label: "Hot" },
+  { id: "coinflip", label: "Coin-flips" },
+  { id: "soon", label: "Soon" },
+];
 
 const TABS: Record<FilterId, { label: string; caption: string }> = {
   all: { label: "Today", caption: "Ranked by signal" },
@@ -73,6 +84,13 @@ export function Dashboard() {
   const [now, setNow] = useState(() => Date.now());
   const [showGuide, setShowGuide] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<MobileView>("markets");
+
+  // Mobile tab tap: swap the visible view and snap to the top (no scroll slide).
+  const switchView = useCallback((v: MobileView) => {
+    setMobileView(v);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  }, []);
 
   // The guide is opt-in — opened from the "How it works" button, the rail, or
   // the footer link. It never forces itself open on arrival.
@@ -175,10 +193,14 @@ export function Dashboard() {
         onHelp={openGuide}
       />
 
-      <main className="main">
-        {showGuide && <HowItWorks onClose={dismissGuide} />}
+      <main className="main" data-view={mobileView}>
+        {showGuide && (
+          <div data-mv="markets">
+            <HowItWorks onClose={dismissGuide} />
+          </div>
+        )}
 
-        <div className="page-head">
+        <div className="page-head" data-mv="markets">
           <div>
             <h1>Best plays today.</h1>
             <p className="sub">
@@ -197,9 +219,15 @@ export function Dashboard() {
           </div>
         </div>
 
-        {featured && <FeaturedMarket key={featured.id} play={featured} />}
+        {featured && (
+          <div data-mv="markets">
+            <FeaturedMarket key={featured.id} play={featured} />
+          </div>
+        )}
 
-        <AskPanel />
+        <div data-mv="ask">
+          <AskPanel />
+        </div>
 
         <section className="kpis" aria-label="Today at a glance">
           <button
@@ -234,7 +262,20 @@ export function Dashboard() {
           </button>
         </section>
 
-        <section className="panel" id="markets-panel" ref={panelRef}>
+        <div className="mobile-filters" data-mv="markets" role="tablist" aria-label="Filter markets">
+          {FILTER_TABS.map((t) => (
+            <button
+              key={t.id}
+              className={`mfilter${filter === t.id ? " active" : ""}`}
+              onClick={() => setFilter(t.id)}
+              aria-pressed={filter === t.id}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <section className="panel" id="markets-panel" data-mv="markets" ref={panelRef}>
           <div className="panel-head">
             <h2>
               {tab.label}
@@ -295,9 +336,11 @@ export function Dashboard() {
           )}
         </section>
 
-        <ConnectAI />
+        <div data-mv="connect">
+          <ConnectAI />
+        </div>
 
-        <footer className="foot">
+        <footer className="foot" data-mv="markets">
           <p className="disc">
             Decision support, not financial advice. HedgePredict never places
             trades. Suggested stakes are fractional-Kelly and capped. Only risk
@@ -311,6 +354,8 @@ export function Dashboard() {
           </p>
         </footer>
       </main>
+
+      <MobileTabs view={mobileView} setView={switchView} />
     </div>
   );
 }

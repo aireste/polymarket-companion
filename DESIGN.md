@@ -48,9 +48,14 @@ Lime stays a pop: an accent card, active nav, the strongest signal, primary data
 - Numbers/data: tabular monospace (Geist Mono), aligned in columns.
 
 ## Layout & chrome (this is what makes it an app)
-- **Left icon rail** (dark, ~76px): brand spark on top; nav icons that ARE the
-  filters (Today/All, Hot, Coinflip, Soon); external Polymarket link at the base.
-  Active item highlighted. On phones the rail becomes a **bottom tab bar** (native).
+- **Left icon rail** (dark, ~76px, desktop): brand spark on top; Ask (scrolls to
+  the chat); nav icons that ARE the market filters (Today/All, Hot, Coinflip,
+  Soon); at the base, "Use in your own AI", How it works, and the Polymarket
+  link. Active item highlighted.
+- **Mobile is tabbed like Flighty**: the rail is replaced by a floating bottom
+  tab bar of THREE destinations (Markets / Ask / Your AI). Each tap swaps the
+  visible view instantly (no scroll slide). Inside Markets, the four filters live
+  as a chip row; the desktop stat cards are hidden on mobile.
 - **Workspace** (light): big bold page title + a dark pill refresh button; a row
   of soft rounded **stat cards** (one lime) summarizing today; then a large white
   **panel** containing the ranked market rows. Tap a row to expand the edge/hedge
