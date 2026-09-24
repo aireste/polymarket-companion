@@ -90,7 +90,7 @@ export function ConnectAI() {
   const tab = CLIENTS.find((c) => c.id === active)!;
 
   return (
-    <section className="connect" aria-label="Use HedgePredict in your own AI">
+    <section className="connect" id="connect" aria-label="Use HedgePredict in your own AI">
       <div className="connect-intro">
         <p className="connect-eyebrow">The second door</p>
         <h2 className="connect-h">Bring HedgePredict into your own AI.</h2>

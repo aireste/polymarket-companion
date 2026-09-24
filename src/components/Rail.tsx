@@ -33,6 +33,19 @@ const icons = {
       <path d="M12 7.5V12l3 2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  ask: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M5 6h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-6l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" strokeLinejoin="round" />
+    </svg>
+  ),
+  connect: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <circle cx="6" cy="12" r="2.4" />
+      <circle cx="18" cy="6" r="2.4" />
+      <circle cx="18" cy="18" r="2.4" />
+      <path d="M8.1 10.9 15.9 7.1M8.1 13.1 15.9 16.9" strokeLinecap="round" />
+    </svg>
+  ),
   help: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
       <circle cx="12" cy="12" r="8.4" />
@@ -56,11 +69,16 @@ const NAV: { id: FilterId; label: string; icon: keyof typeof icons }[] = [
 
 export function Rail({
   filter,
-  setFilter,
+  onFilter,
+  onAsk,
+  onConnect,
   onHelp,
 }: {
   filter: FilterId;
-  setFilter: (f: FilterId) => void;
+  /** Set the filter and scroll the market list into view. */
+  onFilter: (f: FilterId) => void;
+  onAsk: () => void;
+  onConnect: () => void;
   onHelp: () => void;
 }) {
   return (
@@ -68,11 +86,15 @@ export function Rail({
       <span className="rail-brand" aria-hidden>
         {icons.spark}
       </span>
+      <button className="rail-btn" onClick={onAsk} aria-label="Ask HedgePredict">
+        {icons.ask}
+        <span className="rail-label">Ask</span>
+      </button>
       {NAV.map((n) => (
         <button
           key={n.id}
           className={`rail-btn${filter === n.id ? " active" : ""}`}
-          onClick={() => setFilter(n.id)}
+          onClick={() => onFilter(n.id)}
           aria-label={n.label}
           aria-current={filter === n.id ? "page" : undefined}
         >
@@ -81,6 +103,14 @@ export function Rail({
         </button>
       ))}
       <span className="rail-spacer" />
+      <button
+        className="rail-btn rail-ext"
+        onClick={onConnect}
+        aria-label="Use in your own AI"
+      >
+        {icons.connect}
+        <span className="rail-label">Use in your AI</span>
+      </button>
       <button
         className="rail-btn rail-ext"
         onClick={onHelp}

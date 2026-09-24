@@ -158,14 +158,33 @@ export function Dashboard() {
   }, [plays, filter, featured]);
   const tab = TABS[filter];
   const panelRef = useRef<HTMLElement>(null);
-  // Change the filter in place; don't yank the page down to the panel.
+  // Stat cards change the filter in place; don't yank the page down.
   const goToFilter = useCallback((f: FilterId) => {
     setFilter(f);
   }, []);
+  const scrollToId = useCallback((id: string) => {
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+  // The left rail is a nav: filtering there scrolls to the market list.
+  const railFilter = useCallback(
+    (f: FilterId) => {
+      setFilter(f);
+      requestAnimationFrame(() => scrollToId("markets-panel"));
+    },
+    [scrollToId]
+  );
 
   return (
     <div className="shell">
-      <Rail filter={filter} setFilter={setFilter} onHelp={openGuide} />
+      <Rail
+        filter={filter}
+        onFilter={railFilter}
+        onAsk={() => scrollToId("ask-panel")}
+        onConnect={() => scrollToId("connect")}
+        onHelp={openGuide}
+      />
 
       <main className="main">
         {showGuide && <HowItWorks onClose={dismissGuide} />}
@@ -221,7 +240,7 @@ export function Dashboard() {
           </button>
         </section>
 
-        <section className="panel" ref={panelRef}>
+        <section className="panel" id="markets-panel" ref={panelRef}>
           <div className="panel-head">
             <h2>
               {tab.label}

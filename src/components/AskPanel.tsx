@@ -88,7 +88,7 @@ export function AskPanel() {
   const empty = messages.length === 0;
 
   return (
-    <section className="ask-panel" aria-label="Ask HedgePredict">
+    <section className="ask-panel" id="ask-panel" aria-label="Ask HedgePredict">
       <div className="ask-head">
         <div>
           <h2>Ask HedgePredict</h2>
