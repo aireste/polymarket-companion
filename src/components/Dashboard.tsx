@@ -7,6 +7,7 @@ import { Rail } from "./Rail";
 import { HowItWorks } from "./HowItWorks";
 import { FeaturedMarket } from "./FeaturedMarket";
 import { ConnectAI } from "./ConnectAI";
+import { AskPanel } from "./AskPanel";
 
 const GUIDE_KEY = "hp_guide_seen";
 
@@ -186,6 +187,8 @@ export function Dashboard() {
         </div>
 
         {featured && <FeaturedMarket key={featured.id} play={featured} />}
+
+        <AskPanel />
 
         <section className="kpis" aria-label="Today at a glance">
           <button
