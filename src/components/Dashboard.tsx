@@ -9,7 +9,6 @@ import { FeaturedMarket } from "./FeaturedMarket";
 import { ConnectAI } from "./ConnectAI";
 import { AskPanel } from "./AskPanel";
 
-const GUIDE_KEY = "hp_guide_seen";
 
 interface PlaysResponse {
   plays?: PlayDTO[];
@@ -75,20 +74,10 @@ export function Dashboard() {
   const [showGuide, setShowGuide] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
 
-  // Show the guide on a visitor's first arrival only.
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(GUIDE_KEY)) setShowGuide(true);
-    } catch {
-      setShowGuide(true);
-    }
-  }, []);
-
+  // The guide is opt-in — opened from the "How it works" button, the rail, or
+  // the footer link. It never forces itself open on arrival.
   const dismissGuide = useCallback(() => {
     setShowGuide(false);
-    try {
-      localStorage.setItem(GUIDE_KEY, "1");
-    } catch {}
   }, []);
 
   const openGuide = useCallback(() => {
@@ -197,10 +186,15 @@ export function Dashboard() {
               {asOf && ` · updated ${agoLabel(asOf, now)}`}
             </p>
           </div>
-          <button className="pill pill-dark" onClick={load} disabled={loading}>
-            <span aria-hidden>↻</span>
-            {loading ? "Refreshing" : "Refresh"}
-          </button>
+          <div className="page-actions">
+            <button className="pill" onClick={openGuide}>
+              How it works
+            </button>
+            <button className="pill pill-dark" onClick={load} disabled={loading}>
+              <span aria-hidden>↻</span>
+              {loading ? "Refreshing" : "Refresh"}
+            </button>
+          </div>
         </div>
 
         {featured && <FeaturedMarket key={featured.id} play={featured} />}

@@ -184,6 +184,12 @@ body {
   line-height: 1.02;
   color: var(--ink);
 }
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
 .page-head .sub {
   margin-top: 0.5rem;
   color: var(--ink-faint);
