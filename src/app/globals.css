@@ -135,7 +135,7 @@ body {
 /* On phones: rail becomes a bottom tab bar */
 @media (max-width: 720px) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .rail {
     position: fixed;
@@ -1332,12 +1332,17 @@ body {
   .main {
     max-width: 100vw;
     overflow-x: clip;
+    /* Grid items default to min-width:auto and refuse to shrink below their
+       content, blowing the track past the viewport. Let it clamp. */
+    min-width: 0;
   }
   .guide,
   .featured,
   .panel,
-  .kpis {
+  .kpis,
+  .connect {
     max-width: 100%;
+    min-width: 0;
   }
 }
 
@@ -1580,6 +1585,272 @@ body {
 .clear-filter:hover {
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* ── Connect: use HedgePredict in your own AI (dark centerpiece) ── */
+.connect {
+  margin-top: 1.3rem;
+  background: var(--dark);
+  border: 1px solid var(--dark-2);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lift);
+  color: var(--on-dark);
+  padding: clamp(1.3rem, 3.5vw, 1.9rem) clamp(1.3rem, 3.5vw, 1.9rem)
+    clamp(1.4rem, 3.5vw, 1.8rem);
+}
+.connect-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+.connect-h {
+  font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--on-dark);
+  margin-top: 0.45rem;
+}
+.connect-lede {
+  margin-top: 0.6rem;
+  max-width: 64ch;
+  color: var(--on-dark-soft);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* endpoint + copy */
+.connect-url,
+.connect-cmd {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.15rem;
+  background: color-mix(in oklch, var(--on-dark) 8%, transparent);
+  border: 1px solid color-mix(in oklch, var(--on-dark) 15%, transparent);
+  border-radius: var(--r-md);
+  padding: 0.6rem 0.7rem 0.6rem 0.95rem;
+}
+.connect-cmd {
+  margin-top: 0.95rem;
+}
+.connect-url-k {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--on-dark-soft);
+  flex: none;
+}
+.connect-url-v,
+.connect-cmd code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--on-dark);
+  overflow-x: auto;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  scrollbar-width: none;
+}
+.connect-url-v::-webkit-scrollbar,
+.connect-cmd code::-webkit-scrollbar {
+  display: none;
+}
+.connect-copy {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--dark);
+  background: var(--accent);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.42rem 0.85rem;
+  cursor: pointer;
+  transition: filter 0.16s var(--ease), transform 0.12s var(--ease);
+}
+.connect-copy:hover {
+  filter: brightness(1.07);
+}
+.connect-copy:active {
+  transform: translateY(1px);
+}
+
+/* client tabs (segmented, on dark) */
+.connect-tabs {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 1.3rem;
+  background: color-mix(in oklch, var(--on-dark) 7%, transparent);
+  border: 1px solid color-mix(in oklch, var(--on-dark) 12%, transparent);
+  border-radius: 999px;
+  padding: 3px;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.connect-tabs::-webkit-scrollbar {
+  display: none;
+}
+.connect-tab {
+  font-family: var(--font-sans);
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--on-dark-soft);
+  border: 0;
+  background: transparent;
+  padding: 0.42rem 0.95rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.connect-tab:hover {
+  color: var(--on-dark);
+}
+.connect-tab.active {
+  color: var(--dark);
+  background: var(--on-dark);
+  font-weight: 600;
+}
+
+/* steps */
+.connect-steps {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+.connect-steps li {
+  display: grid;
+  grid-template-columns: 27px 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  color: var(--on-dark-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.connect-n {
+  font-family: var(--font-mono);
+  width: 27px;
+  height: 27px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--dark);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.connect-note {
+  margin-top: 0.95rem;
+  font-size: 0.78rem;
+  color: var(--on-dark-soft);
+  opacity: 0.82;
+  line-height: 1.45;
+}
+
+/* example prompts */
+.connect-prompts {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid color-mix(in oklch, var(--on-dark) 12%, transparent);
+}
+.connect-prompts-k {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--on-dark-soft);
+}
+.connect-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+.connect-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.83rem;
+  color: var(--on-dark);
+  background: color-mix(in oklch, var(--on-dark) 8%, transparent);
+  border: 1px solid color-mix(in oklch, var(--on-dark) 14%, transparent);
+  border-radius: 999px;
+  padding: 0.45rem 0.55rem 0.45rem 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s var(--ease), border-color 0.16s var(--ease);
+}
+.connect-chip:hover {
+  background: color-mix(in oklch, var(--on-dark) 13%, transparent);
+  border-color: color-mix(in oklch, var(--on-dark) 22%, transparent);
+}
+.connect-chip-c {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--accent);
+  flex: none;
+}
+.connect-foot {
+  margin-top: 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--on-dark-soft);
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.connect-tab:focus-visible,
+.connect-copy:focus-visible,
+.connect-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .connect {
+    max-width: 100%;
+    overflow: hidden; /* nothing escapes the card; the URL scrolls in its own box */
+  }
+  /* Stack the endpoint/command rows so the long URL gets its own full-width,
+     horizontally-scrollable line instead of forcing the card wider. */
+  .connect-url,
+  .connect-cmd {
+    flex-wrap: wrap;
+  }
+  .connect-url-v,
+  .connect-cmd code {
+    flex-basis: 100%;
+    order: 3;
+    max-width: 100%;
+    /* Wrap the long URL/command instead of forcing the card wider than the
+       viewport (nowrap + scroll still contributes intrinsic width here). */
+    white-space: normal;
+    overflow-x: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .connect-copy {
+    margin-left: auto;
+  }
+  /* Long prompt chips must wrap, not stretch the card past the viewport. */
+  .connect-chip {
+    width: 100%;
+    max-width: 100%;
+  }
+  .connect-chip > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

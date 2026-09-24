@@ -6,6 +6,7 @@ import { PlayEntry } from "./PlayEntry";
 import { Rail } from "./Rail";
 import { HowItWorks } from "./HowItWorks";
 import { FeaturedMarket } from "./FeaturedMarket";
+import { ConnectAI } from "./ConnectAI";
 
 const GUIDE_KEY = "hp_guide_seen";
 
@@ -279,6 +280,8 @@ export function Dashboard() {
             </ol>
           )}
         </section>
+
+        <ConnectAI />
 
         <footer className="foot">
           <p className="disc">
