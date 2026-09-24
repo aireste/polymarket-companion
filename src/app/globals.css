@@ -52,14 +52,16 @@ html {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* clip (not hidden) prevents sideways scroll WITHOUT breaking position:sticky
+     on the left rail — overflow-x:hidden re-parents the sticky scroll container. */
+  overflow-x: clip;
 }
 body {
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.5;
   color: var(--ink);
-  overflow-x: hidden;
+  overflow-x: clip;
   background: var(--paper);
 }
 .num {
@@ -2032,35 +2034,74 @@ body {
   color: var(--neg-ink);
   line-height: 1.5;
 }
-.ask-input {
+/* Modern rounded composer: a crispy input bar with a circular send button. */
+.ask-box {
   display: flex;
   align-items: flex-end;
-  gap: 0.6rem;
+  gap: 0.5rem;
   margin-top: 1rem;
-  border-top: 1px solid var(--rule);
-  padding-top: 1rem;
+  background: var(--paper-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: 20px;
+  padding: 0.4rem 0.4rem 0.4rem 0.95rem;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
 }
-.ask-input textarea {
+.ask-box:focus-within {
+  border-color: var(--accent-ink);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 18%, transparent);
+}
+.ask-box textarea {
   flex: 1;
   min-width: 0;
   resize: none;
+  border: 0;
+  background: transparent;
   font-family: var(--font-sans);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   line-height: 1.45;
   color: var(--ink);
-  background: var(--paper-3);
-  border: 1px solid var(--rule-strong);
-  border-radius: 14px;
-  padding: 0.7rem 0.85rem;
+  padding: 0.5rem 0;
   max-height: 8rem;
-  transition: border-color 0.16s var(--ease);
 }
-.ask-input textarea:focus {
+.ask-box textarea:focus {
   outline: none;
-  border-color: var(--accent-ink);
 }
-.ask-input .pill-dark {
-  align-self: stretch;
+.ask-send {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: oklch(0.2 0.02 130);
+  transition: filter 0.16s var(--ease), transform 0.12s var(--ease),
+    background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.ask-send svg {
+  width: 18px;
+  height: 18px;
+}
+.ask-send:hover {
+  filter: brightness(1.06);
+}
+.ask-send:active {
+  transform: translateY(1px);
+}
+.ask-send:disabled {
+  background: color-mix(in oklch, var(--ink) 8%, var(--paper-2));
+  color: var(--ink-faint);
+  cursor: default;
+}
+.ask-send-spin {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in oklch, var(--ink) 25%, transparent);
+  border-top-color: var(--ink);
+  animation: spin 0.7s linear infinite;
 }
 .ask-foot {
   margin-top: 0.7rem;
@@ -2069,7 +2110,8 @@ body {
   color: var(--ink-faint);
 }
 .ask-ex:focus-visible,
-.ask-input textarea:focus-visible {
+.ask-box textarea:focus-visible,
+.ask-send:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

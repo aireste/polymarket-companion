@@ -132,7 +132,7 @@ export function AskPanel() {
         {error && <p className="ask-error">{error}</p>}
       </div>
 
-      <div className="ask-input">
+      <div className="ask-box">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -142,8 +142,19 @@ export function AskPanel() {
           disabled={loading}
           aria-label="Your question"
         />
-        <button className="pill pill-dark" onClick={() => send(input)} disabled={loading || !input.trim()}>
-          {loading ? "…" : "Ask"}
+        <button
+          className="ask-send"
+          onClick={() => send(input)}
+          disabled={loading || !input.trim()}
+          aria-label="Send"
+        >
+          {loading ? (
+            <span className="ask-send-spin" aria-hidden />
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+              <path d="M12 19V5M6 11l6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
         </button>
       </div>
       <p className="ask-foot">
