@@ -25,6 +25,7 @@ export async function GET() {
       volume24hr: m.volume24hr,
       liquidity: m.liquidity,
       endDate: m.endDate ? m.endDate.toISOString() : null,
+      gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
       score: m.score,
       signals: m.signals,
     }));

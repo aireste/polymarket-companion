@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { PlayDTO } from "@/lib/dto";
 import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
-import { pct, resolveAt, usd } from "@/lib/format";
+import { pct, timingLabel, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
 import { EdgePanel } from "./EdgePanel";
@@ -83,7 +83,9 @@ export function MarketDetail({ play }: { play: PlayDTO }) {
         </span>
         <span>24h {usd(play.volume24hr)}</span>
         <span>liq {usd(play.liquidity)}</span>
-        <span>Resolves {resolveAt(play.endDate)}</span>
+        <span style={{ textTransform: "capitalize" }}>
+          {timingLabel(play.gameStartTime, play.endDate)}
+        </span>
       </div>
 
       <div className="rec-section">

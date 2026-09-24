@@ -2039,6 +2039,41 @@ body {
   }
 }
 
+/* ── Live game badge ── */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: oklch(0.55 0.2 25);
+  background: color-mix(in oklch, oklch(0.62 0.21 25) 16%, var(--paper-2));
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem 0.12rem 0.42rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+.live-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: oklch(0.62 0.22 25);
+  animation: livepulse 1.6s ease-in-out infinite;
+}
+@keyframes livepulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
 /* ── Mobile tabbed views (Flighty-style) ── */
 .mobile-tabs {
   display: none;

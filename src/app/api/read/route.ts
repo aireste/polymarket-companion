@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     volume24hr: play.volume24hr ?? 0,
     liquidity: play.liquidity ?? 0,
     endDate: play.endDate ? new Date(play.endDate) : null,
+    gameStartTime: play.gameStartTime ? new Date(play.gameStartTime) : null,
     active: true,
     closed: false,
     acceptingOrders: true,

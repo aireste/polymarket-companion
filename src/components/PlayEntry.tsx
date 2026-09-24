@@ -1,7 +1,7 @@
 "use client";
 
 import type { PlayDTO } from "@/lib/dto";
-import { pct, resolveAt, usd } from "@/lib/format";
+import { pct, timingLabel, isLive, usd } from "@/lib/format";
 import { SignalMeter } from "./SignalMeter";
 import { MarketDetail } from "./MarketDetail";
 
@@ -34,7 +34,10 @@ export function PlayEntry({
         <span className="play-rank">{String(rank).padStart(2, "0")}</span>
 
         <span className="play-main">
-          <span className="play-q">{play.question}</span>
+          <span className="play-q">
+            {isLive(play.gameStartTime) && <span className="live-badge">LIVE</span>}
+            {play.question}
+          </span>
           <span className="play-odds">
             {play.outcomes.slice(0, 4).map((o) => (
               <span className="odd" key={o.label}>
@@ -46,7 +49,9 @@ export function PlayEntry({
           <span className="play-meta">
             <span>24h {usd(play.volume24hr)}</span>
             <span>liq {usd(play.liquidity)}</span>
-            <span>{resolveAt(play.endDate)}</span>
+            {!isLive(play.gameStartTime) && (
+              <span>{timingLabel(play.gameStartTime, play.endDate)}</span>
+            )}
           </span>
         </span>
 

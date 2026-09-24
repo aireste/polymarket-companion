@@ -31,6 +31,7 @@ async function handle(id: string | null) {
         price: o.price,
       })),
       endDate: market.endDate ? market.endDate.toISOString() : null,
+      gameStartTime: market.gameStartTime ? market.gameStartTime.toISOString() : null,
       aiAction: rec.action,
       confidence: rec.confidence,
       aiProbability: rec.probability,

@@ -63,10 +63,15 @@ function priceEntropy(outcomes: Outcome[]): number {
   return h / Math.log(norm.length); // divide by max entropy
 }
 
-/** Days until resolution; large sentinel if unknown/past so it scores low. */
+/**
+ * Days until the market's real moment: game start for scheduled matches (so
+ * tonight's games rank as "soon"), else the resolution date. Large sentinel if
+ * unknown or already past, so those score low on timeliness.
+ */
 function daysToResolution(m: Market, now: Date): number {
-  if (!m.endDate) return 3650;
-  const days = (m.endDate.getTime() - now.getTime()) / 86_400_000;
+  const when = m.gameStartTime ?? m.endDate;
+  if (!when) return 3650;
+  const days = (when.getTime() - now.getTime()) / 86_400_000;
   return days < 0 ? 3650 : days;
 }
 

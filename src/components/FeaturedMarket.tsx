@@ -5,7 +5,7 @@ import type { PlayDTO } from "@/lib/dto";
 import { useCountUp } from "@/lib/useCountUp";
 import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
-import { resolveAt, usd } from "@/lib/format";
+import { timingLabel, isLive, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
 
@@ -42,8 +42,13 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     <section className="featured" aria-label="Featured market">
       <div className="featured-top">
         <div className="featured-lead">
-          <span className="featured-eyebrow">Top signal today</span>
-          <h2 className="featured-q">{play.question}</h2>
+          <span className="featured-eyebrow">
+            {isLive(play.gameStartTime) ? "Live now" : "Top signal today"}
+          </span>
+          <h2 className="featured-q">
+            {isLive(play.gameStartTime) && <span className="live-badge">LIVE</span>}
+            {play.question}
+          </h2>
         </div>
         <div className="range" role="tablist" aria-label="Time range">
           {RANGES.map((r) => (
@@ -85,8 +90,8 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
 
       <div className="featured-foot">
         <span className="featured-meta num">
-          24h {usd(play.volume24hr)} · liq {usd(play.liquidity)} · resolves{" "}
-          {resolveAt(play.endDate)}
+          24h {usd(play.volume24hr)} · liq {usd(play.liquidity)}
+          {!isLive(play.gameStartTime) && ` · ${timingLabel(play.gameStartTime, play.endDate)}`}
         </span>
         <a
           className="featured-link"

@@ -48,6 +48,7 @@ function playSummary(m: ScoredMarket, rank: number) {
       volume24hr: m.volume24hr,
       liquidity: m.liquidity,
       resolvesAt: m.endDate ? m.endDate.toISOString() : null,
+      gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
       score: m.score,
       signals: m.signals,
     },

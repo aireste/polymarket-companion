@@ -38,7 +38,12 @@ export interface Market {
   volume24hr: number;
   /** Order-book liquidity, USD. */
   liquidity: number;
+  /** Oracle settlement deadline. For sports this is a far-future cushion, NOT
+      when the game happens, so don't use it to sort/display live matches. */
   endDate: Date | null;
+  /** Real event/kickoff time for scheduled markets (sports); null otherwise.
+      Use this, not endDate, for "starts / live / soon" logic. */
+  gameStartTime: Date | null;
   active: boolean;
   closed: boolean;
   acceptingOrders: boolean;
@@ -59,6 +64,7 @@ interface RawMarket {
   liquidity?: string;
   liquidityNum?: number;
   endDate?: string;
+  gameStartTime?: string;
   active?: boolean;
   closed?: boolean;
   acceptingOrders?: boolean;
@@ -79,6 +85,21 @@ function parseStringArray(raw: unknown): string[] {
 function toNumber(raw: unknown, fallback = 0): number {
   const n = typeof raw === "number" ? raw : parseFloat(String(raw));
   return Number.isFinite(n) ? n : fallback;
+}
+
+/**
+ * Parse Gamma's game-start timestamp, which arrives NON-standard, e.g.
+ * "2026-09-24 02:10:00+00" (space instead of T, short "+00" offset). Node is
+ * lenient but Safari returns Invalid Date, so normalize before `new Date`.
+ */
+function parseGameStart(raw: unknown): Date | null {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  const iso = raw
+    .trim()
+    .replace(" ", "T")
+    .replace(/([+-]\d{2})$/, "$1:00"); // "+00" -> "+00:00"; leaves Z / +00:00 alone
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /** Turn a RawMarket into a normalized Market, or null if it's unusable. */
@@ -110,6 +131,7 @@ function normalize(raw: RawMarket): Market | null {
     volume24hr: toNumber(raw.volume24hr),
     liquidity: toNumber(raw.liquidityNum ?? raw.liquidity),
     endDate: endDate && !Number.isNaN(endDate.getTime()) ? endDate : null,
+    gameStartTime: parseGameStart(raw.gameStartTime),
     active: raw.active === true,
     closed: raw.closed === true,
     acceptingOrders: raw.acceptingOrders !== false,

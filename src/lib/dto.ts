@@ -28,6 +28,8 @@ export interface PlayDTO {
   volume24hr: number;
   liquidity: number;
   endDate: string | null;
+  /** ISO game start time for scheduled markets; null otherwise. */
+  gameStartTime: string | null;
   score: number;
   signals: Signals;
 }
@@ -40,6 +42,7 @@ export interface RecommendationDTO {
   marketName: string;
   currentOdds: { label: string; price: number }[];
   endDate: string | null;
+  gameStartTime: string | null;
   aiAction: AiAction;
   confidence: "low" | "medium" | "high";
   aiProbability: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { RecommendationDTO } from "@/lib/dto";
-import { pct, resolveAt } from "@/lib/format";
+import { pct, timingLabel } from "@/lib/format";
 
 const ACTION_COPY: Record<
   RecommendationDTO["aiAction"],
@@ -65,8 +65,8 @@ export function Recommendation({
       </div>
 
       <div className="rec-foot">
-        <span className="rec-model">
-          Resolves {resolveAt(rec.endDate)} · {rec.model} · live web search
+        <span className="rec-model" style={{ textTransform: "capitalize" }}>
+          {timingLabel(rec.gameStartTime, rec.endDate)} · {rec.model} · live web search
         </span>
         {url && (
           <a

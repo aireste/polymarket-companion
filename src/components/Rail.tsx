@@ -17,6 +17,12 @@ const icons = {
       <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" strokeLinejoin="round" />
     </svg>
   ),
+  live: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+      <path d="M8 8a5.5 5.5 0 0 0 0 8M16 8a5.5 5.5 0 0 1 0 8M5.5 5.5a9 9 0 0 0 0 13M18.5 5.5a9 9 0 0 1 0 13" strokeLinecap="round" />
+    </svg>
+  ),
   hot: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
       <path d="M12 3c1 3-1.5 4-1.5 6.5A2.5 2.5 0 0 0 13 12c1-1 1-2.5 1-2.5 1.5 1.2 3 3 3 6a5 5 0 1 1-10 0c0-3.6 2.5-5.5 3-8 .3-1.6 1.4-3 2-4.5z" strokeLinejoin="round" />
@@ -62,6 +68,7 @@ const icons = {
 
 const NAV: { id: FilterId; label: string; icon: keyof typeof icons }[] = [
   { id: "all", label: "Today", icon: "today" },
+  { id: "live", label: "Live", icon: "live" },
   { id: "hot", label: "Hot", icon: "hot" },
   { id: "coinflip", label: "Coin-flips", icon: "coinflip" },
   { id: "soon", label: "Soon", icon: "soon" },

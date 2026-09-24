@@ -9,6 +9,7 @@ import { FeaturedMarket } from "./FeaturedMarket";
 import { ConnectAI } from "./ConnectAI";
 import { AskPanel } from "./AskPanel";
 import { MobileTabs } from "./MobileTabs";
+import { isLive } from "@/lib/format";
 
 
 interface PlaysResponse {
@@ -17,13 +18,14 @@ interface PlaysResponse {
   error?: string;
 }
 
-export type FilterId = "all" | "hot" | "coinflip" | "soon";
+export type FilterId = "all" | "live" | "hot" | "coinflip" | "soon";
 
 /** Mobile-only destinations for the bottom tab bar. */
 export type MobileView = "markets" | "ask" | "connect";
 
 const FILTER_TABS: { id: FilterId; label: string }[] = [
   { id: "all", label: "Today" },
+  { id: "live", label: "Live" },
   { id: "hot", label: "Hot" },
   { id: "coinflip", label: "Coin-flips" },
   { id: "soon", label: "Soon" },
@@ -31,14 +33,17 @@ const FILTER_TABS: { id: FilterId; label: string }[] = [
 
 const TABS: Record<FilterId, { label: string; caption: string }> = {
   all: { label: "Today", caption: "Ranked by signal" },
+  live: { label: "Live", caption: "Games happening right now" },
   hot: { label: "Hot", caption: "Most active in the last 24h" },
   coinflip: { label: "Coinflip", caption: "Near 50/50, where a read matters most" },
-  soon: { label: "Soon", caption: "Resolving soonest" },
+  soon: { label: "Soon", caption: "Starting or resolving soonest" },
 };
 
+/** Soon = the market's real moment (game start for sports, else close) is within a week. */
 function isSoon(p: PlayDTO): boolean {
-  if (!p.endDate) return false;
-  const days = (new Date(p.endDate).getTime() - Date.now()) / 86_400_000;
+  const iso = p.gameStartTime ?? p.endDate;
+  if (!iso) return false;
+  const days = (new Date(iso).getTime() - Date.now()) / 86_400_000;
   return days >= 0 && days <= 7;
 }
 
@@ -49,19 +54,24 @@ function isCoinflip(p: PlayDTO): boolean {
   return top <= 0.6;
 }
 
+/** Real-moment timestamp for sorting: game start for sports, else close date. */
+function whenMs(p: PlayDTO): number {
+  const iso = p.gameStartTime ?? p.endDate;
+  return iso ? new Date(iso).getTime() : Number.POSITIVE_INFINITY;
+}
+
 function applyFilter(plays: PlayDTO[], f: FilterId): PlayDTO[] {
   switch (f) {
+    case "live":
+      return plays
+        .filter((p) => isLive(p.gameStartTime))
+        .sort((a, b) => whenMs(a) - whenMs(b));
     case "hot":
       return [...plays].sort((a, b) => b.volume24hr - a.volume24hr);
     case "coinflip":
       return plays.filter(isCoinflip).sort((a, b) => b.volume24hr - a.volume24hr);
     case "soon":
-      return plays
-        .filter(isSoon)
-        .sort(
-          (a, b) =>
-            new Date(a.endDate!).getTime() - new Date(b.endDate!).getTime()
-        );
+      return plays.filter(isSoon).sort((a, b) => whenMs(a) - whenMs(b));
     default:
       return plays;
   }
@@ -279,7 +289,7 @@ export function Dashboard() {
           <div className="panel-head">
             <h2>
               {tab.label}
-              {(filter === "coinflip" || filter === "soon") && (
+              {filter !== "all" && filter !== "hot" && (
                 <span className="panel-filter-tag">filtered</span>
               )}
             </h2>
@@ -316,7 +326,11 @@ export function Dashboard() {
           )}
 
           {plays && !error && view.length === 0 && (
-            <p className="state">Nothing in this filter right now.</p>
+            <p className="state">
+              {filter === "live"
+                ? "No games are live right now. Check back around game time."
+                : "Nothing in this filter right now."}
+            </p>
           )}
 
           {plays && !error && view.length > 0 && (

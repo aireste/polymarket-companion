@@ -32,6 +32,41 @@ export function resolveAt(iso: string | null): string {
   });
 }
 
+/**
+ * How long after game start we still call a match LIVE. The Gamma payload gives
+ * us the start time but NOT the end time, so this is a deliberate heuristic cap
+ * (covers a long game) rather than a precise "in progress" signal.
+ */
+export const LIVE_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+/** A scheduled game is live if it has started and we're within the live window. */
+export function isLive(gameStartTime: string | null, now = Date.now()): boolean {
+  if (!gameStartTime) return false;
+  const start = new Date(gameStartTime).getTime();
+  if (Number.isNaN(start)) return false;
+  return now >= start && now - start < LIVE_WINDOW_MS;
+}
+
+/**
+ * The right timing label for a market. Scheduled games show "LIVE" or their
+ * real start time ("starts Sep 24, 9:10 PM"); everything else shows its
+ * resolution date. Avoids the old bug where a game tonight read "resolves Oct 1".
+ */
+export function timingLabel(
+  gameStartTime: string | null,
+  endDate: string | null,
+  now = Date.now()
+): string {
+  if (gameStartTime) {
+    const start = new Date(gameStartTime).getTime();
+    if (!Number.isNaN(start)) {
+      if (isLive(gameStartTime, now)) return "LIVE";
+      if (start >= now) return `starts ${resolveAt(gameStartTime)}`;
+    }
+  }
+  return `resolves ${resolveAt(endDate)}`;
+}
+
 /** Days-to-resolution label from an ISO date, e.g. "3d", "5w", "resolved?". */
 export function horizon(iso: string | null): string {
   if (!iso) return "open-ended";

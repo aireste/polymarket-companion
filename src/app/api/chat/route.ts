@@ -50,6 +50,7 @@ function pickPlays(ranked: ScoredMarket[], filter: string, limit: number) {
     volume24hr: Math.round(m.volume24hr),
     liquidity: Math.round(m.liquidity),
     resolvesAt: m.endDate ? m.endDate.toISOString().slice(0, 10) : null,
+    gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
     score: Number(m.score.toFixed(2)),
   }));
 }
