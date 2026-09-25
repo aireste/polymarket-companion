@@ -51,6 +51,27 @@ export interface RecommendationDTO {
   model: string;
 }
 
+/** Jev's calibrated read (POST /api/jev). */
+export interface JevReadDTO {
+  marketId: string;
+  marketName: string;
+  outcome: string;
+  marketPrice: number;
+  jevProbability: number;
+  edge: number;
+  action: "wager" | "hold" | "skip";
+  actionProbabilities?: Record<string, number>;
+  valuation: "undervalued" | "fair" | "overvalued";
+  confidence: number | null;
+  model: string;
+}
+
+/** `available:false` means the gateway key isn't set; `error` means it failed. */
+export type JevResponse =
+  | JevReadDTO
+  | { available: false; reason: string }
+  | { error: string };
+
 /** `available:false` means no API key; `error` means the call failed. */
 export type RecommendationResponse =
   | RecommendationDTO
