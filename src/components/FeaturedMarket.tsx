@@ -10,6 +10,7 @@ import { timingLabel, isLive, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { JevChip } from "./JevChip";
 import { JevCard } from "./JevCard";
+import { WhatIsJev } from "./WhatIsJev";
 import { Recommendation } from "./Recommendation";
 
 const RANGES: { id: string; label: string }[] = [
@@ -109,6 +110,7 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     </section>
 
     <section className="featured-rec" aria-label="AI recommendation">
+      <WhatIsJev />
       <JevCard state={jevState} onAsk={jevState.run} />
       {jevState.jev && !rec && !recLoading && recError !== "no-key" && (
         <button
