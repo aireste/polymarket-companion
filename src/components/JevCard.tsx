@@ -49,10 +49,7 @@ export function JevCard({
     return (
       <div className="jev-ask-banner">
         <div className="jev-ask-banner-txt">
-          <span className="jev-ask-banner-lead">
-            <span className="jev-mark jev-ask-card-mark">Jev</span>
-            What&apos;s the call?
-          </span>
+          <span className="jev-ask-banner-lead">What&apos;s the call?</span>
           <span className="jev-ask-banner-sub">
             A calibrated read on this play: wager, hold, or skip.
           </span>
