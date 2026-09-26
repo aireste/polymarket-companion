@@ -192,7 +192,11 @@ const getJevVerdict = betaZodTool({
       if (err instanceof MissingGatewayKeyError) {
         return "Jev is not configured on this server (no AI Gateway key).";
       }
-      return `Jev couldn't evaluate that market: ${err instanceof Error ? err.message : "unknown error"}.`;
+      const msg = err instanceof Error ? err.message : "unknown error";
+      if (/rate.?limit|high demand|429|overloaded/i.test(msg)) {
+        return "Jev is briefly in high demand (rate-limited upstream). Tell the user to try again in a few seconds; do not invent a verdict yourself.";
+      }
+      return `Jev couldn't evaluate that market: ${msg}.`;
     }
   },
 });

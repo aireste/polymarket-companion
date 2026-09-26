@@ -31,22 +31,46 @@ export function useJev(
   const run = useCallback(async () => {
     setLoading(true);
     setError(null);
+    // The Jev model on the AI Gateway intermittently 429s under upstream load.
+    // Ride out short spikes with a couple of backoff retries before surfacing an
+    // error, so a transient burst self-heals without the user re-tapping.
+    const isRateLimited = (msg: string) =>
+      /rate.?limit|high demand|429|overloaded/i.test(msg);
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const backoffs = [2500, 5000];
+
     try {
-      const res = await fetch("/api/jev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: marketId }),
-      });
-      const data = (await res.json()) as JevResponse;
-      if ("error" in data) {
-        setError(data.error);
-      } else if ("available" in data && data.available === false) {
-        setError("no-key");
-      } else {
-        setJev(data as JevReadDTO);
+      for (let attempt = 0; ; attempt++) {
+        let data: JevResponse;
+        try {
+          const res = await fetch("/api/jev", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: marketId }),
+          });
+          data = (await res.json()) as JevResponse;
+        } catch {
+          setError("Couldn't reach Jev.");
+          return;
+        }
+
+        if ("available" in data && data.available === false) {
+          setError("no-key");
+          return;
+        }
+        if (!("error" in data)) {
+          setJev(data as JevReadDTO);
+          return;
+        }
+        // Retry on a transient rate-limit; otherwise surface the error.
+        if (isRateLimited(data.error) && attempt < backoffs.length) {
+          setError("busy");
+          await wait(backoffs[attempt]);
+          continue;
+        }
+        setError(isRateLimited(data.error) ? "busy" : data.error);
+        return;
       }
-    } catch {
-      setError("Couldn't reach Jev.");
     } finally {
       setLoading(false);
     }

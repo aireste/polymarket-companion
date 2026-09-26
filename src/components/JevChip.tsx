@@ -56,17 +56,36 @@ export function JevChip({
   }
   // Visible (muted) failure state instead of vanishing, so a missing gateway
   // key or a transient error is diagnosable at a glance rather than a mystery.
+  // "busy" = the Jev model is briefly rate-limited upstream — offer a retry.
   if (error || !jev) {
+    const label =
+      error === "no-key" ? "offline" : error === "busy" ? "busy" : "unavailable";
     const why =
       error === "no-key"
         ? "Jev is offline: no AI Gateway key configured for this deployment."
-        : "Jev couldn't be reached right now.";
+        : error === "busy"
+          ? "Jev is in high demand right now. Tap to try again."
+          : "Jev couldn't be reached right now. Tap to try again.";
+    if (error === "busy" && onAsk) {
+      return (
+        <button
+          type="button"
+          className="jev-chip jev-offline jev-retry"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAsk();
+          }}
+          title={why}
+        >
+          <span className="jev-mark">Jev</span>
+          <span className="jev-offline-txt">busy · retry</span>
+        </button>
+      );
+    }
     return (
       <span className="jev-chip jev-offline" title={why}>
         <span className="jev-mark">Jev</span>
-        <span className="jev-offline-txt">
-          {error === "no-key" ? "offline" : "unavailable"}
-        </span>
+        <span className="jev-offline-txt">{label}</span>
       </span>
     );
   }

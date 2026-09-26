@@ -63,7 +63,9 @@ export function JevCard({
   if (error && error !== "no-key" && !jev) {
     return (
       <p className="helper" style={{ color: "var(--neg-ink)" }}>
-        Jev couldn&apos;t be reached right now (it may be briefly rate-limited).{" "}
+        {error === "busy"
+          ? "Jev is in high demand right now (the model is briefly rate-limited upstream)."
+          : "Jev couldn't be reached right now."}{" "}
         {onAsk && (
           <button className="linklike" onClick={onAsk}>
             Try again
