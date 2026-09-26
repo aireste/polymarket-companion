@@ -2618,25 +2618,26 @@ body {
   color: var(--accent);
 }
 
-/* Prominent on-demand "Ask Jev" card (idle state on featured / expanded row). */
-.jev-ask-card {
-  width: 100%;
-  text-align: left;
-  display: grid;
-  gap: 0.2rem;
+/* On-demand "What's the call?" banner (idle state on featured / expanded row):
+   the heading + the green Ask Jev button, side by side. */
+.jev-ask-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
   background: var(--paper-3);
   border: 1px solid color-mix(in oklch, var(--accent) 40%, var(--rule));
   border-radius: var(--r-md);
-  padding: 1rem 1.1rem;
+  padding: 0.9rem 1rem 0.9rem 1.1rem;
   margin-bottom: 0.9rem;
-  cursor: pointer;
-  transition: box-shadow 0.16s var(--ease), transform 0.16s var(--ease);
 }
-.jev-ask-card:hover {
-  box-shadow: var(--shadow-lift);
-  transform: translateY(-1px);
+.jev-ask-banner-txt {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
 }
-.jev-ask-card-lead {
+.jev-ask-banner-lead {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2651,16 +2652,28 @@ body {
   border-radius: 999px;
   font-size: 0.62rem;
 }
-.jev-ask-card-sub {
-  font-size: 0.82rem;
+.jev-ask-banner-sub {
+  font-size: 0.8rem;
   color: var(--ink-soft);
 }
-.jev-ask-card-go {
+.jev-ask-btn {
+  flex: none;
+  background: var(--accent);
+  color: oklch(0.2 0.03 130);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.6rem 1.15rem;
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent-ink);
-  margin-top: 0.35rem;
+  cursor: pointer;
+  transition: filter 0.16s var(--ease), box-shadow 0.16s var(--ease),
+    transform 0.14s var(--ease);
+}
+.jev-ask-btn:hover {
+  filter: brightness(1.05);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
 }
 
 /* "What is Jev?" plain-language explainer (collapsed by default). */

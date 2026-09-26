@@ -110,7 +110,6 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     </section>
 
     <section className="featured-rec" aria-label="AI recommendation">
-      <WhatIsJev />
       <JevCard state={jevState} onAsk={jevState.run} />
       {jevState.jev && !rec && !recLoading && recError !== "no-key" && (
         <button
@@ -147,6 +146,8 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
         </p>
       )}
       {rec && <Recommendation rec={rec} url={play.url} />}
+
+      <WhatIsJev />
     </section>
     </>
   );

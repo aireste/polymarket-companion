@@ -43,20 +43,24 @@ export function JevCard({
     );
   }
 
-  // Idle: Jev is on-demand, so lead with an "Ask Jev" call to action.
+  // Idle: Jev is on-demand, so lead with the action — a plain "What's the call?"
+  // banner with the green Ask Jev button right in it.
   if (!jev && !error && onAsk) {
     return (
-      <button type="button" className="jev-ask-card" onClick={onAsk}>
-        <span className="jev-ask-card-lead">
-          <span className="jev-mark jev-ask-card-mark">Jev</span>
-          What&apos;s the calibrated call?
-        </span>
-        <span className="jev-ask-card-sub">
-          Jev reads this market&apos;s numbers and returns a wager / hold / skip
-          with a probability and confidence. Instant.
-        </span>
-        <span className="jev-ask-card-go">Ask Jev →</span>
-      </button>
+      <div className="jev-ask-banner">
+        <div className="jev-ask-banner-txt">
+          <span className="jev-ask-banner-lead">
+            <span className="jev-mark jev-ask-card-mark">Jev</span>
+            What&apos;s the call?
+          </span>
+          <span className="jev-ask-banner-sub">
+            A calibrated read on this play: wager, hold, or skip.
+          </span>
+        </div>
+        <button type="button" className="jev-ask-btn" onClick={onAsk}>
+          Ask Jev →
+        </button>
+      </div>
     );
   }
 
