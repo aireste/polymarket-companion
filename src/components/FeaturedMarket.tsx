@@ -109,15 +109,19 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     </section>
 
     <section className="featured-rec" aria-label="AI recommendation">
-      <JevCard state={jevState} />
-      {!rec && !recLoading && recError !== "no-key" && (
-        <button className="rec-cta-btn" onClick={getRec} disabled={recLoading}>
-          <span className="rec-cta-lead">What&apos;s the call on the top signal?</span>
+      <JevCard state={jevState} onAsk={jevState.run} />
+      {jevState.jev && !rec && !recLoading && recError !== "no-key" && (
+        <button
+          className="rec-cta-btn secondary"
+          onClick={getRec}
+          disabled={recLoading}
+        >
+          <span className="rec-cta-lead">Want the deeper read?</span>
           <span className="rec-cta-sub">
-            Claude checks the latest news &amp; sentiment, then says Chase, Hold,
-            or Skip.
+            Jev already made the call above. Have Claude check live news &amp;
+            sentiment for the story behind it (~15s).
           </span>
-          <span className="rec-cta-go">Get the play →</span>
+          <span className="rec-cta-go">Get Claude&apos;s web read →</span>
         </button>
       )}
       {recLoading && (

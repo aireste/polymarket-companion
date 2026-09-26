@@ -13,14 +13,14 @@ interface State {
 }
 
 /**
- * Jev's calibrated read for one market. Unlike useRecommendation (a slow, paid
- * Claude + web-search call, fired on demand), Jev is a fast calibrated decision
- * call, so we AUTO-FIRE once on mount to populate the glanceable chip. Set
- * `auto: false` to require an explicit run().
+ * Jev's calibrated read for one market. On-demand by default: the user taps
+ * "Ask Jev" to fire it, so opening the app doesn't hammer the AI Gateway with a
+ * call per market (and each read stays a deliberate action). Pass `auto: true`
+ * to fire once on mount instead.
  */
 export function useJev(
   marketId: string,
-  { auto = true }: { auto?: boolean } = {}
+  { auto = false }: { auto?: boolean } = {}
 ): State {
   const [jev, setJev] = useState<JevReadDTO | null>(null);
   const [loading, setLoading] = useState(false);

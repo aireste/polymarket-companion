@@ -21,7 +21,13 @@ interface JevState {
  * the market, and an on-demand "Why does Jev say that?" that hands the read to
  * Claude for a plain-language explanation. Jev makes the call; Claude narrates.
  */
-export function JevCard({ state }: { state: JevState }) {
+export function JevCard({
+  state,
+  onAsk,
+}: {
+  state: JevState;
+  onAsk?: () => void;
+}) {
   const { jev, loading, error } = state;
   const explain = useJevExplain(jev);
 
@@ -37,7 +43,37 @@ export function JevCard({ state }: { state: JevState }) {
     );
   }
 
-  if ((error && !jev) || !jev) return null;
+  // Idle: Jev is on-demand, so lead with an "Ask Jev" call to action.
+  if (!jev && !error && onAsk) {
+    return (
+      <button type="button" className="jev-ask-card" onClick={onAsk}>
+        <span className="jev-ask-card-lead">
+          <span className="jev-mark jev-ask-card-mark">Jev</span>
+          What&apos;s the calibrated call?
+        </span>
+        <span className="jev-ask-card-sub">
+          Jev reads this market&apos;s numbers and returns a wager / hold / skip
+          with a probability and confidence. Instant.
+        </span>
+        <span className="jev-ask-card-go">Ask Jev →</span>
+      </button>
+    );
+  }
+
+  if (error && error !== "no-key" && !jev) {
+    return (
+      <p className="helper" style={{ color: "var(--neg-ink)" }}>
+        Jev couldn&apos;t be reached right now (it may be briefly rate-limited).{" "}
+        {onAsk && (
+          <button className="linklike" onClick={onAsk}>
+            Try again
+          </button>
+        )}
+      </p>
+    );
+  }
+
+  if (!jev) return null;
 
   const a = JEV_ACTION_COPY[jev.action];
   const conf = confidenceLabel(jev.confidence);

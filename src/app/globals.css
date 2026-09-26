@@ -1390,6 +1390,31 @@ body {
   filter: brightness(1.12);
   box-shadow: var(--shadow-lift);
 }
+/* Secondary: Jev already leads with the verdict, so the Claude web read is a
+   quieter, optional step — light bordered button, not the dominant dark card. */
+.rec-cta-btn.secondary {
+  background: var(--paper-2);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  padding: 0.8rem 1rem;
+}
+.rec-cta-btn.secondary:hover {
+  filter: none;
+  box-shadow: var(--shadow-lift);
+}
+.rec-cta-btn.secondary .rec-cta-lead {
+  font-size: 0.92rem;
+}
+.rec-cta-btn.secondary .rec-cta-sub {
+  color: var(--ink-soft);
+}
+.rec-cta-btn.secondary .rec-cta-go {
+  color: var(--accent-ink);
+}
+/* On the dark featured card the secondary button stays readable on light. */
+.featured-rec .rec-cta-btn.secondary {
+  background: var(--paper-2);
+}
 .rec-cta-lead {
   font-size: 1rem;
   font-weight: 600;
@@ -2569,6 +2594,88 @@ body {
 }
 .jev-chip.jev-skip .jev-action {
   color: var(--ink-soft);
+}
+/* On-demand "Ask Jev" pill (idle state on a row). */
+.jev-chip.jev-ask {
+  cursor: pointer;
+  border-color: color-mix(in oklch, var(--accent) 45%, var(--rule));
+  background: var(--accent-soft);
+  transition: box-shadow 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.jev-chip.jev-ask:hover {
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
+}
+.jev-ask-txt {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.featured-num .jev-chip.jev-ask {
+  background: color-mix(in oklch, var(--accent) 20%, transparent);
+  border-color: color-mix(in oklch, var(--accent) 40%, transparent);
+}
+.featured-num .jev-chip.jev-ask .jev-ask-txt {
+  color: var(--accent);
+}
+
+/* Prominent on-demand "Ask Jev" card (idle state on featured / expanded row). */
+.jev-ask-card {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 0.2rem;
+  background: var(--paper-3);
+  border: 1px solid color-mix(in oklch, var(--accent) 40%, var(--rule));
+  border-radius: var(--r-md);
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.9rem;
+  cursor: pointer;
+  transition: box-shadow 0.16s var(--ease), transform 0.16s var(--ease);
+}
+.jev-ask-card:hover {
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
+}
+.jev-ask-card-lead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.jev-ask-card-mark {
+  background: var(--accent);
+  color: oklch(0.2 0.03 130);
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+}
+.jev-ask-card-sub {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+.jev-ask-card-go {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  margin-top: 0.35rem;
+}
+
+.jev-chip.jev-offline {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--rule-strong);
+}
+.jev-chip.jev-offline .jev-mark,
+.jev-offline-txt {
+  color: var(--ink-faint);
+}
+.jev-offline-txt {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 .jev-chip-loading .jev-dots {
   color: var(--ink-faint);

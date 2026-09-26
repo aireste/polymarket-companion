@@ -18,23 +18,28 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { fetchMarkets, fetchMarketById } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
+import { jevRead, MissingGatewayKeyError } from "@/lib/jev";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 // The agentic loop plus a web search or two can run tens of seconds.
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-const MODEL = "claude-opus-4-8";
+// Sonnet for the on-site chat: fast and cheap. Jev (the calibrated engine) makes
+// the actual verdicts via get_jev_verdict; Claude is just the conversational wrapper.
+const MODEL = "claude-sonnet-5";
 const CLOB_HISTORY = "https://clob.polymarket.com/prices-history";
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
 const SYSTEM = `You are HedgePredict, a prediction-market analyst assistant for Polymarket, talking to a visitor trying the tool on the web.
 
+Jev is the engine. Jev is HedgePredict's calibrated decision model. Whenever the user asks whether to play a specific market, or "what does Jev say", or wants a probability / confidence / call on a market, call get_jev_verdict and lead your answer with Jev's verdict. Do NOT substitute your own guess for Jev's number. You are the voice; Jev is the brain.
+
 How you work:
-- Use your tools. get_best_plays surfaces live markets worth a look (filters: all, hot, coinflip, soon). web_search checks current news and sentiment for a specific market before you form a view. analyze_edge turns a probability into a fractional-Kelly stake and a hedge leg. get_market_history shows how one outcome's price has moved.
-- Honest over hype. A market's price already reflects the crowd's probability, so only call value when you have a concrete, specific reason. If a market looks efficient, say there is no edge. "No edge, don't bet" is a good answer, not a gap.
-- Decision support, not financial advice. You never place trades. Suggested stakes are fractional-Kelly and capped. When sizing real money, remind the user to only risk what they can afford to lose.
-- Be concise and glanceable. Lead with the answer, cite the market's real numbers, and keep it tight. Use plain text, no tables unless asked.`;
+- Use your tools. get_best_plays surfaces live markets worth a look (filters: all, hot, coinflip, soon) — call it first to find market ids. get_jev_verdict(marketId) returns Jev's calibrated call (wager/hold/skip), probability, edge vs the market, and confidence for a market's leading outcome. web_search checks current news for extra color when the user asks why. analyze_edge sizes a fractional-Kelly stake and hedge. get_market_history shows how an outcome's price moved.
+- Honest over hype. A market's price already reflects the crowd's probability. If Jev says skip or the edge is tiny, say so plainly. "No edge, don't bet" is a good answer, not a gap.
+- Decision support, not financial advice. You never place trades. Stakes are fractional-Kelly and capped. Remind users to only risk what they can afford to lose.
+- Be tight. Lead with Jev's call and the two numbers that matter (Jev % vs market %). Keep answers to 1-3 short sentences unless the user asks for depth. Plain text, no tables, no preamble.`;
 
 /** Rank a generous pool then re-sort by the requested signal, like the app UI. */
 function pickPlays(ranked: ScoredMarket[], filter: string, limit: number) {
@@ -129,6 +134,37 @@ const getMarketHistory = betaZodTool({
   },
 });
 
+const getJevVerdict = betaZodTool({
+  name: "get_jev_verdict",
+  description:
+    "Ask Jev, HedgePredict's calibrated decision model, for the verdict on a market's leading outcome. Returns action (wager/hold/skip), Jev's probability, the market-implied probability, the edge in points, and Jev's confidence. Call this whenever the user asks whether to play a specific market, what the odds/percentage are, or what Jev thinks. Use a marketId from get_best_plays. This is fast and is the authoritative call — do not guess a probability yourself.",
+  inputSchema: z.object({
+    marketId: z.string().min(1),
+  }),
+  run: async ({ marketId }) => {
+    const market = await fetchMarketById(marketId);
+    if (!market) return `Market ${marketId} not found.`;
+    try {
+      const jev = await jevRead(market);
+      return JSON.stringify({
+        question: market.question,
+        outcome: jev.outcome,
+        action: jev.action,
+        jevProbability: pct(jev.probability),
+        marketProbability: pct(jev.marketPrice),
+        edgePoints: Number((jev.edge * 100).toFixed(1)),
+        valuation: jev.valuation,
+        confidence: jev.confidence == null ? "n/a" : jev.confidence.toFixed(2),
+      });
+    } catch (err) {
+      if (err instanceof MissingGatewayKeyError) {
+        return "Jev is not configured on this server (no AI Gateway key).";
+      }
+      return `Jev couldn't evaluate that market: ${err instanceof Error ? err.message : "unknown error"}.`;
+    }
+  },
+});
+
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function coerceMessages(body: unknown): ChatMessage[] | null {
@@ -184,10 +220,11 @@ export async function POST(request: Request) {
     model: MODEL,
     max_tokens: 8000,
     thinking: { type: "adaptive" },
-    output_config: { effort: "medium" },
+    output_config: { effort: "low" },
     system: SYSTEM,
     tools: [
       getBestPlays,
+      getJevVerdict,
       analyzeEdge,
       getMarketHistory,
       { type: "web_search_20260209", name: "web_search", max_uses: 2 },

@@ -51,7 +51,7 @@ export function PlayEntry({
             ))}
           </span>
           <span className="play-meta">
-            <JevChip state={jevState} />
+            <JevChip state={jevState} onAsk={jevState.run} />
             <span>24h {usd(play.volume24hr)}</span>
             <span>liq {usd(play.liquidity)}</span>
             {!isLive(play.gameStartTime) && (

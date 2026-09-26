@@ -14,6 +14,7 @@ interface JevState {
   jev: JevReadDTO | null;
   loading: boolean;
   error: string | null;
+  run: () => void;
 }
 
 const RANGES = [
@@ -101,16 +102,21 @@ export function MarketDetail({
         </span>
       </div>
 
-      <JevCard state={jevState} />
+      <JevCard state={jevState} onAsk={jevState.run} />
 
       <div className="rec-section">
-        {!rec && !recLoading && recError !== "no-key" && (
-          <button className="rec-cta-btn" onClick={getRec} disabled={recLoading}>
-            <span className="rec-cta-lead">Should you play this?</span>
+        {jevState.jev && !rec && !recLoading && recError !== "no-key" && (
+          <button
+            className="rec-cta-btn secondary"
+            onClick={getRec}
+            disabled={recLoading}
+          >
+            <span className="rec-cta-lead">Want the deeper read?</span>
             <span className="rec-cta-sub">
-              Claude checks the latest news &amp; sentiment, then calls it.
+              Jev made the call above. Have Claude check live news &amp;
+              sentiment for the story behind it (~15s).
             </span>
-            <span className="rec-cta-go">Get the play →</span>
+            <span className="rec-cta-go">Get Claude&apos;s web read →</span>
           </button>
         )}
 

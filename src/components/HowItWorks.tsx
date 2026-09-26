@@ -4,22 +4,22 @@ const STEPS = [
   {
     n: 1,
     h: "Browse today's markets",
-    p: "Use the side tabs (Today, Hot, Coin-flips, Soon) or the stat cards to filter live Polymarket markets down to the ones worth a look.",
+    p: "Use the side tabs (Today, Hot, Coin-flips, Live) or the stat cards to filter live Polymarket markets down to the ones worth a look.",
   },
   {
     n: 2,
-    h: "Open one for the read",
-    p: "Tap any market for its live odds and signal: momentum, liquidity, how close to 50/50, and time to resolution. Enter your own probability or tap Ask Claude to get the edge, a suggested stake, and the hedge.",
+    h: "Ask Jev for the call",
+    p: "Jev is HedgePredict's calibrated prediction engine — a decision model, not a chatbot. Tap “Ask Jev” on the featured pick or any market row and it instantly returns the play: wager, hold, or skip, plus its own probability, the edge versus the market price, and a confidence score.",
   },
   {
     n: 3,
-    h: "Or just ask",
-    p: "Use Ask HedgePredict to ask anything in plain English, like “best coin-flips today?” It reads live markets, checks the news, and does the edge math for you.",
+    h: "Get the why, or a deeper read",
+    p: "Once Jev has called it, tap “Why does Jev say that?” for a plain-English explanation of the numbers, or “Claude's web read” to pull the live news and sentiment behind the call. Prefer your own math? The edge + hedge calculator is one tap away.",
   },
   {
     n: 4,
-    h: "Take it to your own AI",
-    p: "Connect HedgePredict to Claude, Claude Code, or ChatGPT with the MCP endpoint, and let your assistant call the same engine. See “Use in your own AI” below.",
+    h: "Ask in plain English, or use your own AI",
+    p: "Ask HedgePredict anything — “best coin-flips today?” — and Jev makes the verdicts while Claude does the talking. Or connect the same engine to Claude, Claude Code, or ChatGPT with the MCP endpoint below.",
   },
 ];
 

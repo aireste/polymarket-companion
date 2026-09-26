@@ -11,7 +11,10 @@ import { MissingCredentialsError } from "./read";
 import type { JevReadDTO } from "./dto";
 import { JEV_ACTION_COPY, confidenceLabel, valuationLabel, edgeLabel } from "./jevDisplay";
 
-const MODEL = "claude-opus-4-8";
+// Sonnet keeps this cheap; it's a short interpretation of Jev's numbers, not
+// deep reasoning, so thinking is disabled to stay fast (Sonnet 5 runs adaptive
+// thinking by default otherwise).
+const MODEL = "claude-sonnet-5";
 
 export interface JevExplanation {
   explanation: string;
@@ -42,6 +45,7 @@ Write 2-3 short sentences a smart bettor can skim: what the edge and confidence 
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 600,
+    thinking: { type: "disabled" },
     messages: [{ role: "user", content: prompt }],
   });
 

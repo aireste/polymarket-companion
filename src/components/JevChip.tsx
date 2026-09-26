@@ -11,12 +11,19 @@ interface JevState {
 }
 
 /**
- * Glanceable calibrated read: "Jev · SKIP · 67% · high". Purely presentational
- * — the parent owns the useJev call so a row and its expanded card share one
- * fetch. Renders nothing when Jev isn't configured or errored, so rows stay
- * clean; a pulsing placeholder shows while the fast call is in flight.
+ * Glanceable calibrated read: "Jev · SKIP · 67% · high". Presentational — the
+ * parent owns the useJev call so a row and its expanded card share one fetch.
+ * Jev is on-demand: when nothing has loaded yet, an `onAsk` handler renders a
+ * tappable "Ask Jev" pill; without one, the idle chip renders nothing (so the
+ * surface stays clean until the verdict is requested elsewhere).
  */
-export function JevChip({ state }: { state: JevState }) {
+export function JevChip({
+  state,
+  onAsk,
+}: {
+  state: JevState;
+  onAsk?: () => void;
+}) {
   const { jev, loading, error } = state;
 
   if (loading && !jev) {
@@ -27,8 +34,42 @@ export function JevChip({ state }: { state: JevState }) {
       </span>
     );
   }
-  // No key or a transient error: stay invisible rather than clutter the row.
-  if (error || !jev) return null;
+
+  // Idle (nothing requested yet): offer an "Ask Jev" pill if the parent gave a
+  // trigger, otherwise stay invisible.
+  if (!jev && !error) {
+    if (!onAsk) return null;
+    return (
+      <button
+        type="button"
+        className="jev-chip jev-ask"
+        onClick={(e) => {
+          e.stopPropagation();
+          onAsk();
+        }}
+        title="Ask Jev for its calibrated call on this market"
+      >
+        <span className="jev-mark">Jev</span>
+        <span className="jev-ask-txt">Ask →</span>
+      </button>
+    );
+  }
+  // Visible (muted) failure state instead of vanishing, so a missing gateway
+  // key or a transient error is diagnosable at a glance rather than a mystery.
+  if (error || !jev) {
+    const why =
+      error === "no-key"
+        ? "Jev is offline: no AI Gateway key configured for this deployment."
+        : "Jev couldn't be reached right now.";
+    return (
+      <span className="jev-chip jev-offline" title={why}>
+        <span className="jev-mark">Jev</span>
+        <span className="jev-offline-txt">
+          {error === "no-key" ? "offline" : "unavailable"}
+        </span>
+      </span>
+    );
+  }
 
   const a = JEV_ACTION_COPY[jev.action];
   const conf = confidenceLabel(jev.confidence);

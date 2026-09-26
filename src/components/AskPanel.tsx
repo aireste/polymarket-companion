@@ -93,7 +93,7 @@ export function AskPanel() {
         <div>
           <h2>Ask HedgePredict</h2>
           <p className="ask-sub">
-            Ask anything about today&apos;s markets. It reads live Polymarket data, checks the news, and does the edge math for you.
+            Ask anything about today&apos;s markets in plain English. Jev makes the calibrated calls; Claude reads live data, checks the news, and does the edge math for you.
           </p>
         </div>
       </div>
