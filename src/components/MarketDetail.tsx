@@ -1,13 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import type { PlayDTO } from "@/lib/dto";
+import type { JevReadDTO, PlayDTO } from "@/lib/dto";
 import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
 import { pct, timingLabel, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
+import { JevCard } from "./JevCard";
 import { Recommendation } from "./Recommendation";
 import { EdgePanel } from "./EdgePanel";
+
+interface JevState {
+  jev: JevReadDTO | null;
+  loading: boolean;
+  error: string | null;
+}
 
 const RANGES = [
   { id: "1d", label: "1D" },
@@ -16,7 +23,13 @@ const RANGES = [
 ];
 
 /** The blown-up view for one market: live chart + data + edge/hedge tools. */
-export function MarketDetail({ play }: { play: PlayDTO }) {
+export function MarketDetail({
+  play,
+  jevState,
+}: {
+  play: PlayDTO;
+  jevState: JevState;
+}) {
   const target = play.outcomes[0];
   const [range, setRange] = useState("1w");
   const { history, loading, error } = usePriceHistory(target?.tokenId, range);
@@ -87,6 +100,8 @@ export function MarketDetail({ play }: { play: PlayDTO }) {
           {timingLabel(play.gameStartTime, play.endDate)}
         </span>
       </div>
+
+      <JevCard state={jevState} />
 
       <div className="rec-section">
         {!rec && !recLoading && recError !== "no-key" && (

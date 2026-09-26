@@ -2,7 +2,9 @@
 
 import type { PlayDTO } from "@/lib/dto";
 import { pct, timingLabel, isLive, usd } from "@/lib/format";
+import { useJev } from "@/lib/useJev";
 import { SignalMeter } from "./SignalMeter";
+import { JevChip } from "./JevChip";
 import { MarketDetail } from "./MarketDetail";
 
 /**
@@ -21,6 +23,8 @@ export function PlayEntry({
   onToggle: () => void;
 }) {
   const panelId = `market-${play.id}`;
+  // One Jev call per market, shared by the row chip and the expanded card.
+  const jevState = useJev(play.id);
 
   return (
     <li className={`play${isOpen ? " open" : ""}`}>
@@ -47,6 +51,7 @@ export function PlayEntry({
             ))}
           </span>
           <span className="play-meta">
+            <JevChip state={jevState} />
             <span>24h {usd(play.volume24hr)}</span>
             <span>liq {usd(play.liquidity)}</span>
             {!isLive(play.gameStartTime) && (
@@ -63,7 +68,7 @@ export function PlayEntry({
 
       {isOpen && (
         <div className="expand" id={panelId}>
-          <MarketDetail play={play} />
+          <MarketDetail play={play} jevState={jevState} />
         </div>
       )}
     </li>

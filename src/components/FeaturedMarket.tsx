@@ -5,8 +5,11 @@ import type { PlayDTO } from "@/lib/dto";
 import { useCountUp } from "@/lib/useCountUp";
 import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
+import { useJev } from "@/lib/useJev";
 import { timingLabel, isLive, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
+import { JevChip } from "./JevChip";
+import { JevCard } from "./JevCard";
 import { Recommendation } from "./Recommendation";
 
 const RANGES: { id: string; label: string }[] = [
@@ -36,6 +39,8 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     error: recError,
     run: getRec,
   } = useRecommendation(play.id);
+
+  const jevState = useJev(play.id);
 
   return (
     <>
@@ -74,6 +79,7 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
             {deltaPts >= 0 ? "▲" : "▼"} {Math.abs(deltaPts).toFixed(1)} pts
           </span>
         )}
+        <JevChip state={jevState} />
       </div>
 
       <div className="featured-chart">
@@ -103,6 +109,7 @@ export function FeaturedMarket({ play }: { play: PlayDTO }) {
     </section>
 
     <section className="featured-rec" aria-label="AI recommendation">
+      <JevCard state={jevState} />
       {!rec && !recLoading && recError !== "no-key" && (
         <button className="rec-cta-btn" onClick={getRec} disabled={recLoading}>
           <span className="rec-cta-lead">What&apos;s the call on the top signal?</span>

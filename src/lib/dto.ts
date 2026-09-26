@@ -72,6 +72,18 @@ export type JevResponse =
   | { available: false; reason: string }
   | { error: string };
 
+/** Claude's plain-language explanation of Jev's call (POST /api/jev/explain). */
+export interface JevExplainDTO {
+  explanation: string;
+  model: string;
+}
+
+/** `available:false` means no Anthropic key; `error` means the call failed. */
+export type JevExplainResponse =
+  | JevExplainDTO
+  | { available: false; reason: string }
+  | { error: string };
+
 /** `available:false` means no API key; `error` means the call failed. */
 export type RecommendationResponse =
   | RecommendationDTO
