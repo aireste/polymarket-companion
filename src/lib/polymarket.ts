@@ -196,6 +196,65 @@ export async function fetchMarkets(
     .filter((m): m is Market => m !== null && m.acceptingOrders && !m.closed);
 }
 
+/**
+ * Keyword-search the FULL Polymarket universe (not just the curated dashboard
+ * set), e.g. "bitcoin", "ethereum", a candidate, a team. Hits Gamma's
+ * public-search, which returns events; we flatten their markets, normalize, keep
+ * only tradable ones (active, open, accepting orders), dedupe, and sort by 24h
+ * volume so the meaningful markets come first. Returns [] on no matches.
+ */
+export async function searchMarkets(
+  query: string,
+  limit = 12,
+  timeoutMs = 10_000
+): Promise<Market[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const params = new URLSearchParams({ q, limit_per_type: "20" });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(`${GAMMA_BASE}/public-search?${params}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+      cache: "no-store",
+    });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new Error(`Gamma search request failed: ${reason}`);
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Gamma search returned HTTP ${res.status} ${res.statusText}`);
+  }
+
+  const data: unknown = await res.json();
+  const events = (data as { events?: { markets?: RawMarket[] }[] })?.events;
+  if (!Array.isArray(events)) return [];
+
+  const seen = new Set<string>();
+  const markets: Market[] = [];
+  for (const ev of events) {
+    for (const raw of ev.markets ?? []) {
+      const m = normalize(raw);
+      if (!m) continue;
+      // Only tradable markets — search surfaces resolved/closed ones too.
+      if (!m.active || m.closed || !m.acceptingOrders) continue;
+      if (seen.has(m.id)) continue;
+      seen.add(m.id);
+      markets.push(m);
+    }
+  }
+
+  markets.sort((a, b) => b.volume24hr - a.volume24hr);
+  return markets.slice(0, limit);
+}
+
 /** Fetch and normalize a single market by its Gamma id. Null if not found. */
 export async function fetchMarketById(
   id: string,

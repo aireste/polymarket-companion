@@ -16,7 +16,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { fetchMarkets, fetchMarketById } from "@/lib/polymarket";
+import { fetchMarkets, fetchMarketById, searchMarkets } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { jevRead, MissingGatewayKeyError } from "@/lib/jev";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
@@ -36,7 +36,8 @@ const SYSTEM = `You are HedgePredict, a prediction-market analyst assistant for 
 Jev is the engine. Jev is HedgePredict's calibrated decision model. Whenever the user asks whether to play a specific market, or "what does Jev say", or wants a probability / confidence / call on a market, call get_jev_verdict and lead your answer with Jev's verdict. Do NOT substitute your own guess for Jev's number. You are the voice; Jev is the brain.
 
 How you work:
-- Use your tools. get_best_plays surfaces live markets worth a look (filters: all, hot, coinflip, soon) — call it first to find market ids. get_jev_verdict(marketId) returns Jev's calibrated call (wager/hold/skip), probability, edge vs the market, and confidence for a market's leading outcome. web_search checks current news for extra color when the user asks why. analyze_edge sizes a fractional-Kelly stake and hedge. get_market_history shows how an outcome's price moved.
+- Use your tools. get_best_plays surfaces the curated dashboard set — HedgePredict's top-ranked live markets. search_markets(query) searches the FULL Polymarket universe by keyword (e.g. "bitcoin", "ethereum", a candidate, a team, an event) — use it whenever the user asks about a specific market, asset, or topic that is not in get_best_plays. The dashboard is intentionally kept tight to the best plays; search_markets is how you reach everything else. get_jev_verdict(marketId) returns Jev's calibrated call (wager/hold/skip), probability, edge vs the market, and confidence — call it on any market id from either tool. web_search checks current news for extra color when the user asks why. analyze_edge sizes a fractional-Kelly stake and hedge. get_market_history shows how an outcome's price moved.
+- Finding a specific play: if the user names something not in the dashboard ("any good bitcoin plays?", "what about the X election?", "is there a market on Y?"), call search_markets first, then get_jev_verdict on the most relevant result(s). If search finds nothing tradable, say so plainly.
 - Honest over hype. A market's price already reflects the crowd's probability. If Jev says skip or the edge is tiny, say so plainly. "No edge, don't bet" is a good answer, not a gap.
 - Decision support, not financial advice. You never place trades. Stakes are fractional-Kelly and capped. Remind users to only risk what they can afford to lose.
 - Be tight. Lead with Jev's call and the two numbers that matter (Jev % vs market %). Keep answers to 1-3 short sentences unless the user asks for depth. Plain text, no tables, no preamble.`;
@@ -134,6 +135,37 @@ const getMarketHistory = betaZodTool({
   },
 });
 
+const searchMarketsTool = betaZodTool({
+  name: "search_markets",
+  description:
+    "Search the FULL Polymarket universe by keyword — everything, not just the curated dashboard. Use this whenever the user asks about a specific market, asset, person, team, or topic that get_best_plays did not return (e.g. 'bitcoin plays', 'the X election', 'is there a market on Y?'). Returns tradable markets sorted by 24h volume, each with a marketId you can pass to get_jev_verdict.",
+  inputSchema: z.object({
+    query: z.string().min(1).describe("Keyword(s), e.g. 'bitcoin', 'ethereum $3000', a candidate or team name."),
+    limit: z.number().int().min(1).max(20).default(10),
+  }),
+  run: async ({ query, limit }) => {
+    try {
+      const markets = await searchMarkets(query, limit);
+      if (markets.length === 0) {
+        return `No tradable Polymarket markets matched "${query}". They may all be resolved or not currently accepting orders.`;
+      }
+      return JSON.stringify({
+        query,
+        results: markets.map((m) => ({
+          marketId: m.id,
+          question: m.question,
+          url: m.url,
+          outcomes: m.outcomes.map((o) => ({ label: o.label, price: o.price })),
+          volume24hr: Math.round(m.volume24hr),
+          resolvesAt: m.endDate ? m.endDate.toISOString().slice(0, 10) : null,
+        })),
+      });
+    } catch (err) {
+      return `Search failed: ${err instanceof Error ? err.message : "unknown error"}.`;
+    }
+  },
+});
+
 const getJevVerdict = betaZodTool({
   name: "get_jev_verdict",
   description:
@@ -224,6 +256,7 @@ export async function POST(request: Request) {
     system: SYSTEM,
     tools: [
       getBestPlays,
+      searchMarketsTool,
       getJevVerdict,
       analyzeEdge,
       getMarketHistory,

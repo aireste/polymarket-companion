@@ -17,7 +17,8 @@ interface Msg {
 
 const EXAMPLES = [
   "What are the best coinflip markets today?",
-  "Any under-the-radar picks worth a look?",
+  "Any good Bitcoin plays right now? Get Jev's call.",
+  "Find me an undervalued market that isn't on here.",
   "I think it's 60% likely. Size a $200 play and hedge it.",
 ];
 
