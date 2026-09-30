@@ -9,17 +9,17 @@ const STEPS = [
   {
     n: 2,
     h: "Ask Jev for the call",
-    p: "Jev is HedgePredict's calibrated prediction engine — a decision model, not a chatbot. Every market on the board already has Jev's call: wager, hold, or skip, plus its own probability, the edge versus the market price, and a confidence score. Open any market to see the full read.",
+    p: "Jev is HedgePredict's calibrated prediction engine: a decision model, not a chatbot. Every market on the board already has Jev's call: wager, hold, or skip, plus its own probability, the edge versus the market price, and a confidence score. Open any market to see the full read.",
   },
   {
     n: 3,
     h: "Get the why, or a deeper read",
-    p: "Once Jev has called it, tap “Why does Jev say that?” for a plain-English explanation of the numbers, or “Claude's web read” to pull the live news and sentiment behind the call. Prefer your own math? The edge + hedge calculator is one tap away.",
+    p: "Once Jev has called it, tap “Why does Jev say that?” for a plain-English explanation of the numbers, or “Deep read” to pull the live news and sentiment behind the call (3 a day). Prefer your own math? “Run your own numbers” and the Hedge Lab are one tap away.",
   },
   {
     n: 4,
     h: "Ask in plain English, or use your own AI",
-    p: "Ask HedgePredict anything — “best coin-flips today?” — and Jev makes the verdicts while Claude does the talking. Or connect the same engine to Claude, Claude Code, or ChatGPT with the MCP endpoint below.",
+    p: "Ask HedgePredict anything, like “best coin-flips today?”, and Jev makes the verdicts while Claude does the talking. Or connect the same engine to Claude, Claude Code, or ChatGPT with the MCP endpoint below.",
   },
 ];
 

@@ -777,3 +777,15 @@
   .hp-route, .chart-dot::after { animation: none; }
   .hp-nav-ind, .hp-seg-thumb { transition: none; }
 }
+
+/* Hedge Lab on phones: a native <select> sizes to its longest option, so pin widths. */
+.hl-grid > * { min-width: 0; }
+.hl-field select { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+@media (max-width: 899.98px) {
+  .hl-grid { grid-template-columns: minmax(0, 1fr); }
+  .hl-price input[type="range"] { min-width: 0; }
+}
+/* Phone board footer: the sidebar's extra links live here on mobile. */
+.hp-phone-links { display: flex; gap: 18px; justify-content: center; padding: 18px 0 4px; font-size: 13.5px; }
+.hp-phone-links a { color: var(--ink-soft); display: inline-flex; align-items: center; gap: 8px; }
+@media (min-width: 900px) { .hp-phone-links { display: none; } }

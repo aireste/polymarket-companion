@@ -344,6 +344,13 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
             })}
           </section>
         ))}
+        <nav className="hp-phone-links" aria-label="More">
+          <Link href="/how-it-works">How it works</Link>
+          <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
+            <span className="hp-pm-tile">{Icon.polymarket}</span>
+            Polymarket ↗
+          </a>
+        </nav>
         <p className="hp-disc hp-phone-disc">
           Decision support, not financial advice. HedgePredict never places trades.
         </p>

@@ -151,7 +151,7 @@ export function AskPanel({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={compact ? "Ask about any market…" : "Ask about today's best plays, a market, or size your own bet…"}
+          placeholder={compact ? "Ask about any market…" : "Ask about a market, or size a bet…"}
           rows={1}
           disabled={loading}
           aria-label="Your question"
