@@ -3,7 +3,8 @@
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BoardProvider, useBoard } from "@/lib/boardStore";
+import { BoardProvider, useBoard, useNow } from "@/lib/boardStore";
+import { clockET } from "@/lib/format";
 import { FILTERS, filterCount } from "@/lib/filters";
 import { CommandPalette } from "./CommandPalette";
 import { Icon } from "./icons";
@@ -115,17 +116,19 @@ function Sidebar() {
   );
 }
 
-function agoLabel(iso: string | null, now: number): string {
-  if (!iso) return "";
-  const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
-  if (s < 45) return "just now";
-  if (s < 3600) return `${Math.round(s / 60)}m ago`;
-  return `${Math.round(s / 3600)}h ago`;
+/** Live clock in Eastern Time, the zone Polymarket uses. */
+function ClockET() {
+  const now = useNow(1000);
+  return (
+    <span className="hp-clock" title="All times are US Eastern, like Polymarket">
+      {clockET(now)} <small>ET</small>
+    </span>
+  );
 }
 
 function TopBar() {
   const path = usePathname();
-  const { asOf, now, loading, refresh, setPaletteOpen } = useBoard();
+  const { asOf, loading, refresh, setPaletteOpen } = useBoard();
   const f = FILTERS.find((x) => x.href === path);
 
   return (
@@ -147,8 +150,18 @@ function TopBar() {
         <kbd>⌘K</kbd>
       </button>
       <div className="hp-upd">
-        {asOf && `Updated ${agoLabel(asOf, now)}`}
-        <button className="hp-iconbtn" onClick={refresh} disabled={loading} aria-label="Refresh markets">
+        <Link href="/ask" className="pill hp-pill-lime hp-ask-btn">
+          <span className="hp-ico-sm">{Icon.ask}</span>
+          Ask HedgePredict
+        </Link>
+        <ClockET />
+        <button
+          className="hp-iconbtn"
+          onClick={refresh}
+          disabled={loading}
+          aria-label="Refresh markets"
+          title={asOf ? `Prices update every 20s · last ${new Date(asOf).toLocaleTimeString("en-US", { timeZone: "America/New_York" })} ET` : undefined}
+        >
           <span className={loading ? "hp-spin" : undefined}>{Icon.refresh}</span>
         </button>
       </div>

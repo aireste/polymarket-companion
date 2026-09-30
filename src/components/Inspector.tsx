@@ -9,13 +9,14 @@ import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
 import { JEV_ACTION_COPY, confidenceLabel } from "@/lib/jevDisplay";
-import { pct, resolveAt, usd } from "@/lib/format";
+import { clockLabel, pct, resolveAt, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
 import { EdgePanel } from "./EdgePanel";
 import { JevPill } from "./JevPill";
 import { Status } from "./Status";
 import { Icon } from "./icons";
+import { Odo } from "./Odo";
 
 const RANGES = [
   { id: "1d", label: "1D" },
@@ -28,7 +29,7 @@ const RANGES = [
  * optional deep read, and the numbers. Desktop shows it as the right-hand
  * inspector; the phone shows the same thing inside a bottom sheet.
  */
-export function Inspector({ play }: { play: PlayDTO }) {
+export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolean }) {
   const { now } = useBoard();
   return (
     <div className="hp-insp-body" key={play.id}>
@@ -36,6 +37,7 @@ export function Inspector({ play }: { play: PlayDTO }) {
         <Status play={play} now={now} icon />
         <h2>{play.question}</h2>
       </header>
+      {pass && <JevPass play={play} />}
       <PriceCard play={play} />
       <JevVerdict play={play} />
       <DeepRead play={play} />
@@ -81,7 +83,8 @@ function PriceCard({ play }: { play: PlayDTO }) {
   const target = play.outcomes[0];
   const [range, setRange] = useState("1w");
   const { history, loading, error } = usePriceHistory(target?.tokenId, range);
-  const current = history?.length ? history[history.length - 1].p : target?.price ?? 0;
+  // The big number is the live price (polled every 20s); history is for the line.
+  const current = target?.price ?? (history?.length ? history[history.length - 1].p : 0);
   const first = history?.length ? history[0].p : current;
   const delta = (current - first) * 100;
   const others = play.outcomes.slice(1, 4);
@@ -90,7 +93,7 @@ function PriceCard({ play }: { play: PlayDTO }) {
     <section className="featured hp-price" aria-label="Price">
       <div className="featured-top">
         <div className="featured-num">
-          <span className="featured-pct num">{pct(current)}</span>
+          <span className="featured-pct num"><Odo value={pct(current)} /></span>
           <span className="featured-outcome">{target?.label}</span>
         </div>
         <div className="range" role="tablist" aria-label="Time range">
@@ -132,6 +135,7 @@ function PriceCard({ play }: { play: PlayDTO }) {
 /** Jev's call. Board markets arrive pre-read; anything else is one tap away. */
 function JevVerdict({ play }: { play: PlayDTO }) {
   const { reads, jevStatus, setRead } = useBoard();
+  const shown = useMounted();
   const manual = useJev(play.id);
   const read = reads[play.id] ?? manual.jev;
   const explain = useJevExplain(read ?? null);
@@ -167,9 +171,9 @@ function JevVerdict({ play }: { play: PlayDTO }) {
 
   const a = JEV_ACTION_COPY[read.action];
   const conf = confidenceLabel(read.confidence);
-  const edge = read.edge * 100;
   const probs = read.actionProbabilities ?? {};
   const words = { wager: "Worth a play.", hold: "Hold for now.", skip: "Skip it." }[read.action];
+  const livePrice = play.outcomes[0]?.price ?? read.marketPrice;
 
   return (
     <section className="hp-verdict" aria-label="Jev's call">
@@ -182,23 +186,7 @@ function JevVerdict({ play }: { play: PlayDTO }) {
         {a.blurb}
         {conf && ` ${conf[0].toUpperCase()}${conf.slice(1)} confidence.`}
       </div>
-      <dl className="hp-vs">
-        <div>
-          <dt>Jev</dt>
-          <dd>{pct(read.jevProbability, 0)}</dd>
-        </div>
-        <div>
-          <dt>Market</dt>
-          <dd>{pct(read.marketPrice)}</dd>
-        </div>
-        <div>
-          <dt>Edge</dt>
-          <dd className={edge >= 0 ? "pos" : "neg"}>
-            {edge >= 0 ? "+" : ""}
-            {edge.toFixed(1)}
-          </dd>
-        </div>
-      </dl>
+      <GapMeter market={livePrice} jev={read.jevProbability} />
       <div className="hp-dist" aria-label="How strongly Jev leans">
         {(["wager", "hold", "skip"] as const).map((k) => {
           const v = Math.round((probs[k] ?? 0) * 100);
@@ -206,7 +194,7 @@ function JevVerdict({ play }: { play: PlayDTO }) {
             <div className={`hp-dist-row${k === read.action ? " win" : ""}`} key={k}>
               <span>{k}</span>
               <span className="hp-dist-track">
-                <i style={{ width: `${v}%` }} />
+                <i style={{ width: shown ? `${v}%` : 0 }} />
               </span>
               <span>{v}%</span>
             </div>
@@ -268,5 +256,94 @@ function DeepRead({ play }: { play: PlayDTO }) {
         </button>
       )}
     </div>
+  );
+}
+
+/** True one frame after mount, so bars and markers animate in from zero. */
+function useMounted() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setOn(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+  return on;
+}
+
+/** Market price vs Jev on one 0-100 rail, the gap between them shaded. */
+function GapMeter({ market, jev }: { market: number; jev: number }) {
+  const on = useMounted();
+  const j = on ? jev : market;
+  const lo = Math.min(market, j);
+  const up = jev >= market;
+  const edge = (jev - market) * 100;
+  return (
+    <div className="hp-gap" aria-label={`Market ${pct(market, 0)}, Jev ${pct(jev, 0)}`}>
+      <div className="hp-gap-rail">
+        <span className={`hp-gap-span ${up ? "up" : "dn"}`} style={{ left: `${lo * 100}%`, width: `${Math.abs(j - market) * 100}%` }} />
+        <span className="hp-gap-mk jev" style={{ left: `${j * 100}%` }}>
+          <b>JEV {pct(jev, 0)}</b>
+        </span>
+        <span className="hp-gap-mk mkt" style={{ left: `${market * 100}%` }}>
+          <b>MKT {pct(market, 0)}</b>
+        </span>
+      </div>
+      <div className="hp-gap-ticks">
+        <span>0</span>
+        <span className={`hp-gap-edge ${up ? "up" : "dn"}`}>
+          edge {edge >= 0 ? "+" : ""}
+          {edge.toFixed(1)} pts
+        </span>
+        <span>100</span>
+      </div>
+    </div>
+  );
+}
+
+/** Phone sheet header, boarding-pass style: MARKET → JEV with the edge as the route. */
+export function JevPass({ play }: { play: PlayDTO }) {
+  const { reads } = useBoard();
+  const r = reads[play.id];
+  if (!r) return null;
+  const edge = (r.jevProbability - (play.outcomes[0]?.price ?? r.marketPrice)) * 100;
+  return (
+    <section className="hp-pass" aria-label="Jev's read">
+      <div className="hp-pass-top">
+        <span className="hp-verdict-k">Jev&apos;s read · {r.outcome}</span>
+        <JevPill id={play.id} />
+      </div>
+      <div className="hp-pass-codes">
+        <div>
+          <small>MARKET</small>
+          <b>{pct(play.outcomes[0]?.price ?? r.marketPrice, 0)}</b>
+        </div>
+        <div className="hp-pass-arc">
+          <span className={edge >= 0 ? "up" : "dn"}>
+            {edge >= 0 ? "+" : ""}
+            {edge.toFixed(1)} pts
+          </span>
+          <svg viewBox="0 0 100 40" aria-hidden>
+            <path id={`arc-${play.id}`} d="M2 36 Q50 -8 98 36" />
+            <circle r="3.5">
+              <animateMotion dur="2.4s" repeatCount="indefinite" path="M2 36 Q50 -8 98 36" />
+            </circle>
+          </svg>
+        </div>
+        <div>
+          <small>JEV</small>
+          <b>{pct(r.jevProbability, 0)}</b>
+        </div>
+      </div>
+      <div className="hp-pass-foot">
+        <span>
+          CALL<b>{r.action.toUpperCase()}</b>
+        </span>
+        <span>
+          CONFIDENCE<b>{r.confidence == null ? "–" : `${Math.round(r.confidence * 100)}%`}</b>
+        </span>
+        <span>
+          RESOLVES<b>{clockLabel(play)}</b>
+        </span>
+      </div>
+    </section>
   );
 }

@@ -39,7 +39,22 @@ interface BoardState {
   setPaletteOpen: (open: boolean) => void;
   /** Ticks every 30s so countdowns stay honest. */
   now: number;
+  /** Last price move per market (from the 20s poll), for flashes and deltas. */
+  moves: Record<string, PriceMove>;
+  /** When Jev's board read last landed; the table replays its scan on change. */
+  jevReadAt: number | null;
 }
+
+export interface PriceMove {
+  /** Change in the leading outcome's price since the board loaded, in [−1,1]. */
+  delta: number;
+  /** Direction of the most recent tick, and when it happened. */
+  dir: 1 | -1;
+  at: number;
+}
+
+const PRICE_POLL_MS = 20_000;
+const JEV_REFRESH_MS = 10 * 60_000;
 
 const Ctx = createContext<BoardState | null>(null);
 
@@ -60,6 +75,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const [extras, setExtras] = useState<Record<string, PlayDTO>>({});
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [moves, setMoves] = useState<Record<string, PriceMove>>({});
+  const [jevReadAt, setJevReadAt] = useState<number | null>(null);
 
   const loadJev = useCallback(async () => {
     setJevStatus("loading");
@@ -68,6 +85,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
       if ("reads" in data) {
         setReads((cur) => ({ ...cur, ...data.reads }));
         setJevStatus("ready");
+        setJevReadAt(Date.now());
       } else {
         setJevStatus("available" in data ? "offline" : "error");
       }
@@ -98,6 +116,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
       if (data.error) throw new Error(data.error);
       const list = data.plays ?? [];
       setPlays(list);
+      setMoves({});
       setAsOf(data.asOf ?? new Date().toISOString());
       setNow(Date.now());
       loadJev();
@@ -118,6 +137,71 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
+  /**
+   * Live prices: re-read the board every 20s (only while the tab is visible)
+   * and update prices in place. Rows keep their order so nothing jumps under
+   * the cursor; the Refresh button re-ranks.
+   */
+  const pollPrices = useCallback(async () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      const data = (await (await fetch("/api/plays", { cache: "no-store" })).json()) as {
+        plays?: PlayDTO[];
+        asOf?: string;
+      };
+      if (!data.plays) return;
+      const fresh = new Map(data.plays.map((p) => [p.id, p]));
+      const at = Date.now();
+      setPlays((cur) => {
+        if (!cur) return cur;
+        const moved: Record<string, PriceMove> = {};
+        const next = cur.map((p) => {
+          const f = fresh.get(p.id);
+          if (!f) return p;
+          const before = p.outcomes[0]?.price ?? 0;
+          const after = f.outcomes[0]?.price ?? before;
+          if (Math.abs(after - before) >= 0.0005) {
+            moved[p.id] = { delta: after - before, dir: after > before ? 1 : -1, at };
+          }
+          return { ...p, outcomes: f.outcomes, volume24hr: f.volume24hr, liquidity: f.liquidity };
+        });
+        if (Object.keys(moved).length) {
+          setMoves((m) => {
+            const out = { ...m };
+            for (const [id, mv] of Object.entries(moved)) {
+              out[id] = { ...mv, delta: (m[id]?.delta ?? 0) + mv.delta };
+            }
+            return out;
+          });
+          // Extend the sparklines with the new point.
+          setSparks((sp) => {
+            const out = { ...sp };
+            for (const p of next) {
+              const tok = p.outcomes[0]?.tokenId;
+              if (tok && moved[p.id] && out[tok]) {
+                out[tok] = [...out[tok], { t: Math.floor(at / 1000), p: p.outcomes[0].price }];
+              }
+            }
+            return out;
+          });
+        }
+        return next;
+      });
+      if (data.asOf) setAsOf(data.asOf);
+    } catch {
+      /* next poll will try again */
+    }
+  }, []);
+
+  useEffect(() => {
+    const prices = setInterval(pollPrices, PRICE_POLL_MS);
+    const jev = setInterval(loadJev, JEV_REFRESH_MS);
+    return () => {
+      clearInterval(prices);
+      clearInterval(jev);
+    };
+  }, [pollPrices, loadJev]);
+
   const setRead = useCallback(
     (read: JevReadDTO) => setReads((cur) => ({ ...cur, [read.marketId]: read })),
     []
@@ -136,10 +220,20 @@ export function BoardProvider({ children }: { children: ReactNode }) {
       plays, asOf, loading, error, refresh,
       reads, jevStatus, setRead,
       sparks, extras, addExtra, findPlay,
-      paletteOpen, setPaletteOpen, now,
+      paletteOpen, setPaletteOpen, now, moves, jevReadAt,
     }),
-    [plays, asOf, loading, error, refresh, reads, jevStatus, setRead, sparks, extras, addExtra, findPlay, paletteOpen, now]
+    [plays, asOf, loading, error, refresh, reads, jevStatus, setRead, sparks, extras, addExtra, findPlay, paletteOpen, now, moves, jevReadAt]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+/** A clock for components that need to tick every second (countdowns, the ET clock). */
+export function useNow(intervalMs = 1000): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return now;
 }

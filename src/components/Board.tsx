@@ -3,15 +3,19 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import type { PlayDTO } from "@/lib/dto";
-import { useBoard } from "@/lib/boardStore";
+import { useBoard, useNow } from "@/lib/boardStore";
 import { selectMarket, useIsDesktop, useSelectedId } from "@/lib/useSelection";
 import { FILTERS, TIME_GROUPS, applyFilter, filterById, filterCount, timeGroup, type FilterId } from "@/lib/filters";
-import { clockLabel, countdown, isLive, pct, usd, whenMs } from "@/lib/format";
+import { MARKET_TZ, clockLabel, isLive, pct, usd, whenMs } from "@/lib/format";
 import { Inspector } from "./Inspector";
 import { JevPill } from "./JevPill";
 import { Sparkline } from "./Sparkline";
 import { Status } from "./Status";
 import { Icon } from "./icons";
+import { EdgeMap } from "./EdgeMap";
+import { Odo } from "./Odo";
+import { QuickStart } from "./QuickStart";
+import { Countdown } from "./Countdown";
 
 /** The market board for one filter route. Desktop: table + inspector. Phone: time board + sheet. */
 export function Board({ filter }: { filter: FilterId }) {
@@ -41,44 +45,10 @@ function useFocusedPlay(list: PlayDTO[], fallbackToFirst: boolean) {
   return found ?? (fallbackToFirst ? list[0] ?? null : null);
 }
 
-function JevSummary({ plays }: { plays: PlayDTO[] }) {
-  const { reads, jevStatus } = useBoard();
-  const got = plays.filter((p) => reads[p.id]);
-  const counts = { wager: 0, hold: 0, skip: 0 };
-  got.forEach((p) => counts[reads[p.id].action]++);
-
-  let text: React.ReactNode;
-  if (jevStatus === "loading" && got.length === 0) text = "Jev is reading the board…";
-  else if (jevStatus === "offline") text = "Jev is offline on this server.";
-  else if (got.length === 0) text = "Jev couldn't read the board just now.";
-  else if (counts.wager + counts.hold === 0)
-    text = (
-      <>
-        <b>Jev passed on all {got.length}.</b> No clear mispricing on the board right now. That&apos;s a real answer, not a glitch.
-      </>
-    );
-  else
-    text = (
-      <>
-        <b>
-          Jev likes {counts.wager} {counts.wager === 1 ? "market" : "markets"}
-        </b>
-        {counts.hold > 0 && `, is watching ${counts.hold}`} and passes on {counts.skip}.
-      </>
-    );
-
-  return (
-    <div className="hp-summary">
-      <span className="hp-brand-mark hp-brand-sm">{Icon.spark}</span>
-      <span>{text}</span>
-    </div>
-  );
-}
-
 /* ─────────────────────────── Desktop: the Desk ─────────────────────────── */
 
 function DeskBoard({ filter }: { filter: FilterId }) {
-  const { plays, loading, error, sparks, now } = useBoard();
+  const { plays, loading, error, sparks, now, moves, jevReadAt } = useBoard();
   const f = filterById(filter);
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
   const focused = useFocusedPlay(list, true);
@@ -129,10 +99,16 @@ function DeskBoard({ filter }: { filter: FilterId }) {
           </nav>
         </div>
 
-        {plays && <JevSummary plays={plays} />}
+        <QuickStart />
+        {plays && <EdgeMap plays={list} focusedId={focused?.id ?? null} />}
 
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
 
+        <div className="hp-table-wrap">
+        {/* Replays each time Jev's board read lands: a sweep down the table. */}
+        {jevReadAt && list.length > 0 && (
+          <span key={jevReadAt} className="hp-beam" style={{ animationDuration: `${220 + list.length * 90}ms` }} aria-hidden />
+        )}
         <table className="hp-table">
           <thead>
             <tr>
@@ -181,19 +157,28 @@ function DeskBoard({ filter }: { filter: FilterId }) {
                   </div>
                 </td>
                 <td className="hp-odds">
-                  {pct(p.outcomes[0]?.price ?? 0)}
+                  <Odo value={pct(p.outcomes[0]?.price ?? 0)} flash={moves[p.id]} />
                   {p.outcomes[0] && p.outcomes[0].label.length <= 10 && <small>{p.outcomes[0].label}</small>}
+                  {moves[p.id] && Math.abs(moves[p.id].delta) >= 0.001 && (
+                    <span className={`hp-delta ${moves[p.id].delta > 0 ? "up" : "dn"}`}>
+                      {moves[p.id].delta > 0 ? "▲" : "▼"}
+                      {Math.abs(moves[p.id].delta * 100).toFixed(1)}
+                    </span>
+                  )}
                 </td>
                 <td className="hp-spark-cell">
                   <Sparkline points={sparks[p.outcomes[0]?.tokenId ?? ""]} />
                 </td>
                 <td>
-                  <JevPill id={p.id} />
+                  <span key={jevReadAt ?? 0} className="hp-scan-pop" style={{ animationDelay: `${120 + i * 90}ms` }}>
+                    <JevPill id={p.id} />
+                  </span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
 
         <div className="hp-keys">
           <span>
@@ -215,7 +200,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
 /* ─────────────────────── Phone: the Departures board ─────────────────────── */
 
 function PhoneBoard({ filter }: { filter: FilterId }) {
-  const { plays, loading, error, now, setPaletteOpen } = useBoard();
+  const { plays, loading, error, now, setPaletteOpen, moves } = useBoard();
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
   const open = useFocusedPlay(list, false);
   const pushed = useRef(false);
@@ -252,7 +237,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
       <div className="hp-phone-board">
         <div className="hp-phone-top">
           <span className="hp-date">
-            {new Date(now).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
+            {new Date(now).toLocaleDateString("en-US", { timeZone: MARKET_TZ, weekday: "long", month: "short", day: "numeric" })}
           </span>
         </div>
         <h1 className="hp-phone-title">What&apos;s resolving</h1>
@@ -261,6 +246,9 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           {Icon.search}
           Search all of Polymarket
         </button>
+
+        <QuickStart />
+        {plays && <NextUp plays={list} onOpen={openSheet} />}
 
         <nav className="hp-chips" aria-label="Filter markets">
           {FILTERS.map((x) => (
@@ -271,7 +259,6 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           ))}
         </nav>
 
-        {plays && <JevSummary plays={plays} />}
         {error && <p className="state err">Couldn&apos;t load markets: {error}.</p>}
         {loading && !plays && Array.from({ length: 4 }).map((_, i) => <div key={i} className="hp-fcard hp-fcard-skl" aria-hidden />)}
         {plays && list.length === 0 && (
@@ -294,15 +281,21 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
                     <JevPill id={p.id} />
                   </span>
                   <span className="hp-fcard-q">{p.question}</span>
-                  <span className="hp-split" aria-hidden>
-                    <i style={{ width: `${(a?.price ?? 0) * 100}%` }} />
-                    <i style={{ width: `${(b?.price ?? 1 - (a?.price ?? 0)) * 100}%` }} />
-                  </span>
-                  <span className="hp-split-lbl">
-                    <span>
-                      <b>{pct(a?.price ?? 0, 0)}</b> {a?.label}
+                  {live ? (
+                    <LiveRail play={p} />
+                  ) : (
+                    <span className="hp-fcard-when">
+                      <Countdown play={p} />
                     </span>
-                    <span>{live ? "in play" : countdown(p, now)}</span>
+                  )}
+                  <span className="hp-fcard-odds">
+                    <span>
+                      <b>
+                        <Odo value={pct(a?.price ?? 0, 0)} flash={moves[p.id]} />
+                      </b>{" "}
+                      {a?.label}
+                    </span>
+                    <span>{b ? `${b.label} ${pct(b.price, 0)}` : ""}</span>
                   </span>
                 </button>
               );
@@ -317,8 +310,53 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
       <div className="hp-scrim" onClick={closeSheet} aria-hidden />
       <div className="hp-sheet" role="dialog" aria-modal="true" aria-label={open?.question ?? "Market"}>
         <button className="hp-grab" onClick={closeSheet} aria-label="Close" />
-        <div className="hp-sheet-in">{shown.current && <Inspector play={shown.current} />}</div>
+        <div className="hp-sheet-in">{shown.current && <Inspector play={shown.current} pass />}</div>
       </div>
     </div>
+  );
+}
+
+/** Live game progress, Flighty-style: a rail from first pitch with a moving marker (~3h game). */
+function LiveRail({ play }: { play: PlayDTO }) {
+  const now = useNow(1000);
+  const start = whenMs(play);
+  const frac = Math.min(1, Math.max(0, (now - start) / (3 * 3_600_000)));
+  return (
+    <span className="hp-rail is-live">
+      <span>START</span>
+      <span className="hp-rail-bar" aria-hidden>
+        <b style={{ width: `${frac * 100}%` }} />
+        <i style={{ left: `${frac * 100}%` }} />
+      </span>
+      <span>{Math.floor((now - start) / 60_000)}m in</span>
+    </span>
+  );
+}
+
+/** Flighty's "next flight" card: the next market to resolve, counting down live. */
+function NextUp({ plays, onOpen }: { plays: PlayDTO[]; onOpen: (id: string) => void }) {
+  const now = useNow(1000);
+  const next = plays
+    .filter((p) => !isLive(p.gameStartTime, now) && whenMs(p) > now)
+    .sort((a, b) => whenMs(a) - whenMs(b))[0];
+  if (!next) return null;
+  const frac = Math.min(1, Math.max(0, 1 - (whenMs(next) - now) / (6 * 3_600_000)));
+  return (
+    <button className="hp-next" onClick={() => onOpen(next.id)}>
+      <span className="hp-next-k">Next to resolve</span>
+      <span className="hp-next-q">{next.question}</span>
+      <span className="hp-next-cd">
+        <Countdown play={next} bare />
+        <small>to go</small>
+      </span>
+      <span className="hp-next-route">
+        <span>NOW</span>
+        <span className="hp-next-line" aria-hidden>
+          <b style={{ width: `${frac * 100}%` }} />
+          <i style={{ left: `${frac * 100}%` }} />
+        </span>
+        <span>{clockLabel(next, now)}</span>
+      </span>
+    </button>
   );
 }

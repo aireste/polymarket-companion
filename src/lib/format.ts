@@ -15,20 +15,36 @@ export function pct(p: number, digits = 1): string {
 }
 
 /**
- * Actual resolution date + time in the viewer's local timezone.
- * e.g. "Sep 29, 1:05 PM" (this year) or "Jan 3, 2027, 2:00 AM" (other year).
+ * All times show in US Eastern, like Polymarket itself, so the board, the
+ * clock and Polymarket's own pages always agree.
  */
+export const MARKET_TZ = "America/New_York";
+
+/** Resolution date + time in ET, e.g. "Sep 29, 1:05 PM ET" (+ year if not this year). */
 export function resolveAt(iso: string | null): string {
   if (!iso) return "no close date";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   const sameYear = d.getFullYear() === new Date().getFullYear();
-  return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    ...(sameYear ? {} : { year: "numeric" }),
+  return (
+    d.toLocaleString("en-US", {
+      timeZone: MARKET_TZ,
+      month: "short",
+      day: "numeric",
+      ...(sameYear ? {} : { year: "numeric" }),
+      hour: "numeric",
+      minute: "2-digit",
+    }) + " ET"
+  );
+}
+
+/** Wall clock in ET, e.g. "10:26:17 PM". */
+export function clockET(now = Date.now()): string {
+  return new Date(now).toLocaleTimeString("en-US", {
+    timeZone: MARKET_TZ,
     hour: "numeric",
     minute: "2-digit",
+    second: "2-digit",
   });
 }
 
@@ -88,18 +104,23 @@ export function whenMs(p: { gameStartTime: string | null; endDate: string | null
 /** Flighty-style countdown: "LIVE", "in 43m", "in 6h 12m", "in 29 days". */
 export function countdown(
   p: { gameStartTime: string | null; endDate: string | null },
-  now = Date.now()
+  now = Date.now(),
+  seconds = false
 ): string {
   if (isLive(p.gameStartTime, now)) return "LIVE";
   const ms = whenMs(p) - now;
   if (!Number.isFinite(ms)) return "open-ended";
   if (ms < 0) return "awaiting result";
-  const mins = Math.round(ms / 60_000);
-  if (mins < 60) return `in ${mins}m`;
-  const h = Math.floor(ms / 3_600_000);
-  if (h < 24) return `in ${h}h ${Math.round((ms % 3_600_000) / 60_000)}m`;
-  const d = Math.round(ms / 86_400_000);
-  return `in ${d} ${d === 1 ? "day" : "days"}`;
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  if (h >= 48) {
+    const d = Math.round(h / 24);
+    return `in ${d} days`;
+  }
+  if (h >= 1) return `in ${h}h ${String(m).padStart(2, "0")}m${seconds ? ` ${ss}s` : ""}`;
+  return `in ${m}m${seconds ? ` ${ss}s` : ""}`;
 }
 
 /** Clock face for the board: "9:30 PM" within a day, else "Oct 28". */
@@ -112,6 +133,6 @@ export function clockLabel(
   const d = new Date(t);
   const h = (t - now) / 3_600_000;
   return h < 24
-    ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    : d.toLocaleDateString([], { month: "short", day: "numeric" });
+    ? d.toLocaleTimeString("en-US", { timeZone: MARKET_TZ, hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString("en-US", { timeZone: MARKET_TZ, month: "short", day: "numeric" });
 }
