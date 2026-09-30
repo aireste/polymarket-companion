@@ -187,8 +187,9 @@ export function toJevDTO(market: Market, jev: JevRead): JevReadDTO {
 export function describeRead(jev: Pick<JevRead, "sides" | "lean" | "strength" | "action" | "settled">): string {
   const pct = (x: number) => `${Math.round(x * 100)}%`;
   if (jev.settled) return "No call: this market is effectively decided (one side is at 97% or more)";
-  if (jev.lean == null) return `Skip: priced about right (Jev ${pct(jev.strength)} sure neither side is underpriced)`;
+  if (jev.lean == null) return `Skip: both prices look fair (Jev is ${pct(jev.strength)} sure)`;
   const side = jev.sides[jev.lean];
   const verb = jev.action === "wager" ? "Wager" : "Lean";
-  return `${verb}: ${side.label} looks underpriced at ${pct(side.price)} (Jev ${pct(jev.strength)} on that side)`;
+  const cents = `${Math.max(1, Math.min(99, Math.round(side.price * 100)))}¢`;
+  return `${verb}: ${side.label} looks too cheap at ${cents} (Jev is ${pct(jev.strength)} sure; that's confidence, not a win chance)`;
 }

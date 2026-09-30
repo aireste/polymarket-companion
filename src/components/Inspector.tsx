@@ -9,7 +9,7 @@ import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
 import { JEV_ACTION_COPY, confidenceLabel, leanSide, shortSide } from "@/lib/jevDisplay";
-import { clockLabel, pct, resolveAt, usd } from "@/lib/format";
+import { cents, clockLabel, pct, resolveAt, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
 import { EdgePanel } from "./EdgePanel";
@@ -198,12 +198,17 @@ function JevVerdict({ play }: { play: PlayDTO }) {
       </div>
       <div className="hp-verdict-call">{headline}</div>
       <div className="hp-verdict-sub">
-        {side
-          ? `Jev puts ${pct(read.strength)} on ${side.label} being underpriced at ${pct(side.price)}.`
-          : `Jev is ${pct(read.strength)} sure neither side is underpriced.`}
+        {!side
+          ? `Jev is ${pct(read.strength)} sure both prices are fair.`
+          : read.action === "wager"
+            ? `Jev is ${pct(read.strength)} sure ${side.label} is too cheap at ${cents(side.price)}.`
+            : `Jev thinks ${side.label} looks a bit cheap at ${cents(side.price)}, but it's only ${pct(read.strength)} sure.`}
       </div>
       <LeanBar read={read} shown={shown} />
-      <p className="hp-verdict-src">From price action, volume and timing. No news: that&apos;s what Deep read adds.</p>
+      <p className="hp-verdict-src">
+        The percentages are how sure Jev is of each answer, not chances of winning. Prices are the crowd&apos;s odds. Jev reads price
+        action, volume and timing; Deep read adds the news.
+      </p>
 
       {!explain.explanation && explain.error !== "no-key" && (
         <button className="hp-link" onClick={explain.run} disabled={explain.loading}>
@@ -278,13 +283,14 @@ function useMounted() {
  */
 function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
   const pct = (x: number) => `${Math.round(x * 100)}%`;
-  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: s.label, sub: `at ${pct(s.price)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
-  const neither = { key: "n", label: "Priced right", sub: "", p: read.distribution.neither, lean: read.lean == null };
+  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} too cheap`, sub: `trades at ${cents(s.price)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
+  const neither = { key: "n", label: "Fair price", sub: "", p: read.distribution.neither, lean: read.lean == null };
   // Two-sided markets read left side / neither / right side; others put neither last.
   const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
   const tone = read.action === "wager" ? "wager" : read.action === "hold" ? "hold" : "skip";
   return (
     <div className="hp-lean" aria-label="How Jev's answer splits">
+      <div className="hp-lean-q">Is either side a bargain at these prices?</div>
       <div className="hp-lean-bar">
         {order.map((g) => (
           <i
@@ -324,10 +330,10 @@ export function JevPass({ play }: { play: PlayDTO }) {
       <div className="hp-pass-codes">
         <div>
           <small>{side ? shortSide(side.label, 16).toUpperCase() : shortSide(s0.label, 16).toUpperCase()}</small>
-          <b>{pct(side ? side.price : s0.price)}</b>
+          <b>{cents(side ? side.price : s0.price)}</b>
         </div>
         <div className="hp-pass-arc">
-          <span className={r.action === "skip" ? "" : "up"}>{side ? `${a.label.toLowerCase()} ${pct(r.strength)}` : "priced right"}</span>
+          <span className={r.action === "skip" ? "" : "up"}>{side ? `${pct(r.strength)} sure it's cheap` : "fair price"}</span>
           <svg viewBox="0 0 100 40" aria-hidden>
             <path d="M2 36 Q50 -8 98 36" />
             <circle r="3.5">
@@ -337,7 +343,7 @@ export function JevPass({ play }: { play: PlayDTO }) {
         </div>
         <div>
           <small>{side ? "JEV" : shortSide(s1?.label ?? "", 16).toUpperCase()}</small>
-          <b>{side ? a.label.toUpperCase() : pct(s1?.price ?? 0)}</b>
+          <b>{side ? a.label.toUpperCase() : cents(s1?.price ?? 0)}</b>
         </div>
       </div>
       <div className="hp-pass-foot">

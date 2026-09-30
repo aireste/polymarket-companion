@@ -14,7 +14,7 @@ const POINTS: { k: string; p: string }[] = [
   },
   {
     k: "It gives you a straight call",
-    p: "It answers one question: at these prices, is either side underpriced? Wager means it picks a side outright, Lean means it leans one way, Skip means the prices look about right. You see how strongly it holds that view.",
+    p: "It answers one question: at these prices, is either side a bargain? Wager means it's fairly sure one side is too cheap, Lean means it thinks a side might be, Skip means both prices look fair. The percentages show how sure Jev is, not the chance of winning; the prices are the crowd's odds.",
   },
   {
     k: "It is honest about no-edge",

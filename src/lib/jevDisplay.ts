@@ -10,7 +10,7 @@ export type JevAction = JevReadDTO["action"];
 export const JEV_ACTION_COPY: Record<JevAction, { label: string; blurb: string; cls: string }> = {
   wager: { label: "Wager", blurb: "Jev picks a side outright.", cls: "wager" },
   hold: { label: "Lean", blurb: "Jev leans one way, not strongly.", cls: "hold" },
-  skip: { label: "Skip", blurb: "Priced about right. No side looks underpriced.", cls: "skip" },
+  skip: { label: "Skip", blurb: "Both prices look fair.", cls: "skip" },
 };
 
 /** Bucket Jev's calibrated confidence [0,1] into a plain label. */

@@ -41,6 +41,7 @@ const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, s
 const MONO = "'SF Mono', Menlo, Consolas, 'Courier New', monospace";
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+const cents = (x: number) => `${Math.max(1, Math.min(99, Math.round(x * 100)))}¢`;
 const verb = (a: string) => (a === "wager" ? "Back" : "Lean");
 const tag = (a: string) => (a === "wager" ? "WAGER" : a === "hold" ? "LEAN" : "SKIP");
 
@@ -75,11 +76,11 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
                 </span>
               </Text>
               <Text style={{ margin: "12px 0 0", fontSize: 25, lineHeight: "30px", fontWeight: 800, letterSpacing: "-0.02em", color: C.onDark }}>
-                {verb(pick.call.action)} <span style={{ color: C.lime }}>{pick.call.side}</span> at {pct(pick.call.sidePrice)}
+                {verb(pick.call.action)} <span style={{ color: C.lime }}>{pick.call.side}</span> at {cents(pick.call.sidePrice)}
               </Text>
               <Text style={{ margin: "6px 0 0", fontSize: 14, lineHeight: "20px", color: C.onDarkSoft }}>{pick.question}</Text>
               <Text style={{ margin: "10px 0 0", fontFamily: MONO, fontSize: 12, color: C.onDarkSoft }}>
-                Jev {pct(pick.call.strength)} on this side
+                Jev {pct(pick.call.strength)} sure it&apos;s too cheap
                 {pick.call.confidence != null ? ` · ${pct(pick.call.confidence)} confidence` : ""} · resolves {pick.when}
               </Text>
               <Section style={{ marginTop: 16 }}>
@@ -134,8 +135,8 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
             </Text>
             {issue.leans.length === 0 && <Text style={{ margin: 0, fontSize: 14, color: C.faint }}>No other leans this morning.</Text>}
             {issue.leans.map((m) => (
-              <MarketLine key={m.id} m={m} right={m.call ? `${tag(m.call.action)} ${pct(m.call.strength)}` : ""} note={m.background?.story}>
-                {verb(m.call!.action)} <b>{m.call!.side}</b> at {pct(m.call!.sidePrice)}
+              <MarketLine key={m.id} m={m} right={m.call ? `${pct(m.call.strength)} sure` : ""} note={m.background?.story}>
+                {verb(m.call!.action)} <b>{m.call!.side}</b> at {cents(m.call!.sidePrice)}
               </MarketLine>
             ))}
           </Card>
@@ -177,6 +178,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
 
           <Hr style={{ borderColor: C.rule, margin: "22px 0 14px" }} />
           <Text style={{ margin: 0, fontSize: 11.5, lineHeight: "17px", color: C.faint, textAlign: "center" }}>
+            Jev&apos;s percentages are how sure it is that a side is too cheap, not chances of winning; prices are the crowd&apos;s odds.
             Jev reads prices, recent price moves, volume and timing, not news. Decision support, not financial advice; HedgePredict never
             places trades. Only risk what you can afford to lose. Prediction markets aren&apos;t available everywhere.
           </Text>

@@ -8,7 +8,7 @@ import { getBoardReads } from "./jevBoard";
 import { toPlayDTO } from "./board";
 import { todaysPick } from "./pick";
 import { fetchHistory } from "./history";
-import { MARKET_TZ, clockLabel, isLive, whenMs } from "./format";
+import { MARKET_TZ, cents, clockLabel, isLive, whenMs } from "./format";
 import { CLAUDE_FAST, REFUSAL_FALLBACK } from "./claude";
 import type { JevReadDTO, PlayDTO } from "./dto";
 import { buildBackground, type Background } from "./background";
@@ -94,7 +94,7 @@ async function move24h(p: PlayDTO): Promise<number | undefined> {
 async function writeIntro(issue: Omit<DailyIssue, "intro" | "subject">): Promise<string | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const lines = [
-    issue.pick?.call ? `Today's pick: ${issue.pick.call.action === "wager" ? "Back" : "Lean"} ${issue.pick.call.side} at ${pct(issue.pick.call.sidePrice)} in "${issue.pick.question}"` : "No standout pick today.",
+    issue.pick?.call ? `Today's pick: ${issue.pick.call.action === "wager" ? "Back" : "Lean"} ${issue.pick.call.side} at ${cents(issue.pick.call.sidePrice)} in "${issue.pick.question}"` : "No standout pick today.",
     `Resolving in the next 24h: ${issue.onTheClock.map((m) => m.question).join("; ") || "nothing major"}.`,
     `Biggest 24h moves: ${issue.movers.map((m) => `${m.question} (${m.move24h! >= 0 ? "+" : ""}${Math.round(m.move24h! * 100)} pts)`).join("; ") || "quiet"}.`,
   ].join("\n");
@@ -161,7 +161,7 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
 
   // News background for the pick and the top leans (one cached web-search call per day).
   const callText = (m: IssueMarket) =>
-    m.call ? `${m.call.action === "wager" ? "Back" : "Lean"} ${m.call.side} at ${pct(m.call.sidePrice)}` : "no call";
+    m.call ? `${m.call.action === "wager" ? "Back" : "Lean"} ${m.call.side} at ${cents(m.call.sidePrice)}` : "no call";
   const subjects = [
     ...(pick ? [{ id: pick.id, question: pick.question, call: callText(pick), depth: "pick" as const }] : []),
     ...leans.slice(0, 4).map((m) => ({ id: m.id, question: m.question, call: callText(m), depth: "line" as const })),
@@ -173,7 +173,7 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
   const base = { date: iso, title, pick, leans, counts, onTheClock, movers, generatedAt: now.toISOString() };
   const intro = await writeIntro(base);
   const headline = pick?.call
-    ? `${pick.call.action === "wager" ? "Back" : "Lean"} ${pick.call.side} at ${pct(pick.call.sidePrice)}`
+    ? `${pick.call.action === "wager" ? "Back" : "Lean"} ${pick.call.side} at ${cents(pick.call.sidePrice)}`
     : "Board looks fairly priced";
   return { ...base, intro, subject: `${title} · ${headline}` };
 }

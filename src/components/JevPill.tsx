@@ -27,7 +27,7 @@ export function JevPill({ id, long = false }: { id: string; long?: boolean }) {
   return (
     <span
       className={`hp-jev hp-jev-${a.cls}`}
-      title={side ? `Jev: ${a.label} ${side.label} (${pct}% on that side)` : `Jev: priced about right (${pct}%)`}
+      title={side ? `Jev: ${a.label} ${side.label}, ${pct}% sure it's too cheap` : `Jev: both prices look fair (${pct}% sure)`}
     >
       <span className="hp-jev-dot" aria-hidden />
       {long && "Jev · "}

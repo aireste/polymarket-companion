@@ -66,7 +66,7 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
   else if (n.wager + n.hold === 0)
     text = (
       <>
-        <b>Jev sees every market as priced about right.</b> No side looks underpriced right now.
+        <b>Jev sees every market as priced about right.</b> No side looks too cheap right now.
       </>
     );
   else

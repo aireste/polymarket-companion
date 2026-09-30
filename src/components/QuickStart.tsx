@@ -46,7 +46,7 @@ export function QuickStart() {
           <span>2</span>
           <div>
             <b>Open a market</b>
-            <p>See which side Jev thinks is underpriced and how strongly, plus an optional deep read of the live news.</p>
+            <p>See which side Jev thinks is too cheap and how sure it is, plus an optional deep read of the live news.</p>
           </div>
         </li>
         <li>

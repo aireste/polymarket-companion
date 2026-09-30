@@ -9,7 +9,7 @@ const STEPS = [
   {
     n: 2,
     h: "Ask Jev for the call",
-    p: "Jev is HedgePredict's calibrated prediction engine: a decision model, not a chatbot. Jev looks at each market's prices, recent price moves, volume and timing, and answers one question: at these prices, is either side underpriced? Wager means it picks a side outright, Lean means it leans one way, Skip means the prices look about right. Open any market to see how its answer splits.",
+    p: "Jev is HedgePredict's calibrated prediction engine: a decision model, not a chatbot. Jev looks at each market's prices, recent price moves, volume and timing, and answers one question: at these prices, is either side underpriced? Wager means it picks a side outright, Lean means it leans one way, Skip means the prices look about right. Open any market to see the bar: how sure Jev is that each side is too cheap, or that the price is fair. Those percentages are Jev's confidence, not chances of winning; the prices (in ¢) are the crowd's odds.",
   },
   {
     n: 3,

@@ -34,7 +34,7 @@ export async function explainJev(read: JevReadDTO): Promise<JevExplanation> {
   const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
   const side = read.lean == null ? null : read.sides[read.lean];
   const dist = read.sides
-    .map((s, i) => `"${s.label}" underpriced: ${pct(read.distribution.sides[i] ?? 0)}`)
+    .map((s, i) => `"${s.label}" too cheap: ${pct(read.distribution.sides[i] ?? 0)}`)
     .concat(`neither: ${pct(read.distribution.neither)}`)
     .join(" | ");
 
@@ -42,10 +42,10 @@ export async function explainJev(read: JevReadDTO): Promise<JevExplanation> {
 
 Market: "${read.marketName}"
 Prices: ${read.sides.map((s) => `${s.label} ${pct(s.price)}`).join(", ")}
-Jev's answer (probabilities): ${dist}
+Jev's answer (how sure Jev is of each answer; NOT chances of winning): ${dist}
 Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${side ? ` ${side.label}` : ""}${conf ? ` (${conf} confidence)` : ""}
 
-Write 2-3 short sentences a smart bettor can skim. For a Wager or Lean, say which side looks underpriced and how firmly Jev holds that view, and that it's based on price action and market numbers, not news. For a Skip, say plainly that Jev sees the prices as about right. Plain text, no preamble, no markdown, no em dashes.`;
+Write 2-3 short sentences a smart bettor can skim. For a Wager or Lean, say which side looks too cheap and how sure Jev is (never call Jev's percentage a chance of winning; write prices in cents like 44¢), and that it's based on price action and market numbers, not news. For a Skip, say plainly that Jev sees the prices as about right. Plain text, no preamble, no markdown, no em dashes.`;
 
   const response = await client.beta.messages.create({
     ...REFUSAL_FALLBACK,

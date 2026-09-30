@@ -136,3 +136,14 @@ export function clockLabel(
     ? d.toLocaleTimeString("en-US", { timeZone: MARKET_TZ, hour: "numeric", minute: "2-digit" })
     : d.toLocaleDateString("en-US", { timeZone: MARKET_TZ, month: "short", day: "numeric" });
 }
+
+/**
+ * A share price in cents ("44¢"). Used wherever a market price sits next to
+ * Jev's confidence percentages, so the two can't be read as the same thing.
+ */
+export function cents(p: number): string {
+  const c = Math.round(p * 100);
+  if (c < 1) return "<1¢";
+  if (c > 99) return ">99¢";
+  return `${c}¢`;
+}

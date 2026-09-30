@@ -997,3 +997,4 @@
     box-shadow: 0 0 0 1px var(--rule), 0 20px 50px -30px oklch(0 0 0 / 0.4); }
   .hp-ep-phone-screen { border-radius: 20px; }
 }
+.hp-lean-q { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 8px; }
