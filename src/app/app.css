@@ -744,7 +744,10 @@
 }
 
 /* ───────── Interaction motion: slides, fades and presses (150-300ms) ───────── */
-.hp-route { animation: hp-rise 0.28s var(--expo) both; }
+/* No fill-mode: once the fade ends the wrapper has no transform, because a
+   transformed ancestor would re-anchor position:fixed children (the phone
+   sheet, the scrim) to this wrapper instead of the screen. */
+.hp-route { animation: hp-rise 0.28s var(--expo); }
 @keyframes hp-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 @media (min-width: 900px) {
