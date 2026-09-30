@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BoardProvider, useBoard, useNow } from "@/lib/boardStore";
@@ -120,9 +120,12 @@ function Sidebar() {
 /** Live clock in Eastern Time, the zone Polymarket uses. */
 function ClockET() {
   const now = useNow(1000);
+  // The server's second never matches the browser's; render the time client-side only.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <span className="hp-clock" title="All times are US Eastern, like Polymarket">
-      {clockET(now)} <small>ET</small>
+      {mounted ? clockET(now) : "\u00a0"} <small>ET</small>
     </span>
   );
 }
