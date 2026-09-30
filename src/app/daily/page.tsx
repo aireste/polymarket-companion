@@ -1,26 +1,56 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { todaysIssue } from "@/lib/newsletter";
-import { DailyWeb } from "@/components/DailyWeb";
+import { renderIssueHtml, todaysIssue } from "@/lib/newsletter";
 import { SubscribeBox } from "@/components/SubscribeBox";
+import { EmailPreview } from "@/components/EmailPreview";
 
 export const metadata: Metadata = {
   title: "HedgePredict Daily",
   description: "Jev's pick of the day, what resolves next, and the biggest movers. Weekdays at 8 AM ET.",
 };
 
-/** Today's issue, laid out for the web, with signup. */
+const INSIDE = [
+  { n: "01", k: "Today's pick", p: "Jev's strongest call on the board, with the price and how sure it is." },
+  { n: "02", k: "Jev's board", p: "Every other market Jev leans on, in one line each." },
+  { n: "03", k: "On the clock", p: "What resolves in the next 24 hours, with times in ET." },
+  { n: "04", k: "Movers", p: "The biggest price swings of the last day." },
+];
+
+/** The Daily's landing page: the pitch + signup, and today's real email in a device frame. */
 export default async function Page() {
   await connection();
   const issue = await todaysIssue().catch(() => null);
-  if (!issue) {
-    return (
-      <div className="hp-page">
-        <h1 className="hp-dw-fallback">HedgePredict Daily</h1>
-        <p className="hp-empty">Today&apos;s issue isn&apos;t available right now. Try again in a minute.</p>
+  const html = issue ? await renderIssueHtml(issue).catch(() => null) : null;
+
+  return (
+    <div className="hp-dl">
+      <div className="hp-dl-copy">
+        <h1>HedgePredict Daily</h1>
+        <p className="hp-dl-lede">
+          Jev&apos;s pick, what&apos;s about to resolve, and the day&apos;s biggest movers. In your inbox every weekday at 8 AM ET. A 2-minute read.
+        </p>
         <SubscribeBox source="daily-page" />
+        <ol className="hp-dl-inside" aria-label="What's inside">
+          {INSIDE.map((x) => (
+            <li key={x.n}>
+              <span>{x.n}</span>
+              <div>
+                <b>{x.k}</b>
+                <p>{x.p}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="hp-dl-note">The preview is today&apos;s real issue, rendered exactly as it lands in your inbox.</p>
       </div>
-    );
-  }
-  return <DailyWeb issue={issue} />;
+
+      <div className="hp-dl-preview">
+        {issue && html ? (
+          <EmailPreview html={html} subject={issue.subject} from="HedgePredict Daily" />
+        ) : (
+          <p className="hp-empty">Today&apos;s issue isn&apos;t available right now. Try again in a minute.</p>
+        )}
+      </div>
+    </div>
+  );
 }

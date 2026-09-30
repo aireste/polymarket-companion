@@ -931,59 +931,69 @@
 @media (max-width: 899.98px) { .hp-sub { grid-template-columns: 1fr; gap: 12px; } }
 
 
-/* ───────────── The Daily on the web: full width, two columns ───────────── */
-.hp-dw { padding: 28px 32px 48px; }
-.hp-dw-head { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 28px; align-items: start; }
-.hp-dw-head .hp-sub { margin: 4px 0 0; grid-template-columns: 1fr; gap: 14px; }
-.hp-dw-brand { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-.hp-dw-title h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; margin-top: 8px; text-transform: uppercase; }
-.hp-dw-meta { font: 12px var(--font-mono); color: var(--ink-faint); margin-top: 10px; }
-.hp-dw-intro { font-size: 16px; line-height: 1.6; color: var(--ink-soft); margin-top: 16px; max-width: 68ch; }
-.hp-dw-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; margin-top: 8px; align-items: start; }
-.hp-dw-col { display: grid; gap: 4px; min-width: 0; }
-.hp-dw-sec { margin-top: 22px; }
-.hp-dw-label { display: flex; align-items: baseline; gap: 10px; font: 600 11.5px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
-.hp-dw-label span { color: var(--ink); }
-.hp-dw-label small { margin-left: auto; font: 12px var(--font-sans); letter-spacing: 0; text-transform: none; color: var(--ink-faint); }
-
-.hp-dw-pick.featured { margin: 0; padding: 22px 24px; }
-.hp-dw-pick h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.15; color: var(--on-dark); margin-top: 12px; }
-.hp-dw-pick h2 em { font-style: normal; color: var(--accent); }
-.hp-dw-pick-q { font-size: 15px; color: var(--on-dark-soft); margin-top: 6px; }
-.hp-dw-pick-meta { font: 12.5px var(--font-mono); color: var(--on-dark-faint); margin-top: 10px; }
-.hp-dw-pick-actions { display: flex; gap: 8px; margin-top: 18px; }
-
-.hp-dw-list { list-style: none; background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--r-md); overflow: hidden; }
-.hp-dw-list li + li { border-top: 1px solid var(--rule); }
-.hp-dw-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 13px 16px; transition: background 0.15s var(--ease); }
-.hp-dw-row.has-lead { grid-template-columns: 86px minmax(0, 1fr); }
-.hp-dw-row:hover { background: var(--paper-3); }
-.hp-dw-lead { font: 600 13px var(--font-mono); padding-top: 1px; }
-.hp-dw-lead.up { color: var(--pos-ink); }
-.hp-dw-lead.dn { color: var(--neg-ink); }
-.hp-dw-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; align-items: baseline; }
-.hp-dw-call { display: inline-flex; align-items: center; gap: 7px; font-size: 14.5px; }
-.hp-dw-call i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-.hp-dw-call i.wager { background: var(--accent-ink); }
-.hp-dw-call i.hold { background: oklch(0.75 0.14 80); }
-.hp-dw-q { grid-column: 1; font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
-.hp-dw-q.strong { font-size: 14.5px; color: var(--ink); }
-.hp-dw-right { grid-column: 2; grid-row: 1; font: 12px var(--font-mono); color: var(--ink-faint); white-space: nowrap; }
-.hp-dw-empty { font-size: 14px; color: var(--ink-soft); padding: 14px 16px; border: 1px dashed var(--rule-strong); border-radius: var(--r-md); }
-.hp-dw-empty b { color: var(--ink); }
-.hp-dw-disc { margin-top: 28px; }
-.hp-dw-fallback { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
-
-@media (max-width: 1180px) {
-  .hp-dw-head, .hp-dw-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 899.98px) {
-  .hp-dw { padding: 18px 16px 24px; }
-  .hp-dw-title h1 { font-size: 34px; }
-  .hp-dw-pick h2 { font-size: 24px; }
-  .hp-dw-row.has-lead { grid-template-columns: 72px minmax(0, 1fr); }
-}
 
 /* On dark surfaces (phone pass header stays light; Today's pick uses hp-pick-tag). */
 :root[data-theme="dark"] .hp-jev-wager .hp-jev-dot { background: var(--accent); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hp-jev-wager .hp-jev-dot { background: var(--accent); } }
+
+/* ───────────── The Daily: pitch + signup | today's email in a device ───────────── */
+.hp-dl { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; padding: 36px 40px 48px; }
+.hp-dl-copy { position: sticky; top: 84px; }
+.hp-dl-copy h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.02; }
+.hp-dl-lede { font-size: 17px; line-height: 1.55; color: var(--ink-soft); margin-top: 14px; max-width: 46ch; }
+.hp-dl-copy .hp-sub { grid-template-columns: 1fr; gap: 12px; margin: 22px 0 0; }
+.hp-dl-copy .hp-sub:not(.is-joined) .hp-sub-copy { display: none; }
+.hp-dl-inside { list-style: none; display: grid; gap: 14px; margin-top: 28px; }
+.hp-dl-inside li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; }
+.hp-dl-inside li > span { font: 600 12px var(--font-mono); color: var(--ink-faint); padding-top: 2px; }
+.hp-dl-inside b { font-size: 15px; }
+.hp-dl-inside p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 2px; }
+.hp-dl-note { font-size: 12.5px; color: var(--ink-faint); margin-top: 24px; }
+.hp-dl-preview { display: grid; justify-items: center; min-width: 0; }
+
+.hp-ep { display: grid; justify-items: center; gap: 18px; width: 100%; }
+.hp-ep-toggle { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--paper-3); border: 1px solid var(--rule); }
+.hp-ep-toggle button { height: 30px; padding: 0 16px; border-radius: 9px; font-size: 13px; color: var(--ink-soft); transition: background 0.15s var(--ease), color 0.15s var(--ease); }
+.hp-ep-toggle button[aria-selected="true"] { background: var(--paper-2); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px oklch(0.2 0.02 260 / 0.1); }
+
+.hp-ep-phone, .hp-ep-laptop { animation: hp-rise 0.3s var(--expo); }
+/* Phone: a dark device frame with a mail app inside */
+.hp-ep-phone { width: 390px; max-width: 100%; aspect-ratio: 390 / 800; border-radius: 54px; padding: 12px; background: #16181c;
+  box-shadow: 0 0 0 1px oklch(0.35 0.01 260), 0 40px 90px -40px oklch(0 0 0 / 0.55); }
+.hp-ep-phone-screen { position: relative; width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: #ffffff; display: flex; flex-direction: column; }
+.hp-ep-status { display: flex; justify-content: space-between; align-items: center; padding: 12px 26px 6px; font: 600 14px var(--font-sans); color: #111; }
+.hp-ep-island { width: 104px; height: 30px; border-radius: 999px; background: #111; }
+.hp-ep-status span:last-child { font-size: 11px; letter-spacing: 1px; }
+.hp-ep-mailhead { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 16px 12px; border-bottom: 1px solid #e6e8ec; background: #fff; color: #111; }
+.hp-ep-mailhead > div { min-width: 0; }
+.hp-ep-mailhead b { display: block; font-size: 13.5px; }
+.hp-ep-mailhead span:not(.hp-ep-avatar) { display: block; font-size: 12.5px; color: #555a63; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hp-ep-mailhead time { font-size: 11.5px; color: #8a8e96; align-self: start; }
+.hp-ep-avatar { width: 32px; height: 32px; border-radius: 50%; background: #15171b; color: #d6ef3e; display: grid; place-items: center; font-size: 13px; }
+.hp-ep-phone iframe { flex: 1; width: 100%; border: 0; background: #eef0f3; }
+
+/* Laptop: a mail window on a thin base */
+.hp-ep-laptop { width: 100%; max-width: 820px; display: grid; justify-items: center; }
+.hp-ep-window { width: 100%; height: 640px; border-radius: 14px 14px 6px 6px; overflow: hidden; background: #fff; display: flex; flex-direction: column;
+  border: 10px solid #16181c; border-bottom-width: 14px; box-shadow: 0 40px 90px -40px oklch(0 0 0 / 0.55); }
+.hp-ep-chrome { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; background: #f1f3f5; border-bottom: 1px solid #e3e6ea; }
+.hp-ep-chrome i { width: 11px; height: 11px; border-radius: 50%; background: #d4d7dc; }
+.hp-ep-chrome span { margin-left: 10px; font: 600 12px var(--font-sans); color: #555a63; }
+.hp-ep-mailhead.is-wide { padding: 14px 22px; }
+.hp-ep-laptop iframe { flex: 1; width: 100%; border: 0; background: #eef0f3; }
+.hp-ep-base { width: 112%; max-width: 920px; height: 14px; border-radius: 0 0 16px 16px; background: linear-gradient(#2a2d33, #16181c); }
+
+@media (max-width: 1180px) {
+  .hp-dl { grid-template-columns: 1fr; padding: 28px 24px 40px; }
+  .hp-dl-copy { position: static; }
+}
+@media (max-width: 899.98px) {
+  .hp-dl { padding: 18px 16px 24px; gap: 28px; }
+  .hp-dl-copy h1 { font-size: 34px; }
+  .hp-dl > * { min-width: 0; }
+  /* Already on a phone: no device-in-device. Show the email as an inbox card. */
+  .hp-ep-toggle, .hp-ep-status { display: none; }
+  .hp-ep-phone { width: 100%; aspect-ratio: auto; height: 640px; padding: 0; border-radius: 20px; background: none;
+    box-shadow: 0 0 0 1px var(--rule), 0 20px 50px -30px oklch(0 0 0 / 0.4); }
+  .hp-ep-phone-screen { border-radius: 20px; }
+}
