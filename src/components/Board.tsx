@@ -17,6 +17,7 @@ import { QuickStart } from "./QuickStart";
 import { useSlider } from "@/lib/useSlider";
 import { ThemeToggle } from "./ThemeToggle";
 import { TodaysPick } from "./TodaysPick";
+import { SubscribeBox } from "./SubscribeBox";
 import { todaysPick } from "@/lib/pick";
 import { Countdown } from "./Countdown";
 
@@ -225,6 +226,8 @@ function DeskBoard({ filter }: { filter: FilterId }) {
         </table>
         </div>
 
+        <SubscribeBox compact />
+
         <div className="hp-keys">
           <span>
             <kbd>↑</kbd> <kbd>↓</kbd> move
@@ -349,7 +352,9 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
             })}
           </section>
         ))}
+        <SubscribeBox compact />
         <nav className="hp-phone-links" aria-label="More">
+          <Link href="/daily">The Daily</Link>
           <Link href="/how-it-works">How it works</Link>
           <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
             <span className="hp-pm-tile">{Icon.polymarket}</span>

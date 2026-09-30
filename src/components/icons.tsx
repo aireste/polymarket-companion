@@ -48,6 +48,12 @@ export const Icon = {
       <path d="M8.1 10.9 15.9 7.1M8.1 13.1 15.9 16.9" strokeLinecap="round" />
     </svg>
   ),
+  mail: (
+    <svg viewBox="0 0 24 24" {...s}>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
+      <path d="m4.5 7.5 7.5 5.5 7.5-5.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
   help: (
     <svg viewBox="0 0 24 24" {...s}>
       <circle cx="12" cy="12" r="8.4" />

@@ -18,6 +18,7 @@ const TOOLS = [
   { href: "/ask", label: "Ask", icon: Icon.ask },
   { href: "/hedge", label: "Hedge calc", icon: Icon.hedge },
   { href: "/connect", label: "Use in your AI", icon: Icon.connect },
+  { href: "/daily", label: "The Daily", icon: Icon.mail },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
@@ -25,6 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/hedge": "Hedge calculator",
   "/connect": "Use in your AI",
   "/how-it-works": "How it works",
+  "/daily": "HedgePredict Daily",
 };
 
 /**

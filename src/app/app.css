@@ -880,3 +880,29 @@
   .hp-pick-trend { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .hp-pick, .hp-pick-lean i { animation: none; transition: none; } }
+
+/* ───────────── HedgePredict Daily: signup + web issue ───────────── */
+.hp-sub { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center;
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--r); padding: 18px 20px; margin: 16px 0; }
+.hp-sub-k { display: block; font: 600 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
+.hp-sub-copy b { display: block; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; margin-top: 4px; }
+.hp-sub-copy p { font-size: 13px; color: var(--ink-soft); margin-top: 4px; line-height: 1.45; }
+.hp-sub-form { display: flex; flex-wrap: wrap; gap: 8px; }
+.hp-sub-form input { flex: 1; min-width: 0; height: 42px; border-radius: 999px; border: 1px solid var(--rule-strong); background: var(--paper-3);
+  color: var(--ink); font: 15px var(--font-sans); padding: 0 16px; outline: 0; }
+.hp-sub-form input:focus { border-color: var(--ink); }
+.hp-sub-form button { height: 42px; padding: 0 18px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 600 14px var(--font-sans);
+  transition: transform 0.15s var(--ease), filter 0.15s var(--ease); }
+.hp-sub-form button:hover { filter: brightness(0.9); }
+.hp-sub-form button:active { transform: scale(0.97); }
+.hp-sub-form button:disabled { opacity: 0.6; }
+.hp-sub-msg { flex-basis: 100%; font-size: 13px; color: var(--ink-soft); margin: 2px 4px 0; }
+.hp-sub-msg.ok { font-weight: 600; color: var(--pos-ink); }
+.hp-sub-msg.err { color: var(--neg-ink); }
+.hp-sub.is-compact .hp-sub-copy p { display: none; }
+@media (max-width: 899.98px) { .hp-sub { grid-template-columns: 1fr; gap: 12px; } }
+
+.hp-daily { max-width: 760px; }
+.hp-daily-head h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+.hp-daily-head p { font-size: 14px; color: var(--ink-soft); margin-top: 8px; max-width: 60ch; line-height: 1.5; }
+.hp-daily-frame { width: 100%; height: 1900px; border: 0; border-radius: var(--r); background: #eef0f3; margin-top: 6px; }

@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/daily?slot=edt", "schedule": "0 12 * * 1-5" },
+    { "path": "/api/cron/daily?slot=est", "schedule": "0 13 * * 1-5" }
+  ]
+}
