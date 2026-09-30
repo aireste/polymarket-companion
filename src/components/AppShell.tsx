@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BoardProvider, useBoard, useNow } from "@/lib/boardStore";
 import { clockET } from "@/lib/format";
 import { FILTERS, filterCount } from "@/lib/filters";
 import { CommandPalette } from "./CommandPalette";
+import { AskPanel } from "./AskPanel";
+import { ThemeToggle } from "./ThemeToggle";
+import { useSlider } from "@/lib/useSlider";
 import { Icon } from "./icons";
 
 const BOARD_PATHS = new Set(FILTERS.map((f) => f.href));
@@ -37,13 +40,26 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Sidebar />
         <div className="hp-work">
           <TopBar />
-          <main className="hp-main">{children}</main>
+          <main className="hp-main">
+            <RouteFade>{children}</RouteFade>
+          </main>
         </div>
         <TabBar />
         <CommandPalette />
         <PaletteHotkey />
       </div>
     </BoardProvider>
+  );
+}
+
+/** Each page fades and rises in when you navigate (keyed on the path, not ?m=). */
+function RouteFade({ children }: { children: ReactNode }) {
+  const path = usePathname();
+  const group = BOARD_PATHS.has(path) ? "board" : path;
+  return (
+    <div key={group} className="hp-route">
+      {children}
+    </div>
   );
 }
 
@@ -67,9 +83,12 @@ function Sidebar() {
   const { plays, jevStatus, reads, now } = useBoard();
   const liveN = plays ? filterCount(plays, "live", now) : null;
   const model = Object.values(reads)[0]?.model;
+  const navRef = useRef<HTMLElement>(null);
+  const ind = useSlider(navRef, '.hp-nav[aria-current="page"]', [path]);
 
   return (
-    <nav className="hp-side" aria-label="Sections">
+    <nav className="hp-side" aria-label="Sections" ref={navRef}>
+      {ind && <span className="hp-nav-ind" style={{ transform: `translateY(${ind.y}px)`, height: ind.h }} aria-hidden />}
       <Link href="/" className="hp-brand">
         <span className="hp-brand-mark">{Icon.spark}</span>
         HedgePredict
@@ -148,17 +167,17 @@ function TopBar() {
           <b>{PAGE_TITLES[path] ?? "HedgePredict"}</b>
         )}
       </div>
-      <button className="hp-search" onClick={() => setPaletteOpen(true)}>
-        {Icon.search}
-        Search all of Polymarket…
-        <kbd>⌘K</kbd>
-      </button>
+      <div className="hp-top-mid">
+        <button className="hp-search" onClick={() => setPaletteOpen(true)}>
+          {Icon.search}
+          Search all of Polymarket…
+          <kbd>⌘K</kbd>
+        </button>
+        <AskDropdown />
+      </div>
       <div className="hp-upd">
-        <Link href="/ask" className="hp-ask-btn">
-          <span className="hp-ask-mark">{Icon.spark}</span>
-          Ask HedgePredict
-        </Link>
         <ClockET />
+        <ThemeToggle />
         <button
           className="hp-iconbtn"
           onClick={refresh}
@@ -190,5 +209,66 @@ function TabBar() {
         </Link>
       ))}
     </nav>
+  );
+}
+
+/**
+ * Ask from anywhere: the chat drops down under the button instead of leaving
+ * the page. It stays mounted while closed, so the conversation is still there
+ * when you reopen it. The full /ask page remains for the phone and long chats.
+ */
+function AskDropdown() {
+  const path = usePathname();
+  const [open, setOpen] = useState(false);
+  const [used, setUsed] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+
+  useEffect(() => setOpen(false), [path]);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (wrap.current && !wrap.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  if (path === "/ask") return null;
+
+  return (
+    <div className="hp-askwrap" ref={wrap}>
+      <button
+        className={`hp-ask-btn${open ? " is-open" : ""}`}
+        onClick={() => {
+          setUsed(true);
+          setOpen((o) => !o);
+        }}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+      >
+        <span className="hp-ask-mark">{Icon.spark}</span>
+        Ask HedgePredict
+        <span className="hp-ask-chev" aria-hidden>▾</span>
+      </button>
+      {used && (
+        <div className={`hp-askdrop${open ? " is-open" : ""}`} role="dialog" aria-label="Ask HedgePredict" aria-hidden={!open}>
+          <div className="hp-askdrop-head">
+            <div>
+              <b>Ask HedgePredict</b>
+              <span>Jev makes the call, Claude explains it.</span>
+            </div>
+            <Link href="/ask" className="hp-askdrop-full">
+              Full page ↗
+            </Link>
+          </div>
+          <AskPanel compact />
+        </div>
+      )}
+    </div>
   );
 }

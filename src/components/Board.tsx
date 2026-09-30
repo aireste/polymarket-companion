@@ -14,6 +14,8 @@ import { Status } from "./Status";
 import { Icon } from "./icons";
 import { Odo } from "./Odo";
 import { QuickStart } from "./QuickStart";
+import { useSlider } from "@/lib/useSlider";
+import { ThemeToggle } from "./ThemeToggle";
 import { Countdown } from "./Countdown";
 
 /** The market board for one filter route. Desktop: table + inspector. Phone: time board + sheet. */
@@ -87,6 +89,8 @@ function DeskBoard({ filter }: { filter: FilterId }) {
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
   const focused = useFocusedPlay(list, true);
   const rowRefs = useRef(new Map<string, HTMLTableRowElement>());
+  const segRef = useRef<HTMLElement>(null);
+  const thumb = useSlider(segRef, '.hp-seg-btn[aria-current="page"]', [filter, plays?.length]);
 
   const move = useCallback(
     (step: number) => {
@@ -119,7 +123,10 @@ function DeskBoard({ filter }: { filter: FilterId }) {
             <h1>{f.title}</h1>
             <p>{f.caption}</p>
           </div>
-          <nav className="hp-seg" aria-label="Filter markets">
+          <nav className="hp-seg" aria-label="Filter markets" ref={segRef}>
+            {thumb && (
+              <span className="hp-seg-thumb" style={{ transform: `translateX(${thumb.x}px)`, width: thumb.w }} aria-hidden />
+            )}
             {FILTERS.map((x) => {
               const n = plays ? filterCount(plays, x.id, now) : null;
               return (
@@ -273,6 +280,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           <span className="hp-date">
             {new Date(now).toLocaleDateString("en-US", { timeZone: MARKET_TZ, weekday: "long", month: "short", day: "numeric" })}
           </span>
+          <ThemeToggle />
         </div>
         <h1 className="hp-phone-title">What&apos;s resolving</h1>
 

@@ -39,7 +39,10 @@ function renderContent(text: string) {
 }
 
 /** `initialQuestion` (e.g. from the search palette) is sent once on arrival. */
-export function AskPanel({ initialQuestion }: { initialQuestion?: string } = {}) {
+export function AskPanel({
+  initialQuestion,
+  compact = false,
+}: { initialQuestion?: string; compact?: boolean } = {}) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -97,15 +100,17 @@ export function AskPanel({ initialQuestion }: { initialQuestion?: string } = {})
   }, [initialQuestion, send]);
 
   return (
-    <section className="ask-panel" id="ask-panel" aria-label="Ask HedgePredict">
-      <div className="ask-head">
-        <div>
-          <h2>Ask HedgePredict</h2>
-          <p className="ask-sub">
-            Ask anything about today&apos;s markets in plain English. Jev makes the calibrated calls; Claude reads live data, checks the news, and does the edge math for you.
-          </p>
+    <section className={`ask-panel${compact ? " is-compact" : ""}`} aria-label="Ask HedgePredict">
+      {!compact && (
+        <div className="ask-head">
+          <div>
+            <h2>Ask HedgePredict</h2>
+            <p className="ask-sub">
+              Ask anything about today&apos;s markets in plain English. Jev makes the calibrated calls; Claude reads live data, checks the news, and does the edge math for you.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="ask-log" ref={scrollRef} aria-live="polite">
         {empty && (
@@ -146,7 +151,7 @@ export function AskPanel({ initialQuestion }: { initialQuestion?: string } = {})
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Ask about today's best plays, a market, or size your own bet…"
+          placeholder={compact ? "Ask about any market…" : "Ask about today's best plays, a market, or size your own bet…"}
           rows={1}
           disabled={loading}
           aria-label="Your question"

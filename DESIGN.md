@@ -30,6 +30,20 @@ Chosen from two clickable renditions (Esteban picked A's desktop + B's phone).
   back behind it. Floating bottom tab bar: Board / Ask / Hedge / Your AI.
 - Jev reads for the whole board come from `/api/jev/board` (10-min server cache),
   so every row shows a verdict without per-visitor calls.
+- **Dark mode (2026-09-30):** a token remap, not a new direction. Follows the OS
+  by default; the sun/moon toggle (top bar; phone board header) pins it via
+  `html[data-theme]` + localStorage `hp_theme`, applied before paint by an inline
+  script. In dark, `--dark` surfaces (sidebar, price card, phone widgets) sit a
+  step darker than the canvas with a hairline border. Primary pills invert
+  (light pill on dark).
+- **Motion rule:** every animation reflects a real change (price tick, Jev
+  re-read, countdown, navigation). Sliding sidebar highlight + filter thumb,
+  route fade-rise, odometer prices, breathing chart "now" dot. No ticker tape
+  (Esteban found it noisy); no edge-map scatter (hard to read).
+- **Ask** is a dropdown chat under the top-bar button (stays mounted, keeps the
+  conversation); `/ask` remains for phone and long chats.
+- **Hedge Lab** (`/hedge`): inputs card + dark readout instrument with outcome
+  bars and a hedge-size slider marked at "Full lock".
 - Styles for all of this live in `src/app/app.css` (`hp-` prefix). Beware
   Tailwind v4 utility names as bare class names (`collapse` = visibility:collapse
   bit us; renamed to `acc`).
