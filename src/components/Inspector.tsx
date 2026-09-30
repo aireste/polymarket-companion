@@ -60,7 +60,8 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
         </div>
       </dl>
       <div className="hp-insp-actions">
-        <a className="pill pill-dark" href={play.url} target="_blank" rel="noopener noreferrer">
+        <a className="pill pill-dark hp-pm-btn" href={play.url} target="_blank" rel="noopener noreferrer">
+          <span className="hp-pm-tile">{Icon.polymarket}</span>
           Open on Polymarket ↗
         </a>
         <Link className="pill" href="/hedge">

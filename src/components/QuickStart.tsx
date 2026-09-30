@@ -39,7 +39,7 @@ export function QuickStart() {
           <span>1</span>
           <div>
             <b>Scan the board</b>
-            <p>Live Polymarket markets, each with Jev&apos;s call. Dots far from the line are where Jev disagrees with the price.</p>
+            <p>Live Polymarket markets ranked by signal, each with Jev&apos;s call: wager, hold or skip.</p>
           </div>
         </li>
         <li>

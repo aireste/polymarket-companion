@@ -101,9 +101,10 @@ function Sidebar() {
         {Icon.help}
         How it works
       </Link>
-      <a className="hp-nav" title="Polymarket" href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
-        {Icon.ext}
+      <a className="hp-nav hp-nav-pm" title="Open Polymarket" href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
+        <span className="hp-pm-tile">{Icon.polymarket}</span>
         Polymarket
+        <span className="hp-nav-ext" aria-hidden>↗</span>
       </a>
       <div className={`hp-engine is-${jevStatus}`}>
         <b>
@@ -150,8 +151,8 @@ function TopBar() {
         <kbd>⌘K</kbd>
       </button>
       <div className="hp-upd">
-        <Link href="/ask" className="pill hp-pill-lime hp-ask-btn">
-          <span className="hp-ico-sm">{Icon.ask}</span>
+        <Link href="/ask" className="hp-ask-btn">
+          <span className="hp-ask-mark">{Icon.spark}</span>
           Ask HedgePredict
         </Link>
         <ClockET />

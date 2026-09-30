@@ -12,7 +12,6 @@ import { JevPill } from "./JevPill";
 import { Sparkline } from "./Sparkline";
 import { Status } from "./Status";
 import { Icon } from "./icons";
-import { EdgeMap } from "./EdgeMap";
 import { Odo } from "./Odo";
 import { QuickStart } from "./QuickStart";
 import { Countdown } from "./Countdown";
@@ -43,6 +42,41 @@ function useFocusedPlay(list: PlayDTO[], fallbackToFirst: boolean) {
   }, [id, found, addExtra]);
 
   return found ?? (fallbackToFirst ? list[0] ?? null : null);
+}
+
+/** One plain sentence on how Jev reads the board right now. */
+function JevSummary({ plays }: { plays: PlayDTO[] }) {
+  const { reads, jevStatus } = useBoard();
+  const got = plays.filter((p) => reads[p.id]);
+  const n = { wager: 0, hold: 0, skip: 0 };
+  got.forEach((p) => n[reads[p.id].action]++);
+
+  let text: React.ReactNode;
+  if (jevStatus === "loading" && got.length === 0) text = "Jev is reading the board…";
+  else if (jevStatus === "offline") text = "Jev is offline on this server.";
+  else if (got.length === 0) text = "Jev couldn't read the board just now.";
+  else if (n.wager + n.hold === 0)
+    text = (
+      <>
+        <b>Jev passes on all {got.length}.</b> No clear mispricing right now. That&apos;s a real answer, not a glitch.
+      </>
+    );
+  else
+    text = (
+      <>
+        <b>
+          Jev likes {n.wager} · watching {n.hold}
+        </b>{" "}
+        · passes on {n.skip}.
+      </>
+    );
+
+  return (
+    <div className="hp-summary">
+      <span className="hp-brand-mark hp-brand-sm">{Icon.spark}</span>
+      <span>{text}</span>
+    </div>
+  );
 }
 
 /* ─────────────────────────── Desktop: the Desk ─────────────────────────── */
@@ -100,7 +134,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
         </div>
 
         <QuickStart />
-        {plays && <EdgeMap plays={list} focusedId={focused?.id ?? null} />}
+        {plays && <JevSummary plays={list} />}
 
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
 
