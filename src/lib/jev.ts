@@ -3,33 +3,34 @@
  *
  * Jev (TypeSafe AI's "System One" model) is a calibrated DECISION model, not an
  * LLM: you hand it structured state plus typed questions and it returns choices,
- * probabilities, and a calibrated confidence directly. We route it through the
- * Vercel AI Gateway (model id `typesafe-ai/jev`).
+ * probabilities, and a calibrated confidence directly. We call TypeSafe's API
+ * directly via `@typesafe-ai/sdk` (model `jev-latest`).
  *
  * Division of labour: Jev makes the fast, calibrated call on the market's own
  * metrics; Claude (src/lib/recommend.ts) does the deeper, web-grounded read and
  * the human-language explanation. Jev does NOT browse the web — its probability
  * is a calibrated read of the numbers we give it.
  *
- * Auth: the Vercel AI SDK routes plain `provider/model` ids through the AI
- * Gateway and authenticates with `AI_GATEWAY_API_KEY`. We key off that env var
- * explicitly so the UI can show a clean "not configured" state.
+ * Auth: `TYPESAFE_API_KEY`. We key off that env var explicitly so the UI can
+ * show a clean "not configured" state. (We used to route through the Vercel AI
+ * Gateway, but its free tier doesn't include Jev.)
  */
 
-import { experimental_evaluate as evaluate } from "ai";
+import { choice, noul, TypeSafeClient } from "@typesafe-ai/sdk";
 import type { Market } from "./polymarket";
 
-const MODEL = "typesafe-ai/jev";
+const MODEL = "jev-latest";
 
-/** Thrown when the Vercel AI Gateway key isn't configured. Catch to fall back. */
-export class MissingGatewayKeyError extends Error {
+/** Thrown when the TypeSafe key isn't configured. Catch to fall back. */
+export class MissingJevKeyError extends Error {
   constructor() {
-    super(
-      "No AI_GATEWAY_API_KEY configured. Set your Vercel AI Gateway key to enable Jev."
-    );
-    this.name = "MissingGatewayKeyError";
+    super("No TYPESAFE_API_KEY configured. Set your TypeSafe key to enable Jev.");
+    this.name = "MissingJevKeyError";
   }
 }
+
+let client: TypeSafeClient | null = null;
+const getClient = () => (client ??= new TypeSafeClient());
 
 export type JevAction = "wager" | "hold" | "skip";
 export type JevValuation = "undervalued" | "fair" | "overvalued";
@@ -80,49 +81,38 @@ function buildState(market: Market): string {
 
 /**
  * Ask Jev for a calibrated read on a market's leading outcome.
- * Throws MissingGatewayKeyError when the gateway key isn't configured.
+ * Throws MissingJevKeyError when the TypeSafe key isn't configured.
  */
 export async function jevRead(market: Market): Promise<JevRead> {
-  if (!process.env.AI_GATEWAY_API_KEY) throw new MissingGatewayKeyError();
+  if (!process.env.TYPESAFE_API_KEY) throw new MissingJevKeyError();
 
   const target = market.outcomes[0];
   if (!target) throw new Error("Market has no outcomes to evaluate.");
 
-  const result = await evaluate({
+  const result = await getClient().systemOne({
     model: MODEL,
     state: buildState(market),
     questions: {
-      outcome: {
-        type: "boolean",
-        instructions: `Will the outcome "${target.label}" resolve YES (win)?`,
-        criteria: {
-          true: `"${target.label}" is the more likely result given the metrics.`,
-          false: `"${target.label}" is unlikely to win.`,
-        },
-      },
-      call: {
-        type: "choice",
-        instructions:
-          "Given the market metrics, what is the play on the leading outcome right now?",
-        criteria: {
+      outcome: noul(`Will the outcome "${target.label}" resolve YES (win)?`, {
+        true: `"${target.label}" is the more likely result given the metrics.`,
+        false: `"${target.label}" is unlikely to win.`,
+      }),
+      call: choice(
+        "Given the market metrics, what is the play on the leading outcome right now?",
+        {
           wager: "Clear, actionable value worth acting on now.",
           hold: "Some edge, but small or the timing is uncertain; wait.",
           skip: "The market looks efficient, there is no edge, or it is too risky.",
-        },
-      },
+        }
+      ),
     },
   });
 
-  const probability = clamp01(result.answers.outcome.probability);
-  const action = result.answers.call.choice as JevAction;
+  const probability = clamp01(result.answers.outcome.noul);
+  const action = result.answers.call.choice;
   const edge = probability - target.price;
   const valuation: JevValuation =
     edge > 0.02 ? "undervalued" : edge < -0.02 ? "overvalued" : "fair";
-
-  // Jev returns calibrated confidence for choice/score questions here.
-  const conf = result.providerMetadata?.typesafe?.confidence as
-    | Record<string, number>
-    | undefined;
 
   return {
     outcome: target.label,
@@ -132,7 +122,7 @@ export async function jevRead(market: Market): Promise<JevRead> {
     action,
     actionProbabilities: result.answers.call.probabilities,
     valuation,
-    confidence: typeof conf?.call === "number" ? conf.call : null,
-    model: MODEL,
+    confidence: result.answers.call.confidence,
+    model: result.model,
   };
 }

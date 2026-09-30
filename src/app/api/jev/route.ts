@@ -1,5 +1,5 @@
 import { fetchMarketById } from "@/lib/polymarket";
-import { jevRead, MissingGatewayKeyError } from "@/lib/jev";
+import { jevRead, MissingJevKeyError } from "@/lib/jev";
 import type { JevReadDTO } from "@/lib/dto";
 
 // Jev is a fast decision call, but never cache live-market results.
@@ -39,7 +39,7 @@ async function handle(id: string | null) {
     };
     return Response.json(body);
   } catch (err) {
-    if (err instanceof MissingGatewayKeyError) {
+    if (err instanceof MissingJevKeyError) {
       return Response.json({ available: false, reason: err.message }, { status: 200 });
     }
     const message = err instanceof Error ? err.message : "Jev evaluation failed";

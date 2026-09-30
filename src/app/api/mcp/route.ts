@@ -14,6 +14,7 @@
  * Tools:
  *   get_best_plays      — ranked markets worth a look   (fetchMarkets + rankMarkets)
  *   recommend_market    — Claude's CHASE/HOLD/SKIP read (fetchMarketById + recommend)
+ *   get_jev_read        — Jev's calibrated WAGER/HOLD/SKIP (fetchMarketById + jevRead)
  *   analyze_edge        — edge/Kelly/hedge math, no LLM  (analyzePlay)
  *   get_market_history  — price history for one outcome  (Polymarket CLOB)
  */
@@ -24,6 +25,7 @@ import { fetchMarkets, fetchMarketById } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { recommend } from "@/lib/recommend";
 import { MissingCredentialsError } from "@/lib/read";
+import { jevRead, MissingJevKeyError } from "@/lib/jev";
 
 // The recommend tool calls Claude + live web search; give it room past the
 // default serverless timeout. Honored by Vercel; harmless in local dev.
@@ -166,6 +168,41 @@ const handler = createMcpHandler(
             );
           }
           return errorResult(err instanceof Error ? err.message : "Recommendation failed");
+        }
+      },
+    );
+
+    /* ---- get_jev_read -------------------------------------------------- */
+    server.registerTool(
+      "get_jev_read",
+      {
+        title: "Get Jev's calibrated call",
+        description:
+          "Ask Jev, HedgePredict's calibrated prediction model, for a fast read on one market's leading outcome: its probability vs. the market price, the edge, and a WAGER / HOLD / SKIP call with calibrated confidence. Jev reads the market's own metrics only (no web search), so it takes a few seconds. Use recommend_market for a slower, news-grounded read. Pass a marketId from get_best_plays. Decision support, not advice; it does not place trades.",
+        inputSchema: z.object({
+          marketId: z.string().min(1).describe("Polymarket (Gamma) market id, e.g. from get_best_plays."),
+        }),
+      },
+      async ({ marketId }) => {
+        let market;
+        try {
+          market = await fetchMarketById(marketId);
+        } catch (err) {
+          return errorResult(err instanceof Error ? err.message : "Market lookup failed");
+        }
+        if (!market) return errorResult(`Market ${marketId} not found.`);
+
+        try {
+          const jev = await jevRead(market);
+          const edgePts = (jev.edge * 100).toFixed(1);
+          const conf = jev.confidence != null ? `, ${pct(jev.confidence)} confident` : "";
+          const summary = `Jev on "${market.question}": ${jev.action.toUpperCase()}${conf}. ${jev.outcome} at ${pct(jev.marketPrice)} market vs ${pct(jev.probability)} Jev (edge ${edgePts} pts, ${jev.valuation}).`;
+          return textResult(summary, { marketId: market.id, question: market.question, url: market.url, ...jev });
+        } catch (err) {
+          if (err instanceof MissingJevKeyError) {
+            return errorResult("Jev isn't configured on this server (no TypeSafe key).");
+          }
+          return errorResult(err instanceof Error ? err.message : "Jev evaluation failed");
         }
       },
     );

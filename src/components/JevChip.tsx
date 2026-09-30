@@ -54,7 +54,7 @@ export function JevChip({
       </button>
     );
   }
-  // Visible (muted) failure state instead of vanishing, so a missing gateway
+  // Visible (muted) failure state instead of vanishing, so a missing TypeSafe
   // key or a transient error is diagnosable at a glance rather than a mystery.
   // "busy" = the Jev model is briefly rate-limited upstream — offer a retry.
   if (error || !jev) {
@@ -62,7 +62,7 @@ export function JevChip({
       error === "no-key" ? "offline" : error === "busy" ? "busy" : "unavailable";
     const why =
       error === "no-key"
-        ? "Jev is offline: no AI Gateway key configured for this deployment."
+        ? "Jev is offline: no TypeSafe key configured for this deployment."
         : error === "busy"
           ? "Jev is in high demand right now. Tap to try again."
           : "Jev couldn't be reached right now. Tap to try again.";

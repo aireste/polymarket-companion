@@ -66,7 +66,7 @@ export interface JevReadDTO {
   model: string;
 }
 
-/** `available:false` means the gateway key isn't set; `error` means it failed. */
+/** `available:false` means the TypeSafe key isn't set; `error` means it failed. */
 export type JevResponse =
   | JevReadDTO
   | { available: false; reason: string }

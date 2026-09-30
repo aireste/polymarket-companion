@@ -6,7 +6,7 @@ import type { JevReadDTO, JevResponse } from "./dto";
 interface State {
   jev: JevReadDTO | null;
   loading: boolean;
-  /** null = fine; "no-key" = gateway key missing; string = error message. */
+  /** null = fine; "no-key" = TypeSafe key missing; string = error message. */
   error: string | null;
   /** Manual re-run (also used to retry after an error). */
   run: () => void;
@@ -14,7 +14,7 @@ interface State {
 
 /**
  * Jev's calibrated read for one market. On-demand by default: the user taps
- * "Ask Jev" to fire it, so opening the app doesn't hammer the AI Gateway with a
+ * "Ask Jev" to fire it, so opening the app doesn't hammer the TypeSafe API with a
  * call per market (and each read stays a deliberate action). Pass `auto: true`
  * to fire once on mount instead.
  */
@@ -31,7 +31,7 @@ export function useJev(
   const run = useCallback(async () => {
     setLoading(true);
     setError(null);
-    // The Jev model on the AI Gateway intermittently 429s under upstream load.
+    // Jev can 429 under load (rate limits).
     // Ride out short spikes with a couple of backoff retries before surfacing an
     // error, so a transient burst self-heals without the user re-tapping.
     const isRateLimited = (msg: string) =>

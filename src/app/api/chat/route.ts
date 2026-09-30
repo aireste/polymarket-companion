@@ -18,7 +18,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { fetchMarkets, fetchMarketById, searchMarkets } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
-import { jevRead, MissingGatewayKeyError } from "@/lib/jev";
+import { jevRead, MissingJevKeyError } from "@/lib/jev";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 // The agentic loop plus a web search or two can run tens of seconds.
@@ -190,8 +190,8 @@ const getJevVerdict = betaZodTool({
         confidence: jev.confidence == null ? "n/a" : jev.confidence.toFixed(2),
       });
     } catch (err) {
-      if (err instanceof MissingGatewayKeyError) {
-        return "Jev is not configured on this server (no AI Gateway key).";
+      if (err instanceof MissingJevKeyError) {
+        return "Jev is not configured on this server (no TypeSafe key).";
       }
       const msg = err instanceof Error ? err.message : "unknown error";
       if (/rate.?limit|high demand|429|overloaded/i.test(msg)) {
