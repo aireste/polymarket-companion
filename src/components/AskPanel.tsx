@@ -38,7 +38,8 @@ function renderContent(text: string) {
   ));
 }
 
-export function AskPanel() {
+/** `initialQuestion` (e.g. from the search palette) is sent once on arrival. */
+export function AskPanel({ initialQuestion }: { initialQuestion?: string } = {}) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -87,6 +88,13 @@ export function AskPanel() {
   };
 
   const empty = messages.length === 0;
+
+  const asked = useRef(false);
+  useEffect(() => {
+    if (!initialQuestion || asked.current) return;
+    asked.current = true;
+    send(initialQuestion);
+  }, [initialQuestion, send]);
 
   return (
     <section className="ask-panel" id="ask-panel" aria-label="Ask HedgePredict">

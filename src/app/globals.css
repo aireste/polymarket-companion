@@ -2190,7 +2190,7 @@ body {
   line-height: 1;
   transition: transform 0.22s var(--ease);
 }
-.collapse.open .collapse-chev {
+.acc.open .collapse-chev {
   transform: rotate(180deg);
 }
 .collapse-trigger:focus-visible {
@@ -2201,7 +2201,7 @@ body {
 .collapse-body {
   display: none;
 }
-.collapse.open .collapse-body {
+.acc.open .collapse-body {
   display: block;
 }
 /* Dark connect card: light text on the trigger. */

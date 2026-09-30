@@ -77,3 +77,41 @@ export function horizon(iso: string | null): string {
   if (days < 90) return `${Math.round(days / 7)}w`;
   return `${Math.round(days / 30)}mo`;
 }
+
+/** Real-moment timestamp for a market: game start for sports, else close date. */
+export function whenMs(p: { gameStartTime: string | null; endDate: string | null }): number {
+  const iso = p.gameStartTime ?? p.endDate;
+  const t = iso ? new Date(iso).getTime() : NaN;
+  return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
+}
+
+/** Flighty-style countdown: "LIVE", "in 43m", "in 6h 12m", "in 29 days". */
+export function countdown(
+  p: { gameStartTime: string | null; endDate: string | null },
+  now = Date.now()
+): string {
+  if (isLive(p.gameStartTime, now)) return "LIVE";
+  const ms = whenMs(p) - now;
+  if (!Number.isFinite(ms)) return "open-ended";
+  if (ms < 0) return "awaiting result";
+  const mins = Math.round(ms / 60_000);
+  if (mins < 60) return `in ${mins}m`;
+  const h = Math.floor(ms / 3_600_000);
+  if (h < 24) return `in ${h}h ${Math.round((ms % 3_600_000) / 60_000)}m`;
+  const d = Math.round(ms / 86_400_000);
+  return `in ${d} ${d === 1 ? "day" : "days"}`;
+}
+
+/** Clock face for the board: "9:30 PM" within a day, else "Oct 28". */
+export function clockLabel(
+  p: { gameStartTime: string | null; endDate: string | null },
+  now = Date.now()
+): string {
+  const t = whenMs(p);
+  if (!Number.isFinite(t)) return "Open";
+  const d = new Date(t);
+  const h = (t - now) / 3_600_000;
+  return h < 24
+    ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString([], { month: "short", day: "numeric" });
+}

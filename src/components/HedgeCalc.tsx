@@ -35,30 +35,21 @@ export function HedgeCalc() {
 
   const a = "a" in result ? result.a : null;
   const money = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
-  const [open, setOpen] = useState(false);
 
   return (
     <section
-      className={`hedge collapse${open ? " open" : ""}`}
+      className="hedge acc open"
       id="hedge-calc"
       aria-label="Hedge calculator"
     >
-      <button
-        type="button"
-        className="collapse-trigger"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
+      <div className="collapse-trigger">
         <span className="collapse-titles">
           <span className="collapse-title">Hedge calculator</span>
           <span className="collapse-sub">
             Plan a hedge on any bet: see the lock and your profit or loss each way.
           </span>
         </span>
-        <span className="collapse-chev" aria-hidden>
-          ▾
-        </span>
-      </button>
+      </div>
 
       <div className="collapse-body">
       <div className="hedge-inputs">

@@ -102,3 +102,9 @@ export type ReadResponse =
       model: string;
     }
   | { available: false; reason: string };
+
+/** GET /api/jev/board: Jev's read on every board market, keyed by market id. */
+export type JevBoardResponse =
+  | { reads: Record<string, JevReadDTO>; asOf: string }
+  | { available: false; reason: string }
+  | { error: string };

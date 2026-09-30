@@ -18,6 +18,7 @@
 
 import { choice, noul, TypeSafeClient } from "@typesafe-ai/sdk";
 import type { Market } from "./polymarket";
+import type { JevReadDTO } from "./dto";
 
 const MODEL = "jev-latest";
 
@@ -124,5 +125,22 @@ export async function jevRead(market: Market): Promise<JevRead> {
     valuation,
     confidence: result.answers.call.confidence,
     model: result.model,
+  };
+}
+
+/** Serialize a read for the client (the /api/jev response shape). */
+export function toJevDTO(market: Market, jev: JevRead): JevReadDTO {
+  return {
+    marketId: market.id,
+    marketName: market.question,
+    outcome: jev.outcome,
+    marketPrice: jev.marketPrice,
+    jevProbability: jev.probability,
+    edge: jev.edge,
+    action: jev.action,
+    actionProbabilities: jev.actionProbabilities,
+    valuation: jev.valuation,
+    confidence: jev.confidence,
+    model: jev.model,
   };
 }

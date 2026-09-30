@@ -4,12 +4,12 @@ const STEPS = [
   {
     n: 1,
     h: "Browse today's markets",
-    p: "Use the side tabs (Today, Hot, Coin-flips, Live) or the stat cards to filter live Polymarket markets down to the ones worth a look.",
+    p: "The board ranks live Polymarket markets by signal. Use Today, Live, Hot and Coin-flips to narrow it down, or search all of Polymarket with ⌘K (the search bar on your phone).",
   },
   {
     n: 2,
     h: "Ask Jev for the call",
-    p: "Jev is HedgePredict's calibrated prediction engine — a decision model, not a chatbot. Tap “Ask Jev” on the featured pick or any market row and it instantly returns the play: wager, hold, or skip, plus its own probability, the edge versus the market price, and a confidence score.",
+    p: "Jev is HedgePredict's calibrated prediction engine — a decision model, not a chatbot. Every market on the board already has Jev's call: wager, hold, or skip, plus its own probability, the edge versus the market price, and a confidence score. Open any market to see the full read.",
   },
   {
     n: 3,
@@ -23,14 +23,16 @@ const STEPS = [
   },
 ];
 
-export function HowItWorks({ onClose }: { onClose: () => void }) {
+export function HowItWorks({ onClose }: { onClose?: () => void }) {
   return (
     <section className="guide" aria-label="How HedgePredict works">
       <div className="guide-top">
         <h2>How HedgePredict works</h2>
-        <button className="guide-close" onClick={onClose} aria-label="Dismiss guide">
-          ✕
-        </button>
+        {onClose && (
+          <button className="guide-close" onClick={onClose} aria-label="Dismiss guide">
+            ✕
+          </button>
+        )}
       </div>
 
       <div className="guide-steps">
@@ -52,9 +54,11 @@ export function HowItWorks({ onClose }: { onClose: () => void }) {
           No login, no wallet, nothing connected to your accounts. It only reads
           public data and never places trades.
         </span>
-        <button className="pill pill-dark" onClick={onClose}>
-          Got it
-        </button>
+        {onClose && (
+          <button className="pill pill-dark" onClick={onClose}>
+            Got it
+          </button>
+        )}
       </div>
     </section>
   );

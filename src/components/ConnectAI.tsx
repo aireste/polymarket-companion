@@ -86,32 +86,23 @@ function useCopy() {
 
 export function ConnectAI() {
   const [active, setActive] = useState<ClientId>("claude");
-  const [open, setOpen] = useState(false);
   const { copied, copy } = useCopy();
   const tab = CLIENTS.find((c) => c.id === active)!;
 
   return (
     <section
-      className={`connect collapse${open ? " open" : ""}`}
+      className="connect acc open"
       id="connect"
       aria-label="Use HedgePredict in your own AI"
     >
-      <button
-        type="button"
-        className="collapse-trigger"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
+      <div className="collapse-trigger">
         <span className="collapse-titles">
           <span className="collapse-title">Bring HedgePredict into your own AI</span>
           <span className="collapse-sub">
             Connect the same engine to Claude, Claude Code, or ChatGPT and let your assistant call it.
           </span>
         </span>
-        <span className="collapse-chev" aria-hidden>
-          ▾
-        </span>
-      </button>
+      </div>
 
       <div className="collapse-body">
       <div className="connect-url">

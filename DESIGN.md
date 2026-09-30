@@ -12,6 +12,28 @@ refine within this direction only.
 (Superseded directions, for reference only: dark Flighty; soft light dashboard;
 dark app; light editorial.)
 
+## Layout (2026-09-29): Desk on desktop, Departures on phone
+Chosen from two clickable renditions (Esteban picked A's desktop + B's phone).
+- **Real routes, no scroll-to-section.** `/` Today, `/live`, `/hot`, `/coinflips`
+  (board filters), `/ask`, `/hedge`, `/connect`, `/how-it-works`. The focused
+  market is `?m=<id>` (shareable; phone back gesture closes the sheet).
+- **Desktop "Desk" (>= 900px):** dark labeled sidebar (216px; icon-only 72px
+  between 900 and 1180px) + top bar (breadcrumb, ⌘K search of all Polymarket,
+  updated-ago + refresh). Board = dense table (rank, market + countdown + 24h vol,
+  price, 1W sparkline, Jev pill) + right **inspector** (dark price card, Jev
+  verdict with wager/hold/skip bars, optional Claude deep read, stats). Arrow keys
+  / j k walk the table.
+- **Phone "Departures" (< 900px):** date + "What's resolving" title, search bar,
+  filter chips, Jev summary line, then time groups (Live now / Next 24 hours /
+  This week / Later) of Flighty cards (big clock, Jev pill, Yes/No split bar,
+  countdown). Tap = bottom sheet (90dvh) with the same inspector; board scales
+  back behind it. Floating bottom tab bar: Board / Ask / Hedge / Your AI.
+- Jev reads for the whole board come from `/api/jev/board` (10-min server cache),
+  so every row shows a verdict without per-visitor calls.
+- Styles for all of this live in `src/app/app.css` (`hp-` prefix). Beware
+  Tailwind v4 utility names as bare class names (`collapse` = visibility:collapse
+  bit us; renamed to `acc`).
+
 ---
 
 ## LEGACY NOTES (older direction — Dark Flighty)

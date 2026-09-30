@@ -1,5 +1,5 @@
 import { fetchMarketById } from "@/lib/polymarket";
-import { jevRead, MissingJevKeyError } from "@/lib/jev";
+import { jevRead, toJevDTO, MissingJevKeyError } from "@/lib/jev";
 import type { JevReadDTO } from "@/lib/dto";
 
 // Jev is a fast decision call, but never cache live-market results.
@@ -23,20 +23,7 @@ async function handle(id: string | null) {
   }
 
   try {
-    const jev = await jevRead(market);
-    const body: JevReadDTO = {
-      marketId: market.id,
-      marketName: market.question,
-      outcome: jev.outcome,
-      marketPrice: jev.marketPrice,
-      jevProbability: jev.probability,
-      edge: jev.edge,
-      action: jev.action,
-      actionProbabilities: jev.actionProbabilities,
-      valuation: jev.valuation,
-      confidence: jev.confidence,
-      model: jev.model,
-    };
+    const body: JevReadDTO = toJevDTO(market, await jevRead(market));
     return Response.json(body);
   } catch (err) {
     if (err instanceof MissingJevKeyError) {
