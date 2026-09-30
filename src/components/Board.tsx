@@ -16,6 +16,8 @@ import { Odo } from "./Odo";
 import { QuickStart } from "./QuickStart";
 import { useSlider } from "@/lib/useSlider";
 import { ThemeToggle } from "./ThemeToggle";
+import { TodaysPick } from "./TodaysPick";
+import { todaysPick } from "@/lib/pick";
 import { Countdown } from "./Countdown";
 
 /** The market board for one filter route. Desktop: table + inspector. Phone: time board + sheet. */
@@ -26,7 +28,8 @@ export function Board({ filter }: { filter: FilterId }) {
 }
 
 function useFocusedPlay(list: PlayDTO[], fallbackToFirst: boolean) {
-  const { findPlay, addExtra } = useBoard();
+  const { findPlay, addExtra, plays, reads } = useBoard();
+  const pickId = todaysPick(plays, reads)?.play.id;
   const id = useSelectedId();
   const found = findPlay(id);
 
@@ -43,7 +46,9 @@ function useFocusedPlay(list: PlayDTO[], fallbackToFirst: boolean) {
     };
   }, [id, found, addExtra]);
 
-  return found ?? (fallbackToFirst ? list[0] ?? null : null);
+  // With nothing in the URL, desktop opens on today's pick (if it's in this filter).
+  const fallback = list.find((p) => p.id === pickId) ?? list[0] ?? null;
+  return found ?? (fallbackToFirst ? fallback : null);
 }
 
 /** One plain sentence on how Jev reads the board right now. */
@@ -66,9 +71,7 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
   else
     text = (
       <>
-        <b>
-          Jev backs {n.wager} · leans on {n.hold}
-        </b>{" "}
+        <b>{[n.wager && `Jev backs ${n.wager}`, n.hold && `${n.wager ? "leans on" : "Jev leans on"} ${n.hold}`].filter(Boolean).join(" · ")}</b>{" "}
         · {n.skip} look priced right.
       </>
     );
@@ -141,6 +144,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
         </div>
 
         <QuickStart />
+        <TodaysPick variant="desk" />
         {plays && <JevSummary plays={list} />}
 
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
@@ -290,6 +294,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
         </button>
 
         <QuickStart />
+        <TodaysPick variant="phone" onOpen={openSheet} />
         {plays && <NextUp plays={list} onOpen={openSheet} />}
 
         <nav className="hp-chips" aria-label="Filter markets">
@@ -385,8 +390,11 @@ function LiveRail({ play }: { play: PlayDTO }) {
 /** Flighty's "next flight" card: the next market to resolve, counting down live. */
 function NextUp({ plays, onOpen }: { plays: PlayDTO[]; onOpen: (id: string) => void }) {
   const now = useNow(1000);
+  const { reads, plays: all } = useBoard();
+  const pickId = todaysPick(all, reads)?.play.id;
+  // Don't repeat today's pick right under it.
   const next = plays
-    .filter((p) => !isLive(p.gameStartTime, now) && whenMs(p) > now)
+    .filter((p) => p.id !== pickId && !isLive(p.gameStartTime, now) && whenMs(p) > now)
     .sort((a, b) => whenMs(a) - whenMs(b))[0];
   if (!next) return null;
   const frac = Math.min(1, Math.max(0, 1 - (whenMs(next) - now) / (6 * 3_600_000)));
