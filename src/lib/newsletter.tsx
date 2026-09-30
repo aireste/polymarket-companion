@@ -8,6 +8,7 @@
  *   NEWSLETTER_FROM      e.g. "HedgePredict Daily <daily@hedgepredict.co>" (verified domain)
  *   NEWSLETTER_ADDRESS   postal address for the footer (CAN-SPAM)
  *   CRON_SECRET          Vercel sends it as a Bearer token to the cron route
+ *   FORMSPREE_ENDPOINT   pre-launch waitlist (defaults to our form); used until Resend is set up
  */
 import { Resend } from "resend";
 import { render } from "@react-email/components";
@@ -60,4 +61,22 @@ export async function sendIssue(issue: DailyIssue): Promise<{ id: string }> {
   });
   if (error || !data) throw new Error(error?.message ?? "Broadcast failed");
   return { id: data.id };
+}
+
+/** Pre-launch: signups land in a Formspree waitlist until Resend is configured. */
+const FORMSPREE = process.env.FORMSPREE_ENDPOINT ?? "https://formspree.io/f/mljdvoyo";
+
+export async function joinWaitlist(email: string, source: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await fetch(FORMSPREE, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ email, source, _subject: "New HedgePredict Daily signup" }),
+    });
+    if (res.ok) return { ok: true };
+    const d = (await res.json().catch(() => ({}))) as { errors?: { message?: string }[] };
+    return { ok: false, error: d.errors?.[0]?.message ?? `Formspree returned ${res.status}` };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Waitlist unreachable" };
+  }
 }

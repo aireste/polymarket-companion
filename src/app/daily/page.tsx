@@ -23,7 +23,7 @@ export default async function Page() {
         <h1>HedgePredict Daily</h1>
         <p>A 2-minute read every weekday at 8 AM ET: Jev&apos;s pick, the board, what&apos;s on the clock, and the movers. Here&apos;s today&apos;s.</p>
       </header>
-      <SubscribeBox />
+      <SubscribeBox source="daily-page" />
       {html ? (
         <iframe className="hp-daily-frame" title="Today's HedgePredict Daily" srcDoc={html} sandbox="allow-popups allow-popups-to-escape-sandbox" />
       ) : (

@@ -226,7 +226,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
         </table>
         </div>
 
-        <SubscribeBox compact />
+        <SubscribeBox compact source="board-desktop" />
 
         <div className="hp-keys">
           <span>
@@ -352,7 +352,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
             })}
           </section>
         ))}
-        <SubscribeBox compact />
+        <SubscribeBox compact source="board-phone" />
         <nav className="hp-phone-links" aria-label="More">
           <Link href="/daily">The Daily</Link>
           <Link href="/how-it-works">How it works</Link>

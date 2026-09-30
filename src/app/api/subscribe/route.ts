@@ -1,4 +1,4 @@
-import { isEmail, newsletterConfigured, subscribe } from "@/lib/newsletter";
+import { isEmail, joinWaitlist, newsletterConfigured, subscribe } from "@/lib/newsletter";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
@@ -9,16 +9,21 @@ export async function POST(request: Request) {
   if (!gate.ok) return Response.json({ error: "Too many tries. Give it a few minutes." }, { status: 429 });
 
   let email = "";
+  let source = "site";
+  let trap = "";
   try {
-    email = String(((await request.json()) as { email?: unknown }).email ?? "").trim().toLowerCase();
+    const body = (await request.json()) as { email?: unknown; source?: unknown; company?: unknown };
+    email = String(body.email ?? "").trim().toLowerCase();
+    source = String(body.source ?? "site").slice(0, 40);
+    trap = String(body.company ?? "");
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
+  // Honeypot: people never see or fill "company"; bots do. Pretend it worked.
+  if (trap) return Response.json({ ok: true });
   if (!isEmail(email)) return Response.json({ error: "That doesn't look like an email address." }, { status: 400 });
 
-  if (!newsletterConfigured()) {
-    return Response.json({ ok: false, pending: true, message: "The Daily launches soon. Signups open when it does." });
-  }
-  const res = await subscribe(email);
-  return res.ok ? Response.json({ ok: true }) : Response.json({ error: "Couldn't sign you up just now. Try again." }, { status: 502 });
+  // Before launch the list lives in Formspree; after, in Resend. Same UI either way.
+  const res = newsletterConfigured() ? await subscribe(email) : await joinWaitlist(email, source);
+  return res.ok ? Response.json({ ok: true, live: newsletterConfigured() }) : Response.json({ error: "Couldn't sign you up just now. Try again." }, { status: 502 });
 }
