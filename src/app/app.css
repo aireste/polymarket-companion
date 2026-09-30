@@ -53,10 +53,14 @@
   display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px;
   border-radius: 999px; font: 500 11.5px var(--font-mono); white-space: nowrap; flex: none;
 }
-.hp-jev-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; }
-.hp-jev-skip { background: oklch(0.93 0.004 255); color: var(--ink-soft); }
-.hp-jev-hold { background: var(--amber-soft); color: var(--amber-ink); }
-.hp-jev-wager { background: var(--accent); color: var(--dark); }
+/* Jev's call as type + a status dot: the dot carries the color, the words stay neutral. */
+.hp-jev-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--ink-faint); }
+.hp-jev-wager, .hp-jev-hold, .hp-jev-skip { padding: 0; height: auto; background: none; }
+.hp-jev-wager { color: var(--ink); }
+.hp-jev-wager .hp-jev-dot { background: var(--accent-ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); }
+.hp-jev-hold { color: var(--ink); }
+.hp-jev-hold .hp-jev-dot { background: oklch(0.72 0.14 75); }
+.hp-jev-skip { color: var(--ink-faint); }
 .hp-jev-none { color: var(--ink-faint); }
 .hp-jev-pending {
   width: 64px;
@@ -568,7 +572,6 @@
   --scrim: oklch(0.2 0.01 260 / 0.3);
 }
 .hp-table tbody tr.is-sel { background: var(--row-sel) !important; }
-.hp-jev-skip { background: var(--chip-bg); }
 .hp-ask-btn, .hp-chip[aria-current="page"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .hp-ask-btn:hover { background: var(--ink); filter: brightness(0.9); }
 
@@ -792,8 +795,16 @@
 .hp-phone-links { display: flex; gap: 18px; justify-content: center; padding: 18px 0 4px; font-size: 13.5px; }
 .hp-phone-links a { color: var(--ink-soft); display: inline-flex; align-items: center; gap: 8px; }
 @media (min-width: 900px) { .hp-phone-links { display: none; } }
-.hp-jev-side { font-weight: 600; margin-left: 2px; max-width: 14ch; overflow: hidden; text-overflow: ellipsis; }
-.hp-jev-side::before { content: "·"; margin-right: 5px; opacity: 0.5; font-weight: 400; }
+.hp-jev-side { font-weight: 400; color: var(--ink-soft); max-width: 14ch; overflow: hidden; text-overflow: ellipsis; }
+.hp-jev-side::before { content: "·"; margin-right: 6px; color: var(--ink-faint); }
+
+/* Call state in the inspector header: dot + label + confidence, no pill. */
+.hp-call { display: inline-flex; align-items: center; gap: 7px; font: 600 12.5px var(--font-mono); color: var(--ink); }
+.hp-call i { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); }
+.hp-call-wager i { background: var(--accent-ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); }
+.hp-call-hold i { background: oklch(0.72 0.14 75); }
+.hp-call-skip { color: var(--ink-soft); }
+.hp-call small { font: 12px var(--font-sans); color: var(--ink-faint); margin-left: 4px; }
 
 /* Jev's lean: one stacked bar, sides at the ends, "priced right" in the middle */
 .hp-lean { margin-top: 16px; }
@@ -820,14 +831,14 @@
 .hp-pick.is-loading { height: 132px; border-radius: var(--r); background: var(--paper-2); border: 1px solid var(--rule); margin-bottom: 14px;
   background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rule) 60%, transparent), transparent); background-size: 200% 100%; animation: hp-shimmer 1.4s linear infinite; }
 .hp-pick.is-empty { border: 1px dashed var(--rule-strong); border-radius: var(--r); padding: 14px 18px; margin-bottom: 14px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
-.hp-pick.is-empty .hp-pick-k { color: var(--ink-faint); }
+.hp-pick.is-empty .hp-pick-k { color: var(--ink); }
 .hp-pick.is-empty p { font-size: 13.5px; color: var(--ink-soft); }
 .hp-pick.is-empty b { color: var(--ink); }
 
 .hp-pick-desk.featured { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; padding: 18px 20px; }
 .hp-pick-desk .hp-pick-side { padding-top: 26px; }
 .hp-pick-top { display: flex; align-items: center; gap: 10px; }
-.hp-pick-k { display: inline-flex; align-items: center; gap: 8px; font: 600 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+.hp-pick-k { display: inline-flex; align-items: center; gap: 8px; font: 600 13px var(--font-sans); color: var(--on-dark); }
 .hp-pick-spark { width: 18px; height: 18px; border-radius: 6px; background: var(--accent); color: var(--dark); display: grid; place-items: center; }
 .hp-pick-spark svg { width: 10px; height: 10px; }
 /* Call tag: a small colored dot + quiet label (no filled neon pill). */
@@ -972,3 +983,7 @@
   .hp-dw-pick h2 { font-size: 24px; }
   .hp-dw-row.has-lead { grid-template-columns: 72px minmax(0, 1fr); }
 }
+
+/* On dark surfaces (phone pass header stays light; Today's pick uses hp-pick-tag). */
+:root[data-theme="dark"] .hp-jev-wager .hp-jev-dot { background: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hp-jev-wager .hp-jev-dot { background: var(--accent); } }

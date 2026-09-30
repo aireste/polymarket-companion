@@ -187,16 +187,20 @@ function JevVerdict({ play }: { play: PlayDTO }) {
 
   return (
     <section className="hp-verdict" aria-label="Jev's call">
+      {/* The headline already names the side; the header just states the call, quietly. */}
       <div className="hp-verdict-row">
         <span className="hp-verdict-k">Jev&apos;s call</span>
-        <JevPill id={play.id} long />
+        <span className={`hp-call hp-call-${JEV_ACTION_COPY[read.action].cls}`}>
+          <i aria-hidden />
+          {JEV_ACTION_COPY[read.action].label}
+          {conf && <small>{conf} confidence</small>}
+        </span>
       </div>
       <div className="hp-verdict-call">{headline}</div>
       <div className="hp-verdict-sub">
         {side
           ? `Jev puts ${pct(read.strength)} on ${side.label} being underpriced at ${pct(side.price)}.`
           : `Jev is ${pct(read.strength)} sure neither side is underpriced.`}
-        {conf && ` ${conf[0].toUpperCase()}${conf.slice(1)} confidence.`}
       </div>
       <LeanBar read={read} shown={shown} />
       <p className="hp-verdict-src">From price action, volume and timing. No news: that&apos;s what Deep read adds.</p>
