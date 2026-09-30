@@ -17,6 +17,7 @@ import { JevPill } from "./JevPill";
 import { Status } from "./Status";
 import { Icon } from "./icons";
 import { Odo } from "./Odo";
+import { SubscribeBox, useJoinedDaily } from "./SubscribeBox";
 
 const RANGES = [
   { id: "1d", label: "1D" },
@@ -206,8 +207,8 @@ function JevVerdict({ play }: { play: PlayDTO }) {
       </div>
       <LeanBar read={read} shown={shown} />
       <p className="hp-verdict-src">
-        The percentages are how sure Jev is of each answer, not chances of winning. Prices are the crowd&apos;s odds. Jev reads price
-        action, volume and timing; Deep read adds the news.
+        These are Jev&apos;s confidence in each answer, not chances of winning. One side being a bargain means the other is overpriced.
+        Jev reads price action, volume and timing; Deep read adds the news.
       </p>
 
       {!explain.explanation && explain.error !== "no-key" && (
@@ -236,7 +237,22 @@ function JevVerdict({ play }: { play: PlayDTO }) {
 /** The slower Claude + live-news read. Optional, and only after Jev has spoken. */
 function DeepRead({ play }: { play: PlayDTO }) {
   const { rec, loading, error, run } = useRecommendation(play.id);
+  const joined = useJoinedDaily();
   if (error === "no-key") return null;
+  // Lead gen: deep reads are free for Daily readers. (A browser-side gate; the
+  // server's 3-per-day limit still protects cost either way.)
+  if (!joined && !rec) {
+    return (
+      <div className="hp-deep-lock">
+        <SubscribeBox
+          compact
+          source="deep-read-unlock"
+          title="Unlock deep reads"
+          blurb="Claude checks the live news behind any market (~15s). Free for HedgePredict Daily readers: join and it unlocks right away."
+        />
+      </div>
+    );
+  }
   const limited = error?.startsWith("You've used today's") ?? false;
   if (rec) return <Recommendation rec={rec} url={play.url} />;
   if (loading) {
@@ -281,9 +297,24 @@ function useMounted() {
  * Jev's answer as one stacked bar: each side's share of "this side is
  * underpriced" with "priced about right" in the middle. The leaned side is lit.
  */
+/**
+ * Natural-frequency version of the bar, which people read more easily than
+ * percentages: "If Jev read this market 100 times, it would call Yes a
+ * bargain 45 times, the price fair 53 times, and No a bargain 2 times."
+ */
+function freqSentence(order: { key: string; label: string; p: number }[]) {
+  const parts = order.map((g) => {
+    const n = Math.round(g.p * 100);
+    const what = g.key === "n" ? "the price fair" : `${g.label.replace(/ is a bargain$/, "")} a bargain`;
+    return `${what} ${n} ${n === 1 ? "time" : "times"}`;
+  });
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}` : parts[0];
+  return `If Jev read this market 100 times, it would call ${list}.`;
+}
+
 function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
   const pct = (x: number) => `${Math.round(x * 100)}%`;
-  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} too cheap`, sub: `trades at ${cents(s.price)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
+  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${cents(s.price)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
   const neither = { key: "n", label: "Fair price", sub: "", p: read.distribution.neither, lean: read.lean == null };
   // Two-sided markets read left side / neither / right side; others put neither last.
   const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
@@ -308,6 +339,7 @@ function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
           </span>
         ))}
       </div>
+      <p className="hp-lean-freq">{freqSentence(order)}</p>
     </div>
   );
 }

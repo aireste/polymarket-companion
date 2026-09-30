@@ -18,7 +18,42 @@ function mask(email: string) {
  * the Formspree waitlist before launch and in Resend after, so this UI never
  * changes. Remembers a successful signup in this browser.
  */
-export function SubscribeBox({ compact = false, source = "site" }: { compact?: boolean; source?: string }) {
+/** Fired on window when someone joins, so gated features (deep read) unlock instantly. */
+export const JOINED_EVENT = "hp-daily-joined";
+
+/** Has this browser joined the Daily? Live-updates when a SubscribeBox anywhere succeeds. */
+export function useJoinedDaily(): boolean {
+  const [joined, setJoined] = useState(false);
+  useEffect(() => {
+    const read = () => {
+      try {
+        setJoined(Boolean(localStorage.getItem(JOINED_KEY)));
+      } catch {
+        setJoined(false);
+      }
+    };
+    read();
+    window.addEventListener(JOINED_EVENT, read);
+    window.addEventListener("storage", read);
+    return () => {
+      window.removeEventListener(JOINED_EVENT, read);
+      window.removeEventListener("storage", read);
+    };
+  }, []);
+  return joined;
+}
+
+export function SubscribeBox({
+  compact = false,
+  source = "site",
+  title = "Today's pick in your inbox.",
+  blurb = "Jev's call, what resolves next, and the biggest movers. Weekdays at 8 AM ET, a 2-minute read.",
+}: {
+  compact?: boolean;
+  source?: string;
+  title?: string;
+  blurb?: string;
+}) {
   const id = useId();
   const [email, setEmail] = useState("");
   const [trap, setTrap] = useState("");
@@ -56,6 +91,7 @@ export function SubscribeBox({ compact = false, source = "site" }: { compact?: b
       const clean = email.trim().toLowerCase();
       try {
         localStorage.setItem(JOINED_KEY, clean);
+        window.dispatchEvent(new Event(JOINED_EVENT));
       } catch {
         /* fine */
       }
@@ -92,8 +128,8 @@ export function SubscribeBox({ compact = false, source = "site" }: { compact?: b
   return (
     <section className={`hp-sub${compact ? " is-compact" : ""}`} aria-labelledby={`${id}-t`}>
       <div className="hp-sub-copy">
-        <b id={`${id}-t`}>Today&apos;s pick in your inbox.</b>
-        <p>Jev&apos;s call, what resolves next, and the biggest movers. Weekdays at 8 AM ET, a 2-minute read.</p>
+        <b id={`${id}-t`}>{title}</b>
+        <p>{blurb}</p>
       </div>
       <form className="hp-sub-form" onSubmit={submit} noValidate>
         <div className={`hp-sub-field${showHint || phase === "error" ? " is-bad" : ""}`}>
