@@ -2,8 +2,23 @@ import { fetchMarketById } from "@/lib/polymarket";
 import { recommend } from "@/lib/recommend";
 import { MissingCredentialsError } from "@/lib/read";
 import type { RecommendationDTO } from "@/lib/dto";
+import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
+
+/** The deep read is the one expensive call (Opus + live web search): 3 per visitor per day. */
+function deepReadGate(request: Request) {
+  const gate = rateLimit(`deep-read:${clientKey(request)}`, LIMITS.deepRead.max, LIMITS.deepRead.windowMs);
+  if (gate.ok) return null;
+  const hours = Math.max(1, Math.round(gate.retryAfterSec / 3600));
+  return Response.json(
+    {
+      error: `You've used today's ${LIMITS.deepRead.max} deep reads. They reset in about ${hours}h. Jev's call is always free.`,
+      limit: true,
+    },
+    { status: 429, headers: { "Retry-After": String(gate.retryAfterSec) } }
+  );
+}
 
 async function handle(id: string | null) {
   if (!id) {
@@ -55,7 +70,9 @@ async function handle(id: string | null) {
 /** GET /api/v2/recommendations?id=<marketId> */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  return handle(searchParams.get("id"));
+  const id = searchParams.get("id");
+  if (!id) return handle(id);
+  return deepReadGate(request) ?? handle(id);
 }
 
 /** POST /api/v2/recommendations  { "id": "<marketId>" } */
@@ -67,5 +84,6 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-  return handle(id);
+  if (!id) return handle(id);
+  return deepReadGate(request) ?? handle(id);
 }

@@ -241,6 +241,7 @@ function JevVerdict({ play }: { play: PlayDTO }) {
 function DeepRead({ play }: { play: PlayDTO }) {
   const { rec, loading, error, run } = useRecommendation(play.id);
   if (error === "no-key") return null;
+  const limited = error?.startsWith("You've used today's") ?? false;
   if (rec) return <Recommendation rec={rec} url={play.url} />;
   if (loading) {
     return (
@@ -254,12 +255,18 @@ function DeepRead({ play }: { play: PlayDTO }) {
     <div className="hp-deep">
       <div>
         <div className="hp-deep-lead">Want the story behind the numbers?</div>
-        <div className="hp-deep-sub">Claude checks live news and sentiment (~15s).</div>
-        {error && <p className="helper" style={{ color: "var(--neg-ink)" }}>{error}</p>}
+        <div className="hp-deep-sub">Claude checks live news and sentiment (~15s). 3 per day.</div>
+        {error && (
+          <p className="helper" style={{ color: limited ? "var(--ink-soft)" : "var(--neg-ink)" }}>
+            {error}
+          </p>
+        )}
       </div>
-      <button className="pill" onClick={run}>
-        {error ? "Try again" : "Deep read"}
-      </button>
+      {!limited && (
+        <button className="pill" onClick={run}>
+          {error ? "Try again" : "Deep read"}
+        </button>
+      )}
     </div>
   );
 }

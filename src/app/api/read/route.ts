@@ -1,11 +1,20 @@
 import { generateRead, MissingCredentialsError } from "@/lib/read";
 import type { Market } from "@/lib/polymarket";
 import type { PlayDTO, ReadResponse } from "@/lib/dto";
+import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
 /** POST /api/read — Claude's probability read for a market's leading outcome. */
 export async function POST(request: Request) {
+  const gate = rateLimit(`read:${clientKey(request)}`, LIMITS.read.max, LIMITS.read.windowMs);
+  if (!gate.ok) {
+    return Response.json(
+      { error: `Too many reads. Try again in ${Math.ceil(gate.retryAfterSec / 60)} min.` },
+      { status: 429, headers: { "Retry-After": String(gate.retryAfterSec) } }
+    );
+  }
+
   let play: PlayDTO;
   try {
     play = (await request.json()) as PlayDTO;

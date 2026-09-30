@@ -8,14 +8,14 @@
  */
 import { explainJev } from "@/lib/jevExplain";
 import { MissingCredentialsError } from "@/lib/read";
-import { rateLimit, clientKey } from "@/lib/rateLimit";
+import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
 import type { JevReadDTO } from "@/lib/dto";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function POST(request: Request) {
-  const gate = rateLimit(`jev-explain:${clientKey(request)}`);
+  const gate = rateLimit(`jev-explain:${clientKey(request)}`, LIMITS.explain.max, LIMITS.explain.windowMs);
   if (!gate.ok) {
     return Response.json(
       { error: `Too many explanations. Try again in ${gate.retryAfterSec}s.` },

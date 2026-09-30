@@ -7,14 +7,14 @@
  * the metrics Jev actually saw — no invented news, no re-deciding the call.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_FAST, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import { MissingCredentialsError } from "./read";
 import type { JevReadDTO } from "./dto";
 import { JEV_ACTION_COPY, confidenceLabel, valuationLabel, edgeLabel } from "./jevDisplay";
 
 // Sonnet keeps this cheap; it's a short interpretation of Jev's numbers, not
-// deep reasoning, so thinking is disabled to stay fast (Sonnet 5 runs adaptive
-// thinking by default otherwise).
-const MODEL = "claude-sonnet-5";
+// deep reasoning, so it runs at low effort to stay fast.
+const MODEL = CLAUDE_FAST;
 
 export interface JevExplanation {
   explanation: string;
@@ -42,15 +42,19 @@ Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${conf ? ` (${con
 
 Write 2-3 short sentences a smart bettor can skim: what the edge and confidence imply, and why that maps to a ${JEV_ACTION_COPY[read.action].label} call. If the edge is small or within noise, say plainly that the market looks efficient. Plain text, no preamble, no markdown, no em dashes.`;
 
-  const response = await client.messages.create({
+  const response = await client.beta.messages.create({
+    ...REFUSAL_FALLBACK,
     model: MODEL,
-    max_tokens: 600,
-    thinking: { type: "disabled" },
+    max_tokens: 4000,
+    // Sonnet 5.5 can't disable thinking; low effort keeps it quick and cheap.
+    thinking: { type: "adaptive" },
+    output_config: { effort: "low" },
     messages: [{ role: "user", content: prompt }],
   });
+  assertNotRefused(response);
 
   const text = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
     .map((b) => b.text)
     .join("")
     .trim();

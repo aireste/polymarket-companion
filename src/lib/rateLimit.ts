@@ -11,6 +11,18 @@
 const WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const MAX_HITS = 6; // messages per window per key
 
+/**
+ * Per-visitor budgets, sized to what each call costs. The cheap Sonnet calls
+ * are generous so a live demo never trips them; the Opus + web-search deep
+ * read (~15-25c each) is the one that needs a real cap.
+ */
+export const LIMITS = {
+  chat: { max: 12, windowMs: WINDOW_MS },
+  explain: { max: 12, windowMs: WINDOW_MS },
+  read: { max: 12, windowMs: WINDOW_MS },
+  deepRead: { max: 3, windowMs: 24 * WINDOW_MS },
+} as const;
+
 const hits = new Map<string, number[]>();
 
 export interface RateLimitResult {

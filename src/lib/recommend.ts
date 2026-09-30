@@ -8,6 +8,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_DEEP, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import type { Market } from "./polymarket";
 import { MissingCredentialsError } from "./read";
 
@@ -25,7 +26,7 @@ export interface Recommendation {
   model: string;
 }
 
-const MODEL = "claude-opus-4-8";
+const MODEL = CLAUDE_DEEP;
 
 const REC_SCHEMA = {
   type: "object",
@@ -84,7 +85,7 @@ Market-implied odds: ${odds}
 Resolves by: ${endText} · 24h volume $${Math.round(market.volume24hr).toLocaleString()} · liquidity $${Math.round(market.liquidity).toLocaleString()}
 
 Do this:
-1. Use web search to check the most recent news and social sentiment relevant to this market.
+1. Use web search to check the most recent news and social sentiment relevant to this market. Run two or three focused searches, one or two at a time.
 2. Estimate the true probability that the FIRST outcome ("${target?.label}") resolves YES. The market implies ${targetPct}%.
 3. Compare your estimate to the market price and choose an action:
    - CHASE: you see a clear, actionable edge worth acting on now.
@@ -92,17 +93,20 @@ Do this:
    - SKIP: the market looks efficient, you have no edge, or it's too risky.
 Most efficient markets should be HOLD or SKIP. Ground the sentiment summary in what you actually find; do not invent chatter.`;
 
-  const response = await client.messages.create({
+  const response = await client.beta.messages.create({
+    ...REFUSAL_FALLBACK,
     model: MODEL,
-    max_tokens: 3500,
+    max_tokens: 16000,
     thinking: { type: "adaptive" },
-    tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }],
+    // Opus 5.5 tends to fire searches in parallel; 5 leaves headroom for ~3 useful ones.
+    tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 5 }],
     output_config: {
       effort: "medium",
       format: { type: "json_schema", schema: REC_SCHEMA },
     },
     messages: [{ role: "user", content: prompt }],
   });
+  assertNotRefused(response);
 
   // The final structured answer is the last text block.
   const textBlock = [...response.content]

@@ -19,7 +19,8 @@ import { z } from "zod";
 import { fetchMarkets, fetchMarketById, searchMarkets } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { jevRead, MissingJevKeyError } from "@/lib/jev";
-import { rateLimit, clientKey } from "@/lib/rateLimit";
+import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
+import { CLAUDE_FAST, REFUSAL_FALLBACK } from "@/lib/claude";
 
 // The agentic loop plus a web search or two can run tens of seconds.
 export const maxDuration = 60;
@@ -27,7 +28,7 @@ export const dynamic = "force-dynamic";
 
 // Sonnet for the on-site chat: fast and cheap. Jev (the calibrated engine) makes
 // the actual verdicts via get_jev_verdict; Claude is just the conversational wrapper.
-const MODEL = "claude-sonnet-5";
+const MODEL = CLAUDE_FAST;
 const CLOB_HISTORY = "https://clob.polymarket.com/prices-history";
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
@@ -224,8 +225,7 @@ function coerceMessages(body: unknown): ChatMessage[] | null {
 }
 
 export async function POST(request: Request) {
-  const key = clientKey(request);
-  const limit = rateLimit(key);
+  const limit = rateLimit(`chat:${clientKey(request)}`, LIMITS.chat.max, LIMITS.chat.windowMs);
   if (!limit.ok) {
     return Response.json(
       {
@@ -254,6 +254,7 @@ export async function POST(request: Request) {
 
   const client = new Anthropic();
   const runner = client.beta.messages.toolRunner({
+    ...REFUSAL_FALLBACK,
     model: MODEL,
     max_tokens: 8000,
     thinking: { type: "adaptive" },
@@ -288,6 +289,9 @@ export async function POST(request: Request) {
         .join("\n")
         .trim() ?? "";
 
+    if (final?.stop_reason === "refusal") {
+      return Response.json({ error: "Claude declined that one. Try asking a different way." }, { status: 200 });
+    }
     if (!text) {
       return Response.json({ error: "No answer was produced. Try rephrasing." }, { status: 502 });
     }

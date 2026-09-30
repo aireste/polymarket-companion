@@ -14,6 +14,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { CLAUDE_DEEP, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import type { Market } from "./polymarket";
 
 /** Thrown when no Anthropic API key / auth is available. Catch to fall back. */
@@ -42,7 +43,7 @@ export interface Read {
   model: string;
 }
 
-const MODEL = "claude-opus-4-8";
+const MODEL = CLAUDE_DEEP;
 
 /** JSON shape we constrain Claude's output to (structured outputs). */
 const READ_SCHEMA = {
@@ -102,9 +103,10 @@ Resolves by: ${endText}
 
 Estimate the probability that "${target.label}" resolves YES. The market implies ${(target.price * 100).toFixed(1)}%. If you have no informational edge, return the market price and mark confidence "low".`;
 
-  const response = await client.messages.create({
+  const response = await client.beta.messages.create({
+    ...REFUSAL_FALLBACK,
     model: MODEL,
-    max_tokens: 2048,
+    max_tokens: 16000,
     thinking: { type: "adaptive" },
     output_config: {
       effort: "medium",
@@ -112,6 +114,7 @@ Estimate the probability that "${target.label}" resolves YES. The market implies
     },
     messages: [{ role: "user", content: prompt }],
   });
+  assertNotRefused(response);
 
   // Structured outputs guarantee a single valid-JSON text block.
   const textBlock = response.content.find((b) => b.type === "text");
