@@ -26,6 +26,7 @@ import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { recommend } from "@/lib/recommend";
 import { MissingCredentialsError } from "@/lib/read";
 import { jevRead, MissingJevKeyError } from "@/lib/jev";
+import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
 
 // The recommend tool calls Claude + live web search; give it room past the
 // default serverless timeout. Honored by Vercel; harmless in local dev.
@@ -312,4 +313,40 @@ const handler = createMcpHandler(
   },
 );
 
-export { handler as GET, handler as POST };
+/**
+ * recommend_market is the expensive tool (Opus + live web search). It shares
+ * the website's deep-read budget: 3 per caller per day, web and MCP combined.
+ * Checked here, before the MCP handler, because tool callbacks can't see the
+ * caller's IP. Everything else passes straight through.
+ */
+async function POST(request: Request) {
+  const body: unknown = await request.clone().json().catch(() => null);
+  const calls = (Array.isArray(body) ? body : [body]) as {
+    id?: string | number;
+    method?: string;
+    params?: { name?: string };
+  }[];
+  const deep = calls.find((c) => c?.method === "tools/call" && c.params?.name === "recommend_market");
+  if (deep) {
+    const gate = rateLimit(`deep-read:${clientKey(request)}`, LIMITS.deepRead.max, LIMITS.deepRead.windowMs);
+    if (!gate.ok) {
+      const hours = Math.max(1, Math.round(gate.retryAfterSec / 3600));
+      return Response.json({
+        jsonrpc: "2.0",
+        id: deep.id ?? null,
+        result: {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `Daily limit reached: ${LIMITS.deepRead.max} deep reads per day (resets in about ${hours}h). get_jev_read is still available and free.`,
+            },
+          ],
+        },
+      });
+    }
+  }
+  return handler(request);
+}
+
+export { handler as GET, POST };
