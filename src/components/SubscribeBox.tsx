@@ -78,7 +78,6 @@ export function SubscribeBox({ compact = false, source = "site" }: { compact?: b
           </svg>
         </span>
         <div className="hp-sub-copy">
-          <span className="hp-sub-k">HedgePredict Daily</span>
           <b>You&apos;re on the list.</b>
           <p>
             {phase === "done" && !live
@@ -93,7 +92,6 @@ export function SubscribeBox({ compact = false, source = "site" }: { compact?: b
   return (
     <section className={`hp-sub${compact ? " is-compact" : ""}`} aria-labelledby={`${id}-t`}>
       <div className="hp-sub-copy">
-        <span className="hp-sub-k">HedgePredict Daily</span>
         <b id={`${id}-t`}>Today&apos;s pick in your inbox.</b>
         <p>Jev&apos;s call, what resolves next, and the biggest movers. Weekdays at 8 AM ET, a 2-minute read.</p>
       </div>

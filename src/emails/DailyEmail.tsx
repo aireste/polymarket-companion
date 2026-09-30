@@ -56,9 +56,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
           <Section style={{ padding: "4px 4px 18px" }}>
             <Row>
               <Column>
-                <Text style={{ margin: 0, fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em", color: C.limeInk, fontWeight: 700 }}>
-                  ✦ HEDGEPREDICT DAILY
-                </Text>
+                <Text style={{ margin: 0, fontSize: 13, fontWeight: 600, color: C.soft }}>HedgePredict Daily</Text>
                 <Text style={{ margin: "6px 0 0", fontSize: 30, lineHeight: "34px", fontWeight: 800, letterSpacing: "-0.02em" }}>{issue.title}</Text>
                 <Text style={{ margin: "6px 0 0", fontFamily: MONO, fontSize: 12, color: C.faint }}>2-minute read · prices as of 8:00 AM ET</Text>
               </Column>
@@ -71,8 +69,9 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
           {pick?.call ? (
             <Section style={{ background: C.dark, borderRadius: 18, padding: "20px 22px", color: C.onDark }}>
               <Text style={{ margin: 0 }}>
-                <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 999, background: pick.call.action === "wager" ? C.lime : C.amber, color: C.dark }}>
-                  {tag(pick.call.action)}
+                <span style={{ color: pick.call.action === "wager" ? C.lime : C.amber, fontSize: 12 }}>●</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.onDarkSoft, marginLeft: 6 }}>
+                  {pick.call.action === "wager" ? "Wager" : "Lean"}
                 </span>
               </Text>
               <Text style={{ margin: "12px 0 0", fontSize: 25, lineHeight: "30px", fontWeight: 800, letterSpacing: "-0.02em", color: C.onDark }}>

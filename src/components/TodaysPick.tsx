@@ -90,7 +90,10 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
             <span className="hp-pick-spark">{Icon.spark}</span>
             Today&apos;s pick
           </span>
-          <span className={`hp-pick-tag ${a.cls}`}>{a.label}</span>
+          <span className={`hp-pick-tag ${a.cls}`}>
+            <i aria-hidden />
+            {a.label}
+          </span>
         </div>
         <h2 className="hp-pick-head">
           {verb} <em>{side.label}</em> at <span className="num">{pct(side.price, 0)}</span>
