@@ -55,14 +55,19 @@ export interface RecommendationDTO {
 export interface JevReadDTO {
   marketId: string;
   marketName: string;
-  outcome: string;
-  marketPrice: number;
-  jevProbability: number;
-  edge: number;
+  /** The market's outcomes and their current prices, in [0,1]. */
+  sides: { label: string; price: number }[];
+  /** Index into `sides` of the side Jev leans toward; null = priced about right. */
+  lean: number | null;
+  /** Jev's probability on its answer: the leaned side, or "neither" on a skip. */
+  strength: number;
+  /** Jev's full distribution: one entry per side, plus "neither". */
+  distribution: { sides: number[]; neither: number };
   action: "wager" | "hold" | "skip";
-  actionProbabilities?: Record<string, number>;
-  valuation: "undervalued" | "fair" | "overvalued";
+  /** Calibrated confidence, [0,1]; null if not returned. */
   confidence: number | null;
+  /** One side is at >= 97%: effectively decided, no call made. */
+  settled?: boolean;
   model: string;
 }
 

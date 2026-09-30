@@ -10,7 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_FAST, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import { MissingCredentialsError } from "./read";
 import type { JevReadDTO } from "./dto";
-import { JEV_ACTION_COPY, confidenceLabel, valuationLabel, edgeLabel } from "./jevDisplay";
+import { JEV_ACTION_COPY, confidenceLabel } from "./jevDisplay";
 
 // Sonnet keeps this cheap; it's a short interpretation of Jev's numbers, not
 // deep reasoning, so it runs at low effort to stay fast.
@@ -31,16 +31,21 @@ export async function explainJev(read: JevReadDTO): Promise<JevExplanation> {
   const client = new Anthropic();
   const conf = confidenceLabel(read.confidence);
 
-  const prompt = `You are explaining a verdict from Jev, a calibrated prediction-model. Jev is NOT a language model and did NOT read any news: it made a fast, numbers-only call from the market's own metrics. Your job is to explain, in plain language, why Jev likely landed where it did. Do not re-decide, do not add outside news, do not invent facts. Interpret only what Jev saw.
+  const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
+  const side = read.lean == null ? null : read.sides[read.lean];
+  const dist = read.sides
+    .map((s, i) => `"${s.label}" underpriced: ${pct(read.distribution.sides[i] ?? 0)}`)
+    .concat(`neither: ${pct(read.distribution.neither)}`)
+    .join(" | ");
+
+  const prompt = `You are explaining a call from Jev, a calibrated decision model. Jev is NOT a language model and did NOT read any news: it looked only at this market's prices, its 7-day and 1-day price move, trading volume and timing, and answered one question: "at these prices, is either side underpriced?" Explain in plain language why it likely landed where it did. Do not re-decide, add outside news, or invent facts.
 
 Market: "${read.marketName}"
-Outcome under review: "${read.outcome}"
-Market-implied probability: ${(read.marketPrice * 100).toFixed(1)}%
-Jev's calibrated probability: ${(read.jevProbability * 100).toFixed(1)}%
-Edge (Jev minus market): ${edgeLabel(read.edge)} — Jev reads it as ${valuationLabel(read.valuation)}
-Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${conf ? ` (${conf} confidence)` : ""}
+Prices: ${read.sides.map((s) => `${s.label} ${pct(s.price)}`).join(", ")}
+Jev's answer (probabilities): ${dist}
+Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${side ? ` ${side.label}` : ""}${conf ? ` (${conf} confidence)` : ""}
 
-Write 2-3 short sentences a smart bettor can skim: what the edge and confidence imply, and why that maps to a ${JEV_ACTION_COPY[read.action].label} call. If the edge is small or within noise, say plainly that the market looks efficient. Plain text, no preamble, no markdown, no em dashes.`;
+Write 2-3 short sentences a smart bettor can skim. For a Wager or Lean, say which side looks underpriced and how firmly Jev holds that view, and that it's based on price action and market numbers, not news. For a Skip, say plainly that Jev sees the prices as about right. Plain text, no preamble, no markdown, no em dashes.`;
 
   const response = await client.beta.messages.create({
     ...REFUSAL_FALLBACK,

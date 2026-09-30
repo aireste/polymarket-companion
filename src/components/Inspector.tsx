@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { PlayDTO } from "@/lib/dto";
+import type { JevReadDTO, PlayDTO } from "@/lib/dto";
 import { useBoard } from "@/lib/boardStore";
 import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
-import { JEV_ACTION_COPY, confidenceLabel } from "@/lib/jevDisplay";
+import { JEV_ACTION_COPY, confidenceLabel, leanSide, shortSide } from "@/lib/jevDisplay";
 import { clockLabel, pct, resolveAt, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
@@ -170,38 +170,36 @@ function JevVerdict({ play }: { play: PlayDTO }) {
     );
   }
 
-  const a = JEV_ACTION_COPY[read.action];
+  if (read.settled) {
+    return (
+      <section className="hp-verdict" aria-label="Jev's call">
+        <span className="hp-verdict-k">Jev&apos;s call</span>
+        <div className="hp-verdict-call">Effectively decided.</div>
+        <div className="hp-verdict-sub">One side is already at 97% or more, so there&apos;s nothing left for Jev to call.</div>
+      </section>
+    );
+  }
   const conf = confidenceLabel(read.confidence);
-  const probs = read.actionProbabilities ?? {};
-  const words = { wager: "Worth a play.", hold: "Hold for now.", skip: "Skip it." }[read.action];
-  const livePrice = play.outcomes[0]?.price ?? read.marketPrice;
+  const side = leanSide(read);
+  const pct = (x: number) => `${Math.round(x * 100)}%`;
+  const headline =
+    read.action === "wager" ? `Back ${side?.label}.` : read.action === "hold" ? `Leans ${side?.label}.` : "Priced about right.";
 
   return (
     <section className="hp-verdict" aria-label="Jev's call">
       <div className="hp-verdict-row">
-        <span className="hp-verdict-k">Jev&apos;s call on {read.outcome}</span>
+        <span className="hp-verdict-k">Jev&apos;s call</span>
         <JevPill id={play.id} long />
       </div>
-      <div className="hp-verdict-call">{words}</div>
+      <div className="hp-verdict-call">{headline}</div>
       <div className="hp-verdict-sub">
-        {a.blurb}
+        {side
+          ? `Jev puts ${pct(read.strength)} on ${side.label} being underpriced at ${pct(side.price)}.`
+          : `Jev is ${pct(read.strength)} sure neither side is underpriced.`}
         {conf && ` ${conf[0].toUpperCase()}${conf.slice(1)} confidence.`}
       </div>
-      <GapMeter market={livePrice} jev={read.jevProbability} />
-      <div className="hp-dist" aria-label="How strongly Jev leans">
-        {(["wager", "hold", "skip"] as const).map((k) => {
-          const v = Math.round((probs[k] ?? 0) * 100);
-          return (
-            <div className={`hp-dist-row${k === read.action ? " win" : ""}`} key={k}>
-              <span>{k}</span>
-              <span className="hp-dist-track">
-                <i style={{ width: shown ? `${v}%` : 0 }} />
-              </span>
-              <span>{v}%</span>
-            </div>
-          );
-        })}
-      </div>
+      <LeanBar read={read} shown={shown} />
+      <p className="hp-verdict-src">From price action, volume and timing. No news: that&apos;s what Deep read adds.</p>
 
       {!explain.explanation && explain.error !== "no-key" && (
         <button className="hp-link" onClick={explain.run} disabled={explain.loading}>
@@ -270,76 +268,80 @@ function useMounted() {
   return on;
 }
 
-/** Market price vs Jev on one 0-100 rail, the gap between them shaded. */
-function GapMeter({ market, jev }: { market: number; jev: number }) {
-  const on = useMounted();
-  const j = on ? jev : market;
-  const lo = Math.min(market, j);
-  const up = jev >= market;
-  const edge = (jev - market) * 100;
+/**
+ * Jev's answer as one stacked bar: each side's share of "this side is
+ * underpriced" with "priced about right" in the middle. The leaned side is lit.
+ */
+function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
+  const pct = (x: number) => `${Math.round(x * 100)}%`;
+  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: s.label, sub: `at ${pct(s.price)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
+  const neither = { key: "n", label: "Priced right", sub: "", p: read.distribution.neither, lean: read.lean == null };
+  // Two-sided markets read left side / neither / right side; others put neither last.
+  const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
+  const tone = read.action === "wager" ? "wager" : read.action === "hold" ? "hold" : "skip";
   return (
-    <div className="hp-gap" aria-label={`Market ${pct(market, 0)}, Jev ${pct(jev, 0)}`}>
-      <div className="hp-gap-rail">
-        <span className={`hp-gap-span ${up ? "up" : "dn"}`} style={{ left: `${lo * 100}%`, width: `${Math.abs(j - market) * 100}%` }} />
-        <span className="hp-gap-mk jev" style={{ left: `${j * 100}%` }}>
-          <b>JEV {pct(jev, 0)}</b>
-        </span>
-        <span className="hp-gap-mk mkt" style={{ left: `${market * 100}%` }}>
-          <b>MKT {pct(market, 0)}</b>
-        </span>
+    <div className="hp-lean" aria-label="How Jev's answer splits">
+      <div className="hp-lean-bar">
+        {order.map((g) => (
+          <i
+            key={g.key}
+            className={`${g.key === "n" ? "is-n" : ""} ${g.lean ? `is-lean ${tone}` : ""}`}
+            style={{ flexGrow: shown ? Math.max(g.p, 0.015) : 1 }}
+          />
+        ))}
       </div>
-      <div className="hp-gap-ticks">
-        <span>0</span>
-        <span className={`hp-gap-edge ${up ? "up" : "dn"}`}>
-          edge {edge >= 0 ? "+" : ""}
-          {edge.toFixed(1)} pts
-        </span>
-        <span>100</span>
+      <div className="hp-lean-lbls">
+        {order.map((g) => (
+          <span key={g.key} className={g.lean ? "is-lean" : undefined}>
+            <b>{pct(g.p)}</b> {g.label}
+            {g.sub && <small>{g.sub}</small>}
+          </span>
+        ))}
       </div>
     </div>
   );
 }
 
-/** Phone sheet header, boarding-pass style: MARKET → JEV with the edge as the route. */
+/** Phone sheet header, boarding-pass style: the side at its market price → Jev's lean. */
 export function JevPass({ play }: { play: PlayDTO }) {
   const { reads } = useBoard();
   const r = reads[play.id];
-  if (!r) return null;
-  const edge = (r.jevProbability - (play.outcomes[0]?.price ?? r.marketPrice)) * 100;
+  if (!r || r.settled) return null;
+  const pct = (x: number) => `${Math.round(x * 100)}%`;
+  const side = leanSide(r);
+  const [s0, s1] = r.sides;
+  const a = JEV_ACTION_COPY[r.action];
   return (
     <section className="hp-pass" aria-label="Jev's read">
       <div className="hp-pass-top">
-        <span className="hp-verdict-k">Jev&apos;s read · {r.outcome}</span>
+        <span className="hp-verdict-k">Jev&apos;s read</span>
         <JevPill id={play.id} />
       </div>
       <div className="hp-pass-codes">
         <div>
-          <small>MARKET</small>
-          <b>{pct(play.outcomes[0]?.price ?? r.marketPrice, 0)}</b>
+          <small>{side ? shortSide(side.label, 16).toUpperCase() : shortSide(s0.label, 16).toUpperCase()}</small>
+          <b>{pct(side ? side.price : s0.price)}</b>
         </div>
         <div className="hp-pass-arc">
-          <span className={edge >= 0 ? "up" : "dn"}>
-            {edge >= 0 ? "+" : ""}
-            {edge.toFixed(1)} pts
-          </span>
+          <span className={r.action === "skip" ? "" : "up"}>{side ? `${a.label.toLowerCase()} ${pct(r.strength)}` : "priced right"}</span>
           <svg viewBox="0 0 100 40" aria-hidden>
-            <path id={`arc-${play.id}`} d="M2 36 Q50 -8 98 36" />
+            <path d="M2 36 Q50 -8 98 36" />
             <circle r="3.5">
               <animateMotion dur="2.4s" repeatCount="indefinite" path="M2 36 Q50 -8 98 36" />
             </circle>
           </svg>
         </div>
         <div>
-          <small>JEV</small>
-          <b>{pct(r.jevProbability, 0)}</b>
+          <small>{side ? "JEV" : shortSide(s1?.label ?? "", 16).toUpperCase()}</small>
+          <b>{side ? a.label.toUpperCase() : pct(s1?.price ?? 0)}</b>
         </div>
       </div>
       <div className="hp-pass-foot">
         <span>
-          CALL<b>{r.action.toUpperCase()}</b>
+          CALL<b>{side ? `${a.label} ${shortSide(side.label, 12)}` : "Skip"}</b>
         </span>
         <span>
-          CONFIDENCE<b>{r.confidence == null ? "–" : `${Math.round(r.confidence * 100)}%`}</b>
+          CONFIDENCE<b>{r.confidence == null ? "–" : pct(r.confidence)}</b>
         </span>
         <span>
           RESOLVES<b>{clockLabel(play)}</b>

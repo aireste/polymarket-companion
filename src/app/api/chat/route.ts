@@ -18,7 +18,8 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { fetchMarkets, fetchMarketById, searchMarkets } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
-import { jevRead, MissingJevKeyError } from "@/lib/jev";
+import { jevRead, describeRead, MissingJevKeyError } from "@/lib/jev";
+import { JEV_ACTION_COPY } from "@/lib/jevDisplay";
 import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
 import { CLAUDE_FAST, REFUSAL_FALLBACK } from "@/lib/claude";
 
@@ -37,11 +38,11 @@ const SYSTEM = `You are HedgePredict, a prediction-market analyst assistant for 
 Jev is the engine. Jev is HedgePredict's calibrated decision model. Whenever the user asks whether to play a specific market, or "what does Jev say", or wants a probability / confidence / call on a market, call get_jev_verdict and lead your answer with Jev's verdict. Do NOT substitute your own guess for Jev's number. You are the voice; Jev is the brain.
 
 How you work:
-- Use your tools. get_best_plays surfaces the curated dashboard set — HedgePredict's top-ranked live markets. search_markets(query) searches the FULL Polymarket universe by keyword (e.g. "bitcoin", "ethereum", a candidate, a team, an event) — use it whenever the user asks about a specific market, asset, or topic that is not in get_best_plays. The dashboard is intentionally kept tight to the best plays; search_markets is how you reach everything else. get_jev_verdict(marketId) returns Jev's calibrated call (wager/hold/skip), probability, edge vs the market, and confidence — call it on any market id from either tool. web_search checks current news for extra color when the user asks why. analyze_edge sizes a fractional-Kelly stake and hedge. get_market_history shows how an outcome's price moved.
+- Use your tools. get_best_plays surfaces the curated dashboard set — HedgePredict's top-ranked live markets. search_markets(query) searches the FULL Polymarket universe by keyword (e.g. "bitcoin", "ethereum", a candidate, a team, an event) — use it whenever the user asks about a specific market, asset, or topic that is not in get_best_plays. The dashboard is intentionally kept tight to the best plays; search_markets is how you reach everything else. get_jev_verdict(marketId) returns Jev's calibrated call: Wager (picks a side outright), Lean (leans one side), or Skip (priced about right), which side it favors, how strongly, and its confidence. Call it on any market id from either tool. web_search checks current news for extra color when the user asks why. analyze_edge sizes a fractional-Kelly stake and hedge. get_market_history shows how an outcome's price moved.
 - Finding a specific play: if the user names something not in the dashboard ("any good bitcoin plays?", "what about the X election?", "is there a market on Y?"), call search_markets first, then get_jev_verdict on the most relevant result(s). If search finds nothing tradable, say so plainly.
-- Honest over hype. A market's price already reflects the crowd's probability. If Jev says skip or the edge is tiny, say so plainly. "No edge, don't bet" is a good answer, not a gap.
+- Honest over hype. A market's price already reflects the crowd's probability. If Jev says Skip, say plainly the prices look about right. "No edge, don't bet" is a good answer, not a gap.
 - Decision support, not financial advice. You never place trades. Stakes are fractional-Kelly and capped. Remind users to only risk what they can afford to lose.
-- Be tight and fast. Default to 1-2 sentences. Lead with Jev's call and the two numbers (Jev % vs market %), then at most one short clause of why. This is a quick-answer surface, not an essay.
+- Be tight and fast. Default to 1-2 sentences. Lead with Jev's call and which side it favors at what price (e.g. \"Jev leans Colts at 50%\"), then at most one short clause of why. Jev judges which side is underpriced; it does not give its own win probability, so never present one. This is a quick-answer surface, not an essay.
 - Do NOT tack on unsolicited offers ("If you want, I can size a stake...", "Let me know if...", "I can also check..."). End when the answer is delivered. Only go longer, or offer next steps, if the user explicitly asks you to explain, go deeper, or size a play. No preamble, no tables, no recap.`;
 
 /** Rank a generous pool then re-sort by the requested signal, like the app UI. */
@@ -171,7 +172,7 @@ const searchMarketsTool = betaZodTool({
 const getJevVerdict = betaZodTool({
   name: "get_jev_verdict",
   description:
-    "Ask Jev, HedgePredict's calibrated decision model, for the verdict on a market's leading outcome. Returns action (wager/hold/skip), Jev's probability, the market-implied probability, the edge in points, and Jev's confidence. Call this whenever the user asks whether to play a specific market, what the odds/percentage are, or what Jev thinks. Use a marketId from get_best_plays. This is fast and is the authoritative call — do not guess a probability yourself.",
+    "Ask Jev, HedgePredict's calibrated decision model, whether either side of a market is underpriced at current prices. Returns the call (Wager = picks a side outright, Lean = leans one side, Skip = priced about right), the side it favors, its probability distribution over the sides and 'neither', and its confidence. Call this whenever the user asks whether to play a specific market or what Jev thinks. Use a marketId from get_best_plays or search_markets. Fast and authoritative; do not invent your own probability.",
   inputSchema: z.object({
     marketId: z.string().min(1),
   }),
@@ -182,12 +183,14 @@ const getJevVerdict = betaZodTool({
       const jev = await jevRead(market);
       return JSON.stringify({
         question: market.question,
-        outcome: jev.outcome,
-        action: jev.action,
-        jevProbability: pct(jev.probability),
-        marketProbability: pct(jev.marketPrice),
-        edgePoints: Number((jev.edge * 100).toFixed(1)),
-        valuation: jev.valuation,
+        call: describeRead(jev),
+        // User-facing label only; never surface the internal "hold" name.
+        label: jev.settled ? "Decided" : JEV_ACTION_COPY[jev.action].label,
+        leansToward: jev.lean == null ? null : jev.sides[jev.lean].label,
+        prices: Object.fromEntries(jev.sides.map((s) => [s.label, pct(s.price)])),
+        jevDistribution: Object.fromEntries(
+          jev.sides.map((s, i) => [`${s.label} underpriced`, pct(jev.distribution.sides[i] ?? 0)]).concat([["neither", pct(jev.distribution.neither)]])
+        ),
         confidence: jev.confidence == null ? "n/a" : jev.confidence.toFixed(2),
       });
     } catch (err) {

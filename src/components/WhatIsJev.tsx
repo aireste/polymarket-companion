@@ -10,19 +10,19 @@ import { useState } from "react";
 const POINTS: { k: string; p: string }[] = [
   {
     k: "It reads the numbers for you",
-    p: "Point Jev at any market and it looks at the current price, how much money is moving, and how close the odds are to a coin flip. You do not need to crunch anything yourself.",
+    p: "Jev looks at each market's current prices, how they moved over the last week and day, how much money is trading, and when it resolves. You do not need to crunch anything yourself.",
   },
   {
     k: "It gives you a straight call",
-    p: "Wager, hold, or skip. Plus its own estimate of the real odds, how that compares to the market price (the edge), and how sure it is.",
+    p: "It answers one question: at these prices, is either side underpriced? Wager means it picks a side outright, Lean means it leans one way, Skip means the prices look about right. You see how strongly it holds that view.",
   },
   {
     k: "It is honest about no-edge",
-    p: "The market price already reflects the crowd's best guess, so Jev often says skip. That is on purpose: it keeps you from betting on what is really a fair coin flip.",
+    p: "The market price already reflects the crowd's best guess, so Jev often says the price is about right. That is on purpose: it keeps you from betting on what is really a fair coin flip.",
   },
   {
     k: "Jev decides, Claude explains",
-    p: "Tap Ask Jev for the call. Then tap “Why does Jev say that?”, or use Ask HedgePredict, to have Claude explain it in plain English and check the latest news.",
+    p: "Open any market for the call. Then tap “Why does Jev say that?”, or use Ask HedgePredict, to have Claude explain it in plain English and check the latest news.",
   },
 ];
 

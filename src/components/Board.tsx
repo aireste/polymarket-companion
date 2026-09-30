@@ -51,7 +51,7 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
   const { reads, jevStatus } = useBoard();
   const got = plays.filter((p) => reads[p.id]);
   const n = { wager: 0, hold: 0, skip: 0 };
-  got.forEach((p) => n[reads[p.id].action]++);
+  got.filter((p) => !reads[p.id].settled).forEach((p) => n[reads[p.id].action]++);
 
   let text: React.ReactNode;
   if (jevStatus === "loading" && got.length === 0) text = "Jev is reading the board…";
@@ -60,16 +60,16 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
   else if (n.wager + n.hold === 0)
     text = (
       <>
-        <b>Jev passes on all {got.length}.</b> No clear mispricing right now. That&apos;s a real answer, not a glitch.
+        <b>Jev sees every market as priced about right.</b> No side looks underpriced right now.
       </>
     );
   else
     text = (
       <>
         <b>
-          Jev likes {n.wager} · watching {n.hold}
+          Jev backs {n.wager} · leans on {n.hold}
         </b>{" "}
-        · passes on {n.skip}.
+        · {n.skip} look priced right.
       </>
     );
 

@@ -39,14 +39,14 @@ export function QuickStart() {
           <span>1</span>
           <div>
             <b>Scan the board</b>
-            <p>Live Polymarket markets ranked by signal, each with Jev&apos;s call: wager, hold or skip.</p>
+            <p>Live Polymarket markets ranked by signal, each with Jev&apos;s call: wager, lean or skip.</p>
           </div>
         </li>
         <li>
           <span>2</span>
           <div>
             <b>Open a market</b>
-            <p>See wager, hold or skip, market vs Jev, and an optional deep read of the live news.</p>
+            <p>See which side Jev thinks is underpriced and how strongly, plus an optional deep read of the live news.</p>
           </div>
         </li>
         <li>

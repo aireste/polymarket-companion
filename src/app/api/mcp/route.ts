@@ -25,7 +25,7 @@ import { fetchMarkets, fetchMarketById } from "@/lib/polymarket";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { recommend } from "@/lib/recommend";
 import { MissingCredentialsError } from "@/lib/read";
-import { jevRead, MissingJevKeyError } from "@/lib/jev";
+import { jevRead, describeRead, MissingJevKeyError } from "@/lib/jev";
 import { rateLimit, clientKey, LIMITS } from "@/lib/rateLimit";
 
 // The recommend tool calls Claude + live web search; give it room past the
@@ -179,7 +179,7 @@ const handler = createMcpHandler(
       {
         title: "Get Jev's calibrated call",
         description:
-          "Ask Jev, HedgePredict's calibrated prediction model, for a fast read on one market's leading outcome: its probability vs. the market price, the edge, and a WAGER / HOLD / SKIP call with calibrated confidence. Jev reads the market's own metrics only (no web search), so it takes a few seconds. Use recommend_market for a slower, news-grounded read. Pass a marketId from get_best_plays. Decision support, not advice; it does not place trades.",
+          "Ask Jev, HedgePredict's calibrated decision model, whether either side of one market is underpriced at current prices. Returns WAGER (picks a side outright), LEAN (leans one side), or SKIP (priced about right), the side it favors, its distribution over the sides and 'neither', and calibrated confidence. Jev reads the market's prices, 7-day and 1-day price move, volume and timing only (no web search), so it is fast. Use recommend_market for a slower, news-grounded read. Pass a marketId from get_best_plays. Decision support, not advice; it does not place trades.",
         inputSchema: z.object({
           marketId: z.string().min(1).describe("Polymarket (Gamma) market id, e.g. from get_best_plays."),
         }),
@@ -195,9 +195,8 @@ const handler = createMcpHandler(
 
         try {
           const jev = await jevRead(market);
-          const edgePts = (jev.edge * 100).toFixed(1);
-          const conf = jev.confidence != null ? `, ${pct(jev.confidence)} confident` : "";
-          const summary = `Jev on "${market.question}": ${jev.action.toUpperCase()}${conf}. ${jev.outcome} at ${pct(jev.marketPrice)} market vs ${pct(jev.probability)} Jev (edge ${edgePts} pts, ${jev.valuation}).`;
+          const conf = jev.confidence != null ? ` Confidence ${pct(jev.confidence)}.` : "";
+          const summary = `Jev on "${market.question}": ${describeRead(jev)}.${conf}`;
           return textResult(summary, { marketId: market.id, question: market.question, url: market.url, ...jev });
         } catch (err) {
           if (err instanceof MissingJevKeyError) {
