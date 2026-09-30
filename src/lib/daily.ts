@@ -11,6 +11,7 @@ import { fetchHistory } from "./history";
 import { MARKET_TZ, clockLabel, isLive, whenMs } from "./format";
 import { CLAUDE_FAST, REFUSAL_FALLBACK } from "./claude";
 import type { JevReadDTO, PlayDTO } from "./dto";
+import { buildBackground, type Background } from "./background";
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://polymarket-companion-nu.vercel.app";
 
@@ -30,6 +31,8 @@ export interface IssueMarket {
   when: string;
   /** Change in the leading outcome's price over the last 24h, in [-1,1]. */
   move24h?: number;
+  /** News background from Claude + web search (pick: 2-3 sentences; leans: one line). */
+  background?: Background;
 }
 
 export interface DailyIssue {
@@ -155,6 +158,17 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
     .sort((a, b) => Math.abs(b.m) - Math.abs(a.m))
     .slice(0, 4)
     .map(({ p, m }) => toItem(p, reads[p.id], m));
+
+  // News background for the pick and the top leans (one cached web-search call per day).
+  const callText = (m: IssueMarket) =>
+    m.call ? `${m.call.action === "wager" ? "Back" : "Lean"} ${m.call.side} at ${pct(m.call.sidePrice)}` : "no call";
+  const subjects = [
+    ...(pick ? [{ id: pick.id, question: pick.question, call: callText(pick), depth: "pick" as const }] : []),
+    ...leans.slice(0, 4).map((m) => ({ id: m.id, question: m.question, call: callText(m), depth: "line" as const })),
+  ];
+  const bg = await buildBackground(iso, subjects);
+  if (pick && bg[pick.id]) pick.background = bg[pick.id];
+  for (const m of leans) if (bg[m.id]) m.background = bg[m.id];
 
   const base = { date: iso, title, pick, leans, counts, onTheClock, movers, generatedAt: now.toISOString() };
   const intro = await writeIntro(base);

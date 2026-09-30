@@ -91,7 +91,28 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
                 </Link>
               </Section>
             </Section>
-          ) : (
+          ) : null}
+          {pick?.background && (
+            <Section style={{ background: C.card, border: `1px solid ${C.rule}`, borderRadius: 18, padding: "16px 20px", marginTop: 10 }}>
+              <Text style={{ margin: 0, fontSize: 12, fontWeight: 600, color: C.faint }}>The background · from today&apos;s news</Text>
+              <Text style={{ margin: "6px 0 0", fontSize: 15, lineHeight: "23px", color: C.ink }}>{pick.background.story}</Text>
+              {pick.background.sources.length > 0 && (
+                <Text style={{ margin: "8px 0 0", fontSize: 12.5, color: C.faint }}>
+                  Sources:{" "}
+                  {pick.background.sources.map((src, i) => (
+                    <span key={src.url}>
+                      {i > 0 && " · "}
+                      <Link href={src.url} style={{ color: C.soft, textDecoration: "underline" }}>{src.title}</Link>
+                    </span>
+                  ))}
+                </Text>
+              )}
+              <Text style={{ margin: "8px 0 0", fontSize: 11.5, color: C.faint }}>
+                Background is news context from Claude. Jev&apos;s call above comes only from the market&apos;s numbers.
+              </Text>
+            </Section>
+          )}
+          {!pick?.call && (
             <Section style={{ background: C.card, border: `1px dashed ${C.rule}`, borderRadius: 18, padding: "18px 20px" }}>
               <Text style={{ margin: 0, fontSize: 15, lineHeight: "22px" }}>
                 <b>No standout play today.</b> Jev sees the board as fairly priced. That&apos;s a real answer: sitting out is a position.
@@ -113,7 +134,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
             </Text>
             {issue.leans.length === 0 && <Text style={{ margin: 0, fontSize: 14, color: C.faint }}>No other leans this morning.</Text>}
             {issue.leans.map((m) => (
-              <MarketLine key={m.id} m={m} right={m.call ? `${tag(m.call.action)} ${pct(m.call.strength)}` : ""}>
+              <MarketLine key={m.id} m={m} right={m.call ? `${tag(m.call.action)} ${pct(m.call.strength)}` : ""} note={m.background?.story}>
                 {verb(m.call!.action)} <b>{m.call!.side}</b> at {pct(m.call!.sidePrice)}
               </MarketLine>
             ))}
@@ -189,12 +210,15 @@ function MarketLine({
   leadColor,
   right,
   children,
+  note,
 }: {
   m: IssueMarket;
   lead?: string;
   leadColor?: string;
   right?: string;
   children?: React.ReactNode;
+  /** One line of news background, shown under the market. */
+  note?: string;
 }) {
   return (
     <Row style={{ borderTop: `1px solid ${C.rule}` }}>
@@ -208,6 +232,7 @@ function MarketLine({
         <Link href={m.href} style={{ fontSize: children ? 13 : 14, lineHeight: "19px", color: children ? C.soft : C.ink, textDecoration: "none" }}>
           {m.question}
         </Link>
+        {note && <Text style={{ margin: "6px 0 0", fontSize: 13, lineHeight: "19px", color: C.ink }}>{note}</Text>}
       </Column>
       {right && (
         <Column style={{ width: 110, padding: "11px 0 11px 8px", verticalAlign: "top", textAlign: "right" }}>
