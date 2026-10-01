@@ -312,7 +312,7 @@ function freqSentence(order: { key: string; label: string; p: number }[]) {
   return `If HedgePredict read this market 100 times, it would call ${list}.`;
 }
 
-function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
+function LeanBar({ read, shown, compact = false }: { read: JevReadDTO; shown: boolean; compact?: boolean }) {
   const fmt = useOddsFormat();
   const pct = (x: number) => `${Math.round(x * 100)}%`;
   const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${price(s.price, fmt)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
@@ -322,7 +322,7 @@ function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
   const tone = read.action === "wager" ? "wager" : read.action === "hold" ? "hold" : "skip";
   return (
     <div className="hp-lean" aria-label="How the call splits">
-      <div className="hp-lean-q">Is either side a bargain at these prices?</div>
+      {!compact && <div className="hp-lean-q">Is either side a bargain at these prices?</div>}
       <div className="hp-lean-bar">
         {order.map((g) => (
           <i
@@ -340,7 +340,7 @@ function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
           </span>
         ))}
       </div>
-      <p className="hp-lean-freq">{freqSentence(order)}</p>
+      {!compact && <p className="hp-lean-freq">{freqSentence(order)}</p>}
     </div>
   );
 }
@@ -355,40 +355,39 @@ export function JevPass({ play }: { play: PlayDTO }) {
   const side = leanSide(r);
   const [s0, s1] = r.sides;
   const a = JEV_ACTION_COPY[r.action];
+  const tone = r.action === "wager" ? "wager" : r.action === "hold" ? "hold" : "skip";
   return (
     <section className="hp-pass" aria-label="HedgePredict's read">
       <div className="hp-pass-top">
         <span className="hp-verdict-k">HedgePredict&apos;s read</span>
         <JevPill id={play.id} />
       </div>
-      <div className="hp-pass-codes">
+      <div className="hp-pass-prices">
         <div>
-          <small>{side ? shortSide(side.label, 16).toUpperCase() : shortSide(s0.label, 16).toUpperCase()}</small>
-          <b>{price(side ? side.price : s0.price, fmt)}</b>
+          <small>{shortSide(s0.label, 18)}</small>
+          <b>{price(s0.price, fmt)}</b>
         </div>
-        <div className="hp-pass-arc">
-          <span className={r.action === "skip" ? "" : "up"}>{side ? `${pct(r.strength)} sure it's cheap` : "fair price"}</span>
-          <svg viewBox="0 0 100 40" aria-hidden>
-            <path d="M2 36 Q50 -8 98 36" />
-            <circle r="3.5">
-              <animateMotion dur="2.4s" repeatCount="indefinite" path="M2 36 Q50 -8 98 36" />
-            </circle>
-          </svg>
-        </div>
-        <div>
-          <small>{side ? "JEV" : shortSide(s1?.label ?? "", 16).toUpperCase()}</small>
-          <b>{side ? a.label.toUpperCase() : price(s1?.price ?? 0, fmt)}</b>
-        </div>
+        {s1 && (
+          <div>
+            <small>{shortSide(s1.label, 18)}</small>
+            <b>{price(s1.price, fmt)}</b>
+          </div>
+        )}
       </div>
+      <p className={`hp-pass-verdict ${tone}`}>
+        {side ? `${shortSide(side.label, 22)} looks cheap` : "Both prices look fair"}
+        <span> · {pct(r.strength)} sure</span>
+      </p>
+      <LeanBar read={r} shown compact />
       <div className="hp-pass-foot">
         <span>
-          CALL<b>{side ? `${a.label} ${shortSide(side.label, 12)}` : "Skip"}</b>
+          Call<b>{side ? `${a.label} ${shortSide(side.label, 12)}` : "Skip"}</b>
         </span>
         <span>
-          CONFIDENCE<b>{r.confidence == null ? "–" : pct(r.confidence)}</b>
+          Confidence<b>{r.confidence == null ? "–" : pct(r.confidence)}</b>
         </span>
         <span>
-          RESOLVES<b>{clockLabel(play)}</b>
+          Resolves<b>{clockLabel(play)}</b>
         </span>
       </div>
     </section>

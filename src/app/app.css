@@ -473,17 +473,6 @@
 /* Boarding-pass header in the phone sheet */
 .hp-pass { background: var(--paper-2); border-radius: 22px; padding: 16px 18px; }
 .hp-pass-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.hp-pass-codes { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: end; margin-top: 12px; }
-.hp-pass-codes small { display: block; font: 600 10.5px var(--font-mono); letter-spacing: 0.1em; color: var(--ink-faint); }
-.hp-pass-codes b { font: 700 34px/1 var(--font-mono); letter-spacing: -0.03em; }
-.hp-pass-codes > div:last-child { text-align: right; }
-.hp-pass-arc { position: relative; }
-.hp-pass-arc svg { width: 100%; height: 40px; overflow: visible; }
-.hp-pass-arc path { fill: none; stroke: var(--rule-strong); stroke-width: 1.5; stroke-dasharray: 3 4; }
-.hp-pass-arc circle { fill: var(--ink); }
-.hp-pass-arc > span { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font: 600 11.5px var(--font-mono); background: var(--paper-2); padding: 0 6px; white-space: nowrap; }
-.hp-pass-arc > span.up { color: var(--pos-ink); }
-.hp-pass-arc > span.dn { color: var(--neg-ink); }
 .hp-pass-foot { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--rule-strong); font: 11px var(--font-mono); color: var(--ink-soft); }
 .hp-pass-foot b { display: block; color: var(--ink); font: 600 13px var(--font-mono); margin-top: 2px; }
 
@@ -495,7 +484,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .hp-odo-d > span, .hp-map-pt circle:last-child, .hp-gap-span, .hp-gap-mk, .hp-dist-track i { transition: none; }
-  .hp-map-halo, .hp-flash-up, .hp-flash-dn, .hp-pass-arc circle { animation: none; }
+  .hp-map-halo, .hp-flash-up, .hp-flash-dn { animation: none; }
 }
 @media (max-width: 899.98px) {
   /* Long single-line text (odds, names) must not widen the cards past the screen. */
@@ -748,10 +737,10 @@
 .hp-lean { margin-top: 16px; }
 .hp-lean-bar { display: flex; gap: 3px; height: 12px; }
 .hp-lean-bar i { flex-basis: 0; min-width: 4px; border-radius: 3px; background: var(--rule-strong); transition: flex-grow 0.9s var(--expo), background 0.3s; }
-.hp-lean-bar i.is-n { background: repeating-linear-gradient(135deg, var(--paper-3) 0 4px, var(--rule) 4px 6px); }
+.hp-lean-bar i.is-n { background: color-mix(in srgb, var(--fair) 45%, var(--paper-3)); }
 .hp-lean-bar i.is-lean.wager { background: var(--accent); }
-.hp-lean-bar i.is-lean.hold { background: oklch(0.8 0.14 80); }
-.hp-lean-bar i.is-n.is-lean { background: var(--ink-faint); }
+.hp-lean-bar i.is-lean.hold { background: var(--lean); }
+.hp-lean-bar i.is-n.is-lean { background: var(--fair); }
 .hp-lean-lbls { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--ink-faint); }
 .hp-lean-lbls span { display: flex; flex-direction: column; min-width: 0; max-width: 40%; }
 .hp-lean-lbls span:nth-child(2) { align-items: center; text-align: center; }
@@ -1120,7 +1109,30 @@
 body { font-variant-numeric: tabular-nums; }
 .hp-app kbd, code, pre, .connect-url-v, .connect-cmd code { font-family: var(--font-code); }
 .featured-pct, .hp-price .featured-pct, .hp-verdict-call, .hp-list-head h1, .hp-phone-title, .hp-next-cd,
-.hp-pass-codes b, .hl-head h1, .hl-r-big, .hp-pick-head, .hp-dl-copy h1, .hiw-hero h1, .hiw-dark strong,
+.hp-pass-prices b, .hl-head h1, .hl-r-big, .hp-pick-head, .hp-dl-copy h1, .hiw-hero h1, .hiw-dark strong,
 .hiw-big, .hiw-faq-side h2, .hiw-sec, .hp-fcard-top b {
   font-weight: 700; letter-spacing: -0.025em;
 }
+
+/* ───────────── Outcome colors: lime = bargain (Wager), amber = Lean, blue = fair price ───────────── */
+:root { --fair: oklch(0.7 0.1 240); --fair-ink: oklch(0.5 0.12 245); --lean: oklch(0.8 0.14 80); --lean-ink: oklch(0.58 0.13 70); }
+:root[data-theme="dark"] { --fair: oklch(0.66 0.1 240); --fair-ink: oklch(0.76 0.09 240); --lean-ink: oklch(0.82 0.13 80); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --fair: oklch(0.66 0.1 240); --fair-ink: oklch(0.76 0.09 240); --lean-ink: oklch(0.82 0.13 80); }
+}
+.hp-call-wager { color: var(--accent-ink); }
+.hp-call-hold { color: var(--lean-ink); }
+.hp-call-skip { color: var(--fair-ink); }
+
+/* Phone read card: two prices, a colored verdict, the same bar as desktop */
+.hp-pass-prices { display: flex; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.hp-pass-prices > div:last-child { text-align: right; }
+.hp-pass-prices small { display: block; font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hp-pass-prices b { font-size: 32px; line-height: 1.1; }
+.hp-pass-verdict { margin-top: 12px; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+.hp-pass-verdict span { font-weight: 450; color: var(--ink-soft); }
+.hp-pass-verdict.wager { color: var(--accent-ink); }
+.hp-pass-verdict.hold { color: var(--lean-ink); }
+.hp-pass-verdict.skip { color: var(--fair-ink); }
+.hp-pass .hp-lean { margin-top: 10px; }
+.hp-pass-foot { font-family: var(--font-sans); }
