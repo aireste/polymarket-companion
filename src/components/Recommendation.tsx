@@ -48,7 +48,7 @@ export function Recommendation({
       </div>
 
       <div className="rec-read">
-        <span className="rec-read-k">Claude&apos;s read</span>
+        <span className="rec-read-k">The deep read</span>
         <span className="rec-read-v num">
           {price(rec.aiProbability, fmt, "pct", 0)}
           <span className="rec-read-vs"> · market {marketPct}</span>

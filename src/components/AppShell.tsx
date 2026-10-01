@@ -10,6 +10,7 @@ import { CommandPalette } from "./CommandPalette";
 import { AskPanel } from "./AskPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { OddsToggle } from "./OddsToggle";
+import { POLYMARKET_US } from "@/lib/links";
 import { useSlider } from "@/lib/useSlider";
 import { Icon } from "./icons";
 
@@ -17,14 +18,14 @@ const BOARD_PATHS = new Set(FILTERS.map((f) => f.href));
 
 const TOOLS = [
   { href: "/ask", label: "Ask", icon: Icon.ask },
-  { href: "/hedge", label: "Hedge calc", icon: Icon.hedge },
+  { href: "/hedge", label: "Hedge Lab", icon: Icon.hedge },
   { href: "/connect", label: "Use in your AI", icon: Icon.connect },
   { href: "/daily", label: "The Daily", icon: Icon.mail },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
   "/ask": "Ask",
-  "/hedge": "Hedge calculator",
+  "/hedge": "Hedge Lab",
   "/connect": "Use in your AI",
   "/how-it-works": "How it works",
   "/daily": "HedgePredict Daily",
@@ -83,9 +84,8 @@ function PaletteHotkey() {
 
 function Sidebar() {
   const path = usePathname();
-  const { plays, jevStatus, reads, now } = useBoard();
+  const { plays, now } = useBoard();
   const liveN = plays ? filterCount(plays, "live", now) : null;
-  const model = Object.values(reads)[0]?.model;
   const navRef = useRef<HTMLElement>(null);
   const ind = useSlider(navRef, '.hp-nav[aria-current="page"]', [path]);
 
@@ -123,18 +123,11 @@ function Sidebar() {
         {Icon.help}
         How it works
       </Link>
-      <a className="hp-nav hp-nav-pm" title="Open Polymarket" href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
+      <a className="hp-nav hp-nav-pm" title="Open Polymarket" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
         <span className="hp-pm-tile">{Icon.polymarket}</span>
         Polymarket
         <span className="hp-nav-ext" aria-hidden>↗</span>
       </a>
-      <div className={`hp-engine is-${jevStatus}`}>
-        <b>
-          <i aria-hidden />
-          {jevStatus === "ready" ? "Jev online" : jevStatus === "loading" ? "Jev reading…" : "Jev offline"}
-        </b>
-        <span>{model ?? "calibrated decision model"}</span>
-      </div>
     </nav>
   );
 }
@@ -264,7 +257,7 @@ function AskDropdown() {
           <div className="hp-askdrop-head">
             <div>
               <b>Ask HedgePredict</b>
-              <span>Jev makes the call, Claude explains it.</span>
+              <span>Straight calls on today&apos;s markets, explained.</span>
             </div>
             <Link href="/ask" className="hp-askdrop-full">
               Full page ↗

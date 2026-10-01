@@ -55,7 +55,7 @@ export function HedgeCalc() {
   const sideB = market?.outcomes[1]?.label ?? "Other side";
 
   return (
-    <section className="hl" aria-label="Hedge calculator">
+    <section className="hl" aria-label="Hedge Lab">
       <header className="hl-head">
         <div>
           <h1>Hedge Lab</h1>

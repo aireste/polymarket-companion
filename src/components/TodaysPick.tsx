@@ -10,6 +10,7 @@ import { Sparkline } from "./Sparkline";
 import { Countdown } from "./Countdown";
 import { Icon } from "./icons";
 import { useOddsFormat } from "@/lib/oddsFormat";
+import { polymarketUs } from "@/lib/links";
 
 const KEY = "hp_pick_collapsed";
 
@@ -51,7 +52,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
       <section className={`hp-pick hp-pick-${variant} is-empty`} aria-label="Today's pick">
         <span className="hp-pick-k">Today&apos;s pick</span>
         <p>
-          <b>No standout play right now.</b> Jev sees today&apos;s board as fairly priced. That&apos;s a real answer: check back as prices move.
+          <b>No standout play right now.</b> Today&apos;s board looks fairly priced. That&apos;s a real answer: check back as prices move.
         </p>
       </section>
     );
@@ -93,7 +94,6 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
             Today&apos;s pick
           </span>
           <span className={`hp-pick-tag ${a.cls}`}>
-            <i aria-hidden />
             {a.label}
           </span>
         </div>
@@ -102,7 +102,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
         </h2>
         <p className="hp-pick-q">{play.question}</p>
         <p className="hp-pick-meta">
-          Jev {pct(read.strength, 0)} sure it&apos;s too cheap{conf ? ` · ${conf} confidence` : ""} ·{" "}
+          {pct(read.strength, 0)} sure it&apos;s too cheap{conf ? ` · ${conf} confidence` : ""} ·{" "}
           <Countdown play={play} />
         </p>
       </div>
@@ -114,7 +114,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
             <small>1W · {side.label}</small>
           </span>
         )}
-        <div className="hp-pick-lean" aria-label="How Jev's answer splits">
+        <div className="hp-pick-lean" aria-label="How the call splits">
           {read.sides.length === 2 ? (
             <>
               <i className={read.lean === 0 ? `on ${a.cls}` : ""} style={{ flexGrow: Math.max(read.distribution.sides[0], 0.02) }} />
@@ -131,7 +131,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
           <button className="hp-pick-open" onClick={() => open(play.id)}>
             Open
           </button>
-          <a className="hp-pick-trade" href={play.url} target="_blank" rel="noopener noreferrer">
+          <a className="hp-pick-trade" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
             Trade ↗
           </a>

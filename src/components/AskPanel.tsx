@@ -17,7 +17,7 @@ interface Msg {
 
 const EXAMPLES = [
   "What are the best coinflip markets today?",
-  "Any good Bitcoin plays right now? Get Jev's call.",
+  "Any good Bitcoin plays right now?",
   "Find me an undervalued market that isn't on here.",
   "I think it's 60% likely. Size a $200 play and hedge it.",
 ];
@@ -106,7 +106,7 @@ export function AskPanel({
           <div>
             <h2>Ask HedgePredict</h2>
             <p className="ask-sub">
-              Ask anything about today&apos;s markets in plain English. Jev makes the calibrated calls; Claude reads live data, checks the news, and does the edge math for you.
+              Ask anything about today&apos;s markets in plain English. HedgePredict checks the live prices and the news, then gives you a straight answer.
             </p>
           </div>
         </div>

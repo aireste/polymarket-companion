@@ -13,7 +13,7 @@ function deepReadGate(request: Request) {
   const hours = Math.max(1, Math.round(gate.retryAfterSec / 3600));
   return Response.json(
     {
-      error: `You've used today's ${LIMITS.deepRead.max} deep reads. They reset in about ${hours}h. Jev's call is always free.`,
+      error: `You've used today's ${LIMITS.deepRead.max} deep reads. They reset in about ${hours}h. The call itself is always free.`,
       limit: true,
     },
     { status: 429, headers: { "Retry-After": String(gate.retryAfterSec) } }

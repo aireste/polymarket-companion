@@ -7,12 +7,12 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "HedgePredict Daily",
-  description: "Jev's pick of the day, what resolves next, and the biggest movers. Weekdays at 8 AM ET.",
+  description: "The day's best pick, what resolves next, and the biggest movers. Weekdays at 8 AM ET.",
 };
 
 const INSIDE = [
-  { n: "01", k: "Today's pick", p: "Jev's strongest call on the board, with the price and how sure it is." },
-  { n: "02", k: "Jev's board", p: "Every other market Jev leans on, in one line each." },
+  { n: "01", k: "Today's pick", p: "The strongest call on the board, with the price and how sure we are." },
+  { n: "02", k: "The board", p: "Every other market worth a look, in one line each." },
   { n: "03", k: "On the clock", p: "What resolves in the next 24 hours, with times in ET." },
   { n: "04", k: "Movers", p: "The biggest price swings of the last day." },
 ];
@@ -29,7 +29,7 @@ export default async function Page() {
         <Link href="/" className="hp-back">‹ Board</Link>
         <h1>HedgePredict Daily</h1>
         <p className="hp-dl-lede">
-          Jev&apos;s pick, what&apos;s about to resolve, and the day&apos;s biggest movers. In your inbox every weekday at 8 AM ET. A 2-minute read.
+          The day&apos;s best pick, what&apos;s about to resolve, and the day&apos;s biggest movers. In your inbox every weekday at 8 AM ET. A 2-minute read.
         </p>
         <SubscribeBox source="daily-page" />
         <ol className="hp-dl-inside" aria-label="What's inside">

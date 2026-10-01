@@ -45,6 +45,8 @@ Prices: ${read.sides.map((s) => `${s.label} ${pct(s.price)}`).join(", ")}
 Jev's answer (how sure Jev is of each answer; NOT chances of winning): ${dist}
 Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${side ? ` ${side.label}` : ""}${conf ? ` (${conf} confidence)` : ""}
 
+The reader knows this model as "HedgePredict", so refer to it as HedgePredict (e.g. "HedgePredict is 74% sure..."), never by the name Jev.
+
 Write 2-3 short sentences a smart bettor can skim. For a Wager or Lean, say which side looks too cheap and how sure Jev is (never call Jev's percentage a chance of winning; write prices in cents like 44¢), and that it's based on price action and market numbers, not news. For a Skip, say plainly that Jev sees the prices as about right. Plain text, no preamble, no markdown, no em dashes.`;
 
   const response = await client.beta.messages.create({

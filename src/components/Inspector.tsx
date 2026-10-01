@@ -19,6 +19,7 @@ import { Icon } from "./icons";
 import { Odo } from "./Odo";
 import { SubscribeBox, useJoinedDaily } from "./SubscribeBox";
 import { useOddsFormat } from "@/lib/oddsFormat";
+import { polymarketUs } from "@/lib/links";
 
 const RANGES = [
   { id: "1d", label: "1D" },
@@ -62,13 +63,13 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
         </div>
       </dl>
       <div className="hp-insp-actions">
-        <a className="pill pill-dark hp-pm-btn" href={play.url} target="_blank" rel="noopener noreferrer">
+        <a className="pill pill-dark hp-pm-btn" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
           <span className="hp-pm-tile">{Icon.polymarket}</span>
           Open on Polymarket ↗
         </a>
         <Link className="pill" href="/hedge">
           <span className="hp-ico-sm">{Icon.hedge}</span>
-          Hedge calculator
+          Hedge Lab
         </Link>
       </div>
       <details className="manual">
@@ -128,9 +129,6 @@ function PriceCard({ play }: { play: PlayDTO }) {
         <span className="featured-meta num">
           {others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}
         </span>
-        <a className="featured-link" href={play.url} target="_blank" rel="noopener noreferrer">
-          Polymarket ↗
-        </a>
       </div>
     </section>
   );
@@ -153,22 +151,22 @@ function JevVerdict({ play }: { play: PlayDTO }) {
     if (jevStatus === "loading" || manual.loading) {
       return (
         <div className="hp-verdict hp-verdict-wait">
-          <span className="rec-spinner" aria-hidden /> Jev is reading the numbers…
+          <span className="rec-spinner" aria-hidden /> Reading the numbers…
         </div>
       );
     }
     if (jevStatus === "offline" || manual.error === "no-key") {
-      return <div className="hp-verdict hp-verdict-wait">Jev is offline on this server (no TypeSafe key).</div>;
+      return <div className="hp-verdict hp-verdict-wait">Calls are offline right now. Try again in a bit.</div>;
     }
     return (
       <div className="hp-verdict hp-verdict-ask">
         <div>
-          <div className="hp-verdict-k">Jev</div>
+          <div className="hp-verdict-k">HedgePredict</div>
           <div className="hp-verdict-lead">What&apos;s the call?</div>
-          {manual.error && <p className="helper">Jev couldn&apos;t be reached. Try again.</p>}
+          {manual.error && <p className="helper">Couldn&apos;t get the call. Try again.</p>}
         </div>
         <button className="pill hp-pill-lime" onClick={manual.run}>
-          Ask Jev →
+          Get the call →
         </button>
       </div>
     );
@@ -176,10 +174,10 @@ function JevVerdict({ play }: { play: PlayDTO }) {
 
   if (read.settled) {
     return (
-      <section className="hp-verdict" aria-label="Jev's call">
-        <span className="hp-verdict-k">Jev&apos;s call</span>
+      <section className="hp-verdict" aria-label="HedgePredict's call">
+        <span className="hp-verdict-k">HedgePredict&apos;s call</span>
         <div className="hp-verdict-call">Effectively decided.</div>
-        <div className="hp-verdict-sub">One side is already at 97% or more, so there&apos;s nothing left for Jev to call.</div>
+        <div className="hp-verdict-sub">One side is already at 97% or more, so there&apos;s nothing left to call.</div>
       </section>
     );
   }
@@ -190,12 +188,11 @@ function JevVerdict({ play }: { play: PlayDTO }) {
     read.action === "wager" ? `Back ${side?.label}.` : read.action === "hold" ? `Leans ${side?.label}.` : "Priced about right.";
 
   return (
-    <section className="hp-verdict" aria-label="Jev's call">
+    <section className="hp-verdict" aria-label="HedgePredict's call">
       {/* The headline already names the side; the header just states the call, quietly. */}
       <div className="hp-verdict-row">
-        <span className="hp-verdict-k">Jev&apos;s call</span>
+        <span className="hp-verdict-k">HedgePredict&apos;s call</span>
         <span className={`hp-call hp-call-${JEV_ACTION_COPY[read.action].cls}`}>
-          <i aria-hidden />
           {JEV_ACTION_COPY[read.action].label}
           {conf && <small>{conf} confidence</small>}
         </span>
@@ -203,20 +200,20 @@ function JevVerdict({ play }: { play: PlayDTO }) {
       <div className="hp-verdict-call">{headline}</div>
       <div className="hp-verdict-sub">
         {!side
-          ? `Jev is ${pct(read.strength)} sure both prices are fair.`
+          ? `${pct(read.strength)} sure both prices are fair.`
           : read.action === "wager"
-            ? `Jev is ${pct(read.strength)} sure ${side.label} is too cheap at ${price(side.price, fmt)}.`
-            : `Jev thinks ${side.label} looks a bit cheap at ${price(side.price, fmt)}, but it's only ${pct(read.strength)} sure.`}
+            ? `${pct(read.strength)} sure ${side.label} is too cheap at ${price(side.price, fmt)}.`
+            : `${side.label} looks a bit cheap at ${price(side.price, fmt)}, but only ${pct(read.strength)} sure.`}
       </div>
       <LeanBar read={read} shown={shown} />
       <p className="hp-verdict-src">
-        These are Jev&apos;s confidence in each answer, not chances of winning. One side being a bargain means the other is overpriced.
-        Jev reads price action, volume and timing; Deep read adds the news.
+        These show how sure HedgePredict is of each answer, not chances of winning. One side being a bargain means the other is overpriced.
+        The call comes from price moves, volume and timing; Deep read adds the news.
       </p>
 
       {!explain.explanation && explain.error !== "no-key" && (
         <button className="hp-link" onClick={explain.run} disabled={explain.loading}>
-          {explain.loading ? "Claude is explaining…" : "Why does Jev say that?"}
+          {explain.loading ? "Explaining…" : "Why this call?"}
         </button>
       )}
       {explain.error && explain.error !== "no-key" && (
@@ -251,13 +248,13 @@ function DeepRead({ play }: { play: PlayDTO }) {
           compact
           source="deep-read-unlock"
           title="Unlock deep reads"
-          blurb="Claude checks the live news behind any market (~15s). Free for HedgePredict Daily readers: join and it unlocks right away."
+          blurb="We check the live news behind any market in about 15 seconds. Free for HedgePredict Daily readers: join and it unlocks right away."
         />
       </div>
     );
   }
   const limited = error?.startsWith("You've used today's") ?? false;
-  if (rec) return <Recommendation rec={rec} url={play.url} />;
+  if (rec) return <Recommendation rec={rec} url={polymarketUs(play.question)} />;
   if (loading) {
     return (
       <div className="rec-loading">
@@ -270,7 +267,7 @@ function DeepRead({ play }: { play: PlayDTO }) {
     <div className="hp-deep">
       <div>
         <div className="hp-deep-lead">Want the story behind the numbers?</div>
-        <div className="hp-deep-sub">Claude checks live news and sentiment (~15s). 3 per day.</div>
+        <div className="hp-deep-sub">Checks live news and what people are saying (about 15 seconds). 3 per day.</div>
         {error && (
           <p className="helper" style={{ color: limited ? "var(--ink-soft)" : "var(--neg-ink)" }}>
             {error}
@@ -312,7 +309,7 @@ function freqSentence(order: { key: string; label: string; p: number }[]) {
     return `${what} ${n} ${n === 1 ? "time" : "times"}`;
   });
   const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}` : parts[0];
-  return `If Jev read this market 100 times, it would call ${list}.`;
+  return `If HedgePredict read this market 100 times, it would call ${list}.`;
 }
 
 function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
@@ -324,7 +321,7 @@ function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
   const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
   const tone = read.action === "wager" ? "wager" : read.action === "hold" ? "hold" : "skip";
   return (
-    <div className="hp-lean" aria-label="How Jev's answer splits">
+    <div className="hp-lean" aria-label="How the call splits">
       <div className="hp-lean-q">Is either side a bargain at these prices?</div>
       <div className="hp-lean-bar">
         {order.map((g) => (
@@ -359,9 +356,9 @@ export function JevPass({ play }: { play: PlayDTO }) {
   const [s0, s1] = r.sides;
   const a = JEV_ACTION_COPY[r.action];
   return (
-    <section className="hp-pass" aria-label="Jev's read">
+    <section className="hp-pass" aria-label="HedgePredict's read">
       <div className="hp-pass-top">
-        <span className="hp-verdict-k">Jev&apos;s read</span>
+        <span className="hp-verdict-k">HedgePredict&apos;s read</span>
         <JevPill id={play.id} />
       </div>
       <div className="hp-pass-codes">

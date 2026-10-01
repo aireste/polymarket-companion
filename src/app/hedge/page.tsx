@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HedgeCalc } from "@/components/HedgeCalc";
 
-export const metadata: Metadata = { title: "Hedge calculator · HedgePredict" };
+export const metadata: Metadata = { title: "Hedge Lab · HedgePredict" };
 
 export default function Page() {
   return (

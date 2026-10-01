@@ -13,10 +13,10 @@ import { Sparkline } from "./Sparkline";
 import { Status } from "./Status";
 import { Icon } from "./icons";
 import { Odo } from "./Odo";
-import { QuickStart } from "./QuickStart";
 import { useSlider } from "@/lib/useSlider";
 import { ThemeToggle } from "./ThemeToggle";
 import { OddsToggle } from "./OddsToggle";
+import { POLYMARKET_US } from "@/lib/links";
 import { TodaysPick } from "./TodaysPick";
 import { SubscribeBox } from "./SubscribeBox";
 import { todaysPick } from "@/lib/pick";
@@ -54,7 +54,7 @@ function useFocusedPlay(list: PlayDTO[], fallbackToFirst: boolean) {
   return found ?? (fallbackToFirst ? fallback : null);
 }
 
-/** One plain sentence on how Jev reads the board right now. */
+/** One plain sentence on how the board reads right now. */
 function JevSummary({ plays }: { plays: PlayDTO[] }) {
   const { reads, jevStatus } = useBoard();
   const got = plays.filter((p) => reads[p.id]);
@@ -62,19 +62,19 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
   got.filter((p) => !reads[p.id].settled).forEach((p) => n[reads[p.id].action]++);
 
   let text: React.ReactNode;
-  if (jevStatus === "loading" && got.length === 0) text = "Jev is reading the board…";
-  else if (jevStatus === "offline") text = "Jev is offline on this server.";
-  else if (got.length === 0) text = "Jev couldn't read the board just now.";
+  if (jevStatus === "loading" && got.length === 0) text = "Reading the board…";
+  else if (jevStatus === "offline") text = "Calls are offline right now.";
+  else if (got.length === 0) text = "Couldn't read the board just now.";
   else if (n.wager + n.hold === 0)
     text = (
       <>
-        <b>Jev sees every market as priced about right.</b> No side looks too cheap right now.
+        <b>Every market looks priced about right.</b> No side looks too cheap right now.
       </>
     );
   else
     text = (
       <>
-        <b>{[n.wager && `Jev backs ${n.wager}`, n.hold && `${n.wager ? "leans on" : "Jev leans on"} ${n.hold}`].filter(Boolean).join(" · ")}</b>{" "}
+        <b>{[n.wager && `${n.wager} to wager`, n.hold && `${n.hold} to lean on`].filter(Boolean).join(" · ")}</b>{" "}
         · {n.skip} look priced right.
       </>
     );
@@ -91,7 +91,7 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
 
 function DeskBoard({ filter }: { filter: FilterId }) {
   const fmt = useOddsFormat();
-  const { plays, loading, error, sparks, now, moves, jevReadAt } = useBoard();
+  const { plays, loading, error, sparks, now, moves } = useBoard();
   const f = filterById(filter);
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
   const focused = useFocusedPlay(list, true);
@@ -147,17 +147,12 @@ function DeskBoard({ filter }: { filter: FilterId }) {
           </nav>
         </div>
 
-        <QuickStart />
         <TodaysPick variant="desk" />
         {plays && <JevSummary plays={list} />}
 
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
 
         <div className="hp-table-wrap">
-        {/* Replays each time Jev's board read lands: a sweep down the table. */}
-        {jevReadAt && list.length > 0 && (
-          <span key={jevReadAt} className="hp-beam" style={{ animationDuration: `${220 + list.length * 90}ms` }} aria-hidden />
-        )}
         <table className="hp-table">
           <thead>
             <tr>
@@ -165,7 +160,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
               <th>Market</th>
               <th>Price</th>
               <th>1W</th>
-              <th>Jev</th>
+              <th>Call</th>
             </tr>
           </thead>
           <tbody>
@@ -219,9 +214,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
                   <Sparkline points={sparks[p.outcomes[0]?.tokenId ?? ""]} />
                 </td>
                 <td>
-                  <span key={jevReadAt ?? 0} className="hp-scan-pop" style={{ animationDelay: `${120 + i * 90}ms` }}>
-                    <JevPill id={p.id} />
-                  </span>
+                  <JevPill id={p.id} />
                 </td>
               </tr>
             ))}
@@ -238,13 +231,26 @@ function DeskBoard({ filter }: { filter: FilterId }) {
           <span>
             <kbd>⌘K</kbd> search all of Polymarket
           </span>
+          <Credit />
         </div>
       </div>
 
       <aside className="hp-insp" aria-label="Market details">
-        {focused ? <Inspector play={focused} /> : <div className="hp-insp-empty">Pick a market to see Jev&apos;s call.</div>}
+        {focused ? <Inspector play={focused} /> : <div className="hp-insp-empty">Pick a market to see the call.</div>}
       </aside>
     </div>
+  );
+}
+
+/** "© 2026 Guerra Digital LLC", linking to estejg.com like SPCTR's footer. */
+function Credit() {
+  return (
+    <span className="hp-credit">
+      © {new Date().getFullYear()}{" "}
+      <a href="https://estejg.com" target="_blank" rel="noopener noreferrer">
+        Guerra Digital LLC
+      </a>
+    </span>
   );
 }
 
@@ -316,13 +322,12 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
         <Link href="/how-it-works" className="hp-howcard">
           <span className="hp-howcard-ic" aria-hidden>{Icon.spark}</span>
           <span className="hp-howcard-txt">
-            <small>New here?</small>
             <b>How HedgePredict works</b>
+            <small>The calls, the odds, and the FAQ</small>
           </span>
           <span className="hp-howcard-go" aria-hidden>→</span>
         </Link>
 
-        <QuickStart />
         <TodaysPick variant="phone" onOpen={openSheet} />
         {plays && <NextUp plays={list} onOpen={openSheet} />}
 
@@ -389,7 +394,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
             <span className="hp-dcard-ic" aria-hidden>{Icon.mail}</span>
             <span className="hp-dcard-txt">
               <b>The Daily</b>
-              <small>Jev&apos;s pick in your inbox, weekdays at 8 AM ET</small>
+              <small>The day&apos;s best pick, weekdays at 8 AM ET</small>
             </span>
             <span className="hp-howcard-go" aria-hidden>→</span>
           </Link>
@@ -397,7 +402,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
         </section>
 
         <nav className="hp-phone-links" aria-label="More">
-          <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
+          <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
             Polymarket ↗
           </a>
@@ -405,6 +410,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
         <p className="hp-disc hp-phone-disc">
           Decision support, not financial advice. HedgePredict never places trades.
         </p>
+        <Credit />
       </div>
 
       <div className="hp-scrim" onClick={closeSheet} aria-hidden />

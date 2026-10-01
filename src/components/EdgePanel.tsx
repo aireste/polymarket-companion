@@ -72,7 +72,7 @@ export function EdgePanel({ play }: { play: PlayDTO }) {
         }
       }
     } catch {
-      setError("Could not reach Claude right now.");
+      setError("Couldn't get a read right now.");
     } finally {
       setLoading(false);
     }
@@ -114,10 +114,10 @@ export function EdgePanel({ play }: { play: PlayDTO }) {
 
       <div className="ask-actions">
         <button className="btn btn-accent" onClick={askClaude} disabled={loading}>
-          {loading ? "Claude is thinking…" : "Not sure? Ask Claude"}
+          {loading ? "Reading…" : "Not sure? Get a read"}
         </button>
         {read && read.available && (
-          <span className="conf">Claude: {pct(read.probability, 0)} · {read.confidence} confidence</span>
+          <span className="conf">Read: {pct(read.probability, 0)} · {read.confidence} confidence</span>
         )}
       </div>
 
@@ -127,7 +127,7 @@ export function EdgePanel({ play }: { play: PlayDTO }) {
       )}
       {read && !read.available && (
         <p className="helper">
-          Add an Anthropic API key to enable Claude reads. For now, set the slider yourself.
+          Reads aren&apos;t available right now. For now, set the slider yourself.
         </p>
       )}
 

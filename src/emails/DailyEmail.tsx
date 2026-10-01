@@ -19,6 +19,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { DailyIssue, IssueMarket } from "@/lib/daily";
+import { polymarketUs } from "@/lib/links";
 
 const C = {
   canvas: "#eef0f3",
@@ -80,14 +81,14 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
               </Text>
               <Text style={{ margin: "6px 0 0", fontSize: 14, lineHeight: "20px", color: C.onDarkSoft }}>{pick.question}</Text>
               <Text style={{ margin: "10px 0 0", fontFamily: MONO, fontSize: 12, color: C.onDarkSoft }}>
-                Jev {pct(pick.call.strength)} sure it&apos;s too cheap
+                {pct(pick.call.strength)} sure it&apos;s too cheap
                 {pick.call.confidence != null ? ` · ${pct(pick.call.confidence)} confidence` : ""} · resolves {pick.when}
               </Text>
               <Section style={{ marginTop: 16 }}>
                 <Button href={pick.href} style={{ background: C.lime, color: C.dark, fontWeight: 700, fontSize: 14, borderRadius: 999, padding: "10px 18px" }}>
                   Open in HedgePredict
                 </Button>
-                <Link href={pick.url} style={{ marginLeft: 16, color: C.onDarkSoft, fontSize: 13, textDecoration: "underline" }}>
+                <Link href={polymarketUs(pick.question)} style={{ marginLeft: 16, color: C.onDarkSoft, fontSize: 13, textDecoration: "underline" }}>
                   Trade on Polymarket ↗
                 </Link>
               </Section>
@@ -109,24 +110,24 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
                 </Text>
               )}
               <Text style={{ margin: "8px 0 0", fontSize: 11.5, color: C.faint }}>
-                Background is news context from Claude. Jev&apos;s call above comes only from the market&apos;s numbers.
+                Background is news context. The call above comes only from the market&apos;s numbers.
               </Text>
             </Section>
           )}
           {!pick?.call && (
             <Section style={{ background: C.card, border: `1px dashed ${C.rule}`, borderRadius: 18, padding: "18px 20px" }}>
               <Text style={{ margin: 0, fontSize: 15, lineHeight: "22px" }}>
-                <b>No standout play today.</b> Jev sees the board as fairly priced. That&apos;s a real answer: sitting out is a position.
+                <b>No standout play today.</b> The board looks fairly priced. That&apos;s a real answer: sitting out is a position.
               </Text>
             </Section>
           )}
 
-          {/* 02 Jev's board */}
-          <Label n="02" text="Jev's board" />
+          {/* 02 The board */}
+          <Label n="02" text="The board" />
           <Card>
             <Text style={{ margin: "0 0 6px", fontSize: 14, color: C.soft }}>
               <b style={{ color: C.ink }}>
-                {[issue.counts.wager && `Jev backs ${issue.counts.wager}`, issue.counts.lean && `${issue.counts.wager ? "leans on" : "Jev leans on"} ${issue.counts.lean}`]
+                {[issue.counts.wager && `${issue.counts.wager} to wager`, issue.counts.lean && `${issue.counts.lean} to lean on`]
                   .filter(Boolean)
                   .join(" · ") || "No calls"}
               </b>{" "}
@@ -178,8 +179,8 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
 
           <Hr style={{ borderColor: C.rule, margin: "22px 0 14px" }} />
           <Text style={{ margin: 0, fontSize: 11.5, lineHeight: "17px", color: C.faint, textAlign: "center" }}>
-            Jev&apos;s percentages are how sure it is that a side is too cheap, not chances of winning; prices are the crowd&apos;s odds.
-            Jev reads prices, recent price moves, volume and timing, not news. Decision support, not financial advice; HedgePredict never
+            Our percentages show how sure we are that a side is too cheap, not chances of winning; prices are the crowd&apos;s odds.
+            Calls come from prices, recent price moves, volume and timing, not news. Decision support, not financial advice; HedgePredict never
             places trades. Only risk what you can afford to lose. Prediction markets aren&apos;t available everywhere.
           </Text>
           <Text style={{ margin: "10px 0 0", fontSize: 11.5, lineHeight: "17px", color: C.faint, textAlign: "center" }}>

@@ -4,15 +4,15 @@ import { useBoard } from "@/lib/boardStore";
 import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
 
 /**
- * Jev's call on a row: "Wager · Colts", "Lean · Yes", or "Skip". A quiet
- * shimmer while the board read loads.
+ * Jev's call on a row: "Wager · Colts", "Lean · Yes", or "Skip". Plain type:
+ * weight and ink carry the strength of the call, no dots or chips.
  */
 export function JevPill({ id, long = false }: { id: string; long?: boolean }) {
   const { reads, jevStatus } = useBoard();
   const read = reads[id];
   if (!read) {
-    if (jevStatus === "loading") return <span className="hp-jev hp-jev-pending" aria-label="Jev is reading" />;
-    return <span className="hp-jev hp-jev-none">{jevStatus === "offline" ? "Jev off" : "Jev ·"}</span>;
+    if (jevStatus === "loading") return <span className="hp-jev hp-jev-none" aria-label="Reading">…</span>;
+    return <span className="hp-jev hp-jev-none">{jevStatus === "offline" ? "Off" : "·"}</span>;
   }
   if (read.settled) {
     return (
@@ -27,10 +27,8 @@ export function JevPill({ id, long = false }: { id: string; long?: boolean }) {
   return (
     <span
       className={`hp-jev hp-jev-${a.cls}`}
-      title={side ? `Jev: ${a.label} ${side.label}, ${pct}% sure it's too cheap` : `Jev: both prices look fair (${pct}% sure)`}
+      title={side ? `${a.label} ${side.label}: ${pct}% sure it's too cheap` : `Both prices look fair (${pct}% sure)`}
     >
-      <span className="hp-jev-dot" aria-hidden />
-      {long && "Jev · "}
       {a.label}
       {side && <span className="hp-jev-side">{shortSide(side.label, long ? 22 : 12)}</span>}
     </span>

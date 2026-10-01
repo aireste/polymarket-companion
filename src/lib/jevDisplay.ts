@@ -8,8 +8,8 @@ export type JevAction = JevReadDTO["action"];
 
 /** "hold" is shown as "Lean": Jev leans one way, but not enough to call a wager. */
 export const JEV_ACTION_COPY: Record<JevAction, { label: string; blurb: string; cls: string }> = {
-  wager: { label: "Wager", blurb: "Jev picks a side outright.", cls: "wager" },
-  hold: { label: "Lean", blurb: "Jev leans one way, not strongly.", cls: "hold" },
+  wager: { label: "Wager", blurb: "Picks a side outright.", cls: "wager" },
+  hold: { label: "Lean", blurb: "Leans one way, not strongly.", cls: "hold" },
   skip: { label: "Skip", blurb: "Both prices look fair.", cls: "skip" },
 };
 
