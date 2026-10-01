@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { PlayDTO } from "@/lib/dto";
 import { useBoard, useNow } from "@/lib/boardStore";
 import { selectMarket, useIsDesktop, useSelectedId } from "@/lib/useSelection";
 import { FILTERS, TIME_GROUPS, applyFilter, filterById, filterCount, timeGroup, type FilterId } from "@/lib/filters";
-import { MARKET_TZ, clockLabel, isLive, pct, usd, whenMs } from "@/lib/format";
+import { MARKET_TZ, clockLabel, isLive, price, usd, whenMs } from "@/lib/format";
 import { Inspector } from "./Inspector";
 import { JevPill } from "./JevPill";
 import { Sparkline } from "./Sparkline";
@@ -16,10 +16,12 @@ import { Odo } from "./Odo";
 import { QuickStart } from "./QuickStart";
 import { useSlider } from "@/lib/useSlider";
 import { ThemeToggle } from "./ThemeToggle";
+import { OddsToggle } from "./OddsToggle";
 import { TodaysPick } from "./TodaysPick";
 import { SubscribeBox } from "./SubscribeBox";
 import { todaysPick } from "@/lib/pick";
 import { Countdown } from "./Countdown";
+import { useOddsFormat } from "@/lib/oddsFormat";
 
 /** The market board for one filter route. Desktop: table + inspector. Phone: time board + sheet. */
 export function Board({ filter }: { filter: FilterId }) {
@@ -88,6 +90,7 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
 /* ─────────────────────────── Desktop: the Desk ─────────────────────────── */
 
 function DeskBoard({ filter }: { filter: FilterId }) {
+  const fmt = useOddsFormat();
   const { plays, loading, error, sparks, now, moves, jevReadAt } = useBoard();
   const f = filterById(filter);
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
@@ -203,7 +206,7 @@ function DeskBoard({ filter }: { filter: FilterId }) {
                   </div>
                 </td>
                 <td className="hp-odds">
-                  <Odo value={pct(p.outcomes[0]?.price ?? 0)} flash={moves[p.id]} />
+                  <Odo value={price(p.outcomes[0]?.price ?? 0, fmt, "pct")} flash={moves[p.id]} />
                   {p.outcomes[0] && p.outcomes[0].label.length <= 10 && <small>{p.outcomes[0].label}</small>}
                   {moves[p.id] && Math.abs(moves[p.id].delta) >= 0.001 && (
                     <span className={`hp-delta ${moves[p.id].delta > 0 ? "up" : "dn"}`}>
@@ -247,10 +250,15 @@ function DeskBoard({ filter }: { filter: FilterId }) {
 
 /* ─────────────────────── Phone: the Departures board ─────────────────────── */
 
+/** How many markets the phone board shows before "Show all". Soonest first, live on top. */
+const PHONE_PEEK = 6;
+
 function PhoneBoard({ filter }: { filter: FilterId }) {
+  const fmt = useOddsFormat();
   const { plays, loading, error, now, setPaletteOpen, moves } = useBoard();
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
   const open = useFocusedPlay(list, false);
+  const [showAll, setShowAll] = useState(false);
   const pushed = useRef(false);
   // Keep the last market rendered while the sheet slides away.
   const shown = useRef<PlayDTO | null>(null);
@@ -275,10 +283,16 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
     };
   }, [open]);
 
-  const groups = TIME_GROUPS.map((g) => ({
+  const allGroups = TIME_GROUPS.map((g) => ({
     ...g,
     rows: list.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
   })).filter((g) => g.rows.length > 0);
+  // Peek: the first PHONE_PEEK markets in board order (groups are already soonest-first).
+  const limit = showAll ? Infinity : PHONE_PEEK;
+  const starts = allGroups.map((_, i) => allGroups.slice(0, i).reduce((n, g) => n + g.rows.length, 0));
+  const groups = allGroups
+    .map((g, i) => ({ ...g, total: g.rows.length, rows: g.rows.slice(0, Math.max(0, limit - starts[i])) }))
+    .filter((g) => g.rows.length > 0);
 
   return (
     <div className={`hp-phone${open ? " has-sheet" : ""}`}>
@@ -287,7 +301,10 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           <span className="hp-date">
             {new Date(now).toLocaleDateString("en-US", { timeZone: MARKET_TZ, weekday: "long", month: "short", day: "numeric" })}
           </span>
-          <ThemeToggle />
+          <span className="hp-phone-tools">
+            <OddsToggle />
+            <ThemeToggle />
+          </span>
         </div>
         <h1 className="hp-phone-title">What&apos;s resolving</h1>
 
@@ -295,6 +312,15 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           {Icon.search}
           Search all of Polymarket
         </button>
+
+        <Link href="/how-it-works" className="hp-howcard">
+          <span className="hp-howcard-ic" aria-hidden>{Icon.spark}</span>
+          <span className="hp-howcard-txt">
+            <small>New here?</small>
+            <b>How HedgePredict works</b>
+          </span>
+          <span className="hp-howcard-go" aria-hidden>→</span>
+        </Link>
 
         <QuickStart />
         <TodaysPick variant="phone" onOpen={openSheet} />
@@ -319,7 +345,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           <section key={g.id}>
             <h2 className="hp-group">
               {g.id === "live" && <span className="hp-live-dot" aria-hidden />}
-              {g.label} · {g.rows.length}
+              {g.label} · {g.total}
             </h2>
             {g.rows.map((p) => {
               const live = isLive(p.gameStartTime, now);
@@ -341,21 +367,36 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
                   <span className="hp-fcard-odds">
                     <span>
                       <b>
-                        <Odo value={pct(a?.price ?? 0, 0)} flash={moves[p.id]} />
+                        <Odo value={price(a?.price ?? 0, fmt, "pct", 0)} flash={moves[p.id]} />
                       </b>{" "}
                       {a?.label}
                     </span>
-                    <span>{b ? `${b.label} ${pct(b.price, 0)}` : ""}</span>
+                    <span>{b ? `${b.label} ${price(b.price, fmt, "pct", 0)}` : ""}</span>
                   </span>
                 </button>
               );
             })}
           </section>
         ))}
-        <SubscribeBox compact source="board-phone" />
+        {list.length > PHONE_PEEK && (
+          <button className="hp-showall" onClick={() => setShowAll((v) => !v)} aria-expanded={showAll}>
+            {showAll ? "Show fewer ▴" : `Show all ${list.length} markets ▾`}
+          </button>
+        )}
+
+        <section className="hp-dcard" aria-label="HedgePredict Daily">
+          <Link href="/daily" className="hp-dcard-head">
+            <span className="hp-dcard-ic" aria-hidden>{Icon.mail}</span>
+            <span className="hp-dcard-txt">
+              <b>The Daily</b>
+              <small>Jev&apos;s pick in your inbox, weekdays at 8 AM ET</small>
+            </span>
+            <span className="hp-howcard-go" aria-hidden>→</span>
+          </Link>
+          <SubscribeBox compact source="board-phone" />
+        </section>
+
         <nav className="hp-phone-links" aria-label="More">
-          <Link href="/daily">The Daily</Link>
-          <Link href="/how-it-works">How it works</Link>
           <a href="https://polymarket.com" target="_blank" rel="noopener noreferrer">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
             Polymarket ↗

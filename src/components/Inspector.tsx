@@ -9,7 +9,7 @@ import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
 import { JEV_ACTION_COPY, confidenceLabel, leanSide, shortSide } from "@/lib/jevDisplay";
-import { cents, clockLabel, pct, resolveAt, usd } from "@/lib/format";
+import { clockLabel, price, resolveAt, usd } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
 import { EdgePanel } from "./EdgePanel";
@@ -18,6 +18,7 @@ import { Status } from "./Status";
 import { Icon } from "./icons";
 import { Odo } from "./Odo";
 import { SubscribeBox, useJoinedDaily } from "./SubscribeBox";
+import { useOddsFormat } from "@/lib/oddsFormat";
 
 const RANGES = [
   { id: "1d", label: "1D" },
@@ -82,6 +83,7 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
 }
 
 function PriceCard({ play }: { play: PlayDTO }) {
+  const fmt = useOddsFormat();
   const target = play.outcomes[0];
   const [range, setRange] = useState("1w");
   const { history, loading, error } = usePriceHistory(target?.tokenId, range);
@@ -95,7 +97,7 @@ function PriceCard({ play }: { play: PlayDTO }) {
     <section className="featured hp-price" aria-label="Price">
       <div className="featured-top">
         <div className="featured-num">
-          <span className="featured-pct num"><Odo value={pct(current)} /></span>
+          <span className="featured-pct num"><Odo value={price(current, fmt, "pct")} /></span>
           <span className="featured-outcome">{target?.label}</span>
         </div>
         <div className="range" role="tablist" aria-label="Time range">
@@ -124,7 +126,7 @@ function PriceCard({ play }: { play: PlayDTO }) {
       </div>
       <div className="featured-foot">
         <span className="featured-meta num">
-          {others.map((o) => `${o.label} ${pct(o.price)}`).join(" · ")}
+          {others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}
         </span>
         <a className="featured-link" href={play.url} target="_blank" rel="noopener noreferrer">
           Polymarket ↗
@@ -136,6 +138,7 @@ function PriceCard({ play }: { play: PlayDTO }) {
 
 /** Jev's call. Board markets arrive pre-read; anything else is one tap away. */
 function JevVerdict({ play }: { play: PlayDTO }) {
+  const fmt = useOddsFormat();
   const { reads, jevStatus, setRead } = useBoard();
   const shown = useMounted();
   const manual = useJev(play.id);
@@ -202,8 +205,8 @@ function JevVerdict({ play }: { play: PlayDTO }) {
         {!side
           ? `Jev is ${pct(read.strength)} sure both prices are fair.`
           : read.action === "wager"
-            ? `Jev is ${pct(read.strength)} sure ${side.label} is too cheap at ${cents(side.price)}.`
-            : `Jev thinks ${side.label} looks a bit cheap at ${cents(side.price)}, but it's only ${pct(read.strength)} sure.`}
+            ? `Jev is ${pct(read.strength)} sure ${side.label} is too cheap at ${price(side.price, fmt)}.`
+            : `Jev thinks ${side.label} looks a bit cheap at ${price(side.price, fmt)}, but it's only ${pct(read.strength)} sure.`}
       </div>
       <LeanBar read={read} shown={shown} />
       <p className="hp-verdict-src">
@@ -313,8 +316,9 @@ function freqSentence(order: { key: string; label: string; p: number }[]) {
 }
 
 function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
+  const fmt = useOddsFormat();
   const pct = (x: number) => `${Math.round(x * 100)}%`;
-  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${cents(s.price)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
+  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${price(s.price, fmt)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
   const neither = { key: "n", label: "Fair price", sub: "", p: read.distribution.neither, lean: read.lean == null };
   // Two-sided markets read left side / neither / right side; others put neither last.
   const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
@@ -346,6 +350,7 @@ function LeanBar({ read, shown }: { read: JevReadDTO; shown: boolean }) {
 
 /** Phone sheet header, boarding-pass style: the side at its market price → Jev's lean. */
 export function JevPass({ play }: { play: PlayDTO }) {
+  const fmt = useOddsFormat();
   const { reads } = useBoard();
   const r = reads[play.id];
   if (!r || r.settled) return null;
@@ -362,7 +367,7 @@ export function JevPass({ play }: { play: PlayDTO }) {
       <div className="hp-pass-codes">
         <div>
           <small>{side ? shortSide(side.label, 16).toUpperCase() : shortSide(s0.label, 16).toUpperCase()}</small>
-          <b>{cents(side ? side.price : s0.price)}</b>
+          <b>{price(side ? side.price : s0.price, fmt)}</b>
         </div>
         <div className="hp-pass-arc">
           <span className={r.action === "skip" ? "" : "up"}>{side ? `${pct(r.strength)} sure it's cheap` : "fair price"}</span>
@@ -375,7 +380,7 @@ export function JevPass({ play }: { play: PlayDTO }) {
         </div>
         <div>
           <small>{side ? "JEV" : shortSide(s1?.label ?? "", 16).toUpperCase()}</small>
-          <b>{side ? a.label.toUpperCase() : cents(s1?.price ?? 0)}</b>
+          <b>{side ? a.label.toUpperCase() : price(s1?.price ?? 0, fmt)}</b>
         </div>
       </div>
       <div className="hp-pass-foot">

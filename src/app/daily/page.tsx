@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { renderIssueHtml, todaysIssue } from "@/lib/newsletter";
 import { SubscribeBox } from "@/components/SubscribeBox";
 import { EmailPreview } from "@/components/EmailPreview";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "HedgePredict Daily",
@@ -25,6 +26,7 @@ export default async function Page() {
   return (
     <div className="hp-dl">
       <div className="hp-dl-copy">
+        <Link href="/" className="hp-back">‹ Board</Link>
         <h1>HedgePredict Daily</h1>
         <p className="hp-dl-lede">
           Jev&apos;s pick, what&apos;s about to resolve, and the day&apos;s biggest movers. In your inbox every weekday at 8 AM ET. A 2-minute read.

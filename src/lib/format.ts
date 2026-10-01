@@ -147,3 +147,28 @@ export function cents(p: number): string {
   if (c > 99) return ">99¢";
   return `${c}¢`;
 }
+
+/** How prices display: Polymarket's own cents/percent, or US sportsbook odds. */
+export type OddsFormat = "poly" | "us";
+
+/**
+ * A price in [0,1] as American odds. A Polymarket price is an implied
+ * probability, so 62¢ -> -163 (bet $163 to win $100) and 40¢ -> +150
+ * (bet $100 to win $150). Clamped to 1-99¢ like `cents`.
+ */
+export function american(p: number): string {
+  const q = Math.min(0.99, Math.max(0.01, p));
+  if (Math.abs(q - 0.5) < 0.005) return "+100";
+  const v = Math.round(q > 0.5 ? (-q / (1 - q)) * 100 : ((1 - q) / q) * 100);
+  return v > 0 ? `+${v}` : `${v}`;
+}
+
+/**
+ * A market price in the viewer's chosen format. In "poly" mode it renders
+ * exactly as before (`as` picks cents or percent for that spot). Only prices
+ * go through here: Jev's confidence numbers are not odds and stay as %.
+ */
+export function price(p: number, fmt: OddsFormat, as: "cents" | "pct" = "cents", digits = 1): string {
+  if (fmt === "us") return american(p);
+  return as === "pct" ? pct(p, digits) : cents(p);
+}

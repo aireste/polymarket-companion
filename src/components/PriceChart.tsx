@@ -1,7 +1,9 @@
 "use client";
 
+import { price } from "@/lib/format";
 import { useMemo, useRef, useState } from "react";
 import type { HistoryPoint } from "@/lib/dto";
+import { useOddsFormat } from "@/lib/oddsFormat";
 
 const W = 640;
 const H = 210;
@@ -27,6 +29,7 @@ interface Hover {
  * crosshair + tooltip. Pure SVG — no chart lib. (dataviz: one series → no legend.)
  */
 export function PriceChart({ points }: { points: HistoryPoint[] }) {
+  const fmt = useOddsFormat();
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<Hover | null>(null);
 
@@ -146,7 +149,7 @@ export function PriceChart({ points }: { points: HistoryPoint[] }) {
           className="chart-tip"
           style={{ left: `${(hover!.x / W) * 100}%` }}
         >
-          <span className="chart-tip-p">{(hp.p * 100).toFixed(1)}%</span>
+          <span className="chart-tip-p">{price(hp.p, fmt, "pct")}</span>
           <span className="chart-tip-t">
             {new Date(hp.t * 1000).toLocaleDateString("en-US", {
               month: "short",

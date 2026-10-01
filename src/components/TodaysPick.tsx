@@ -5,10 +5,11 @@ import { useBoard } from "@/lib/boardStore";
 import { todaysPick } from "@/lib/pick";
 import { JEV_ACTION_COPY, confidenceLabel } from "@/lib/jevDisplay";
 import { selectMarket } from "@/lib/useSelection";
-import { cents, pct } from "@/lib/format";
+import { pct, price } from "@/lib/format";
 import { Sparkline } from "./Sparkline";
 import { Countdown } from "./Countdown";
 import { Icon } from "./icons";
+import { useOddsFormat } from "@/lib/oddsFormat";
 
 const KEY = "hp_pick_collapsed";
 
@@ -17,6 +18,7 @@ const KEY = "hp_pick_collapsed";
  * (desktop) or a card (phone). "Open" focuses it in the inspector / sheet.
  */
 export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onOpen?: (id: string) => void }) {
+  const fmt = useOddsFormat();
   const { plays, reads, jevStatus, sparks } = useBoard();
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
@@ -70,7 +72,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
       <button className="hp-pick hp-pick-desk is-collapsed" onClick={toggle} aria-expanded={false}>
         <span className="hp-pick-k">Today&apos;s pick</span>
         <span className="hp-pick-mini">
-          {verb} <b>{side.label}</b> at {cents(side.price)} · {play.question}
+          {verb} <b>{side.label}</b> at {price(side.price, fmt)} · {play.question}
         </span>
         <span className="hp-pick-show">Show ▾</span>
       </button>
@@ -96,7 +98,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
           </span>
         </div>
         <h2 className="hp-pick-head">
-          {verb} <em>{side.label}</em> at <span className="num">{cents(side.price)}</span>
+          {verb} <em>{side.label}</em> at <span className="num">{price(side.price, fmt)}</span>
         </h2>
         <p className="hp-pick-q">{play.question}</p>
         <p className="hp-pick-meta">

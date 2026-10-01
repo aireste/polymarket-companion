@@ -1,7 +1,8 @@
 "use client";
 
 import type { RecommendationDTO } from "@/lib/dto";
-import { pct, timingLabel } from "@/lib/format";
+import { price, timingLabel } from "@/lib/format";
+import { useOddsFormat } from "@/lib/oddsFormat";
 
 const ACTION_COPY: Record<
   RecommendationDTO["aiAction"],
@@ -31,9 +32,10 @@ export function Recommendation({
   rec: RecommendationDTO;
   url?: string;
 }) {
+  const fmt = useOddsFormat();
   const a = ACTION_COPY[rec.aiAction];
   const target = rec.currentOdds[0];
-  const marketPct = target ? pct(target.price, 0) : "—";
+  const marketPct = target ? price(target.price, fmt, "pct", 0) : "—";
 
   return (
     <div className="rec">
@@ -48,7 +50,7 @@ export function Recommendation({
       <div className="rec-read">
         <span className="rec-read-k">Claude&apos;s read</span>
         <span className="rec-read-v num">
-          {pct(rec.aiProbability, 0)}
+          {price(rec.aiProbability, fmt, "pct", 0)}
           <span className="rec-read-vs"> · market {marketPct}</span>
           {target ? ` on ${target.label}` : ""}
         </span>

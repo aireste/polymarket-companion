@@ -5,9 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import type { PlayDTO } from "@/lib/dto";
 import { useBoard } from "@/lib/boardStore";
 import { FILTERS } from "@/lib/filters";
-import { pct } from "@/lib/format";
+import { price } from "@/lib/format";
 import { JevPill } from "./JevPill";
 import { Icon } from "./icons";
+import { useOddsFormat } from "@/lib/oddsFormat";
 
 type Item =
   | { kind: "market"; play: PlayDTO; onBoard: boolean }
@@ -27,6 +28,7 @@ const GO: { label: string; href: string }[] = [
  * and can hand the query to Ask.
  */
 export function CommandPalette() {
+  const fmt = useOddsFormat();
   const { paletteOpen, setPaletteOpen, plays, addExtra } = useBoard();
   const router = useRouter();
   const path = usePathname();
@@ -146,7 +148,7 @@ export function CommandPalette() {
       <button key={it.play.id} {...common}>
         <span className="hp-pal-q">{it.play.question}</span>
         {it.onBoard && <JevPill id={it.play.id} />}
-        <span className="hp-pal-r">{pct(it.play.outcomes[0]?.price ?? 0)}</span>
+        <span className="hp-pal-r">{price(it.play.outcomes[0]?.price ?? 0, fmt, "pct")}</span>
       </button>
     );
   };

@@ -9,6 +9,7 @@ import { FILTERS, filterCount } from "@/lib/filters";
 import { CommandPalette } from "./CommandPalette";
 import { AskPanel } from "./AskPanel";
 import { ThemeToggle } from "./ThemeToggle";
+import { OddsToggle } from "./OddsToggle";
 import { useSlider } from "@/lib/useSlider";
 import { Icon } from "./icons";
 
@@ -179,6 +180,7 @@ function TopBar() {
       </div>
       <div className="hp-upd">
         <ClockET />
+        <OddsToggle />
         <ThemeToggle />
         <button
           className="hp-iconbtn"
