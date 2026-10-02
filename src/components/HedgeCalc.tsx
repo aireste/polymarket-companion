@@ -6,6 +6,7 @@ import { analyzeHedge } from "@/lib/scoring";
 import { useBoard } from "@/lib/boardStore";
 import { Odo } from "./Odo";
 import { HedgeLabMark } from "./HedgeLabMark";
+import { LabIntro } from "./LabIntro";
 
 const STAKES = [25, 50, 100, 250];
 const money = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
@@ -64,6 +65,8 @@ export function HedgeCalc() {
         </div>
         <span className="hl-badge">Pure math · no AI</span>
       </header>
+
+      <LabIntro />
 
       <div className="hl-grid">
         <div className="hl-inputs">
