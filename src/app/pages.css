@@ -59,66 +59,6 @@
 .hw-sec { padding: 34px 0 40px; border-top: 1px solid var(--rule); }
 .hw-sec h2 { font-weight: 900; font-size: clamp(24px, 2.4vw, 30px); letter-spacing: -0.04em; line-height: 1.1; }
 
-/* the call walkthrough: tabs that fill like story slides, one example per call */
-.tour { margin-top: 22px; --tc: var(--fair); --tci: var(--fair-ink); }
-.tour.is-wager { --tc: var(--wager); --tci: var(--wager-ink); }
-.tour.is-hold { --tc: var(--lean); --tci: var(--lean-ink); }
-.tour-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.tour-tabs button { text-align: left; font: 900 22px var(--font-sans); letter-spacing: -0.04em; color: var(--ink-faint); padding-bottom: 10px; transition: color 0.2s var(--ease); }
-.tour-tabs button[aria-selected="true"].is-wager { color: var(--wager-ink); }
-.tour-tabs button[aria-selected="true"].is-hold { color: var(--lean-ink); }
-.tour-tabs button[aria-selected="true"].is-skip { color: var(--fair-ink); }
-.tour-tabs button:hover { color: var(--ink-soft); }
-.tour-tabs i { display: block; margin-top: 8px; height: 3px; background: var(--rule); position: relative; overflow: hidden; }
-.tour-tabs b { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); transition: transform 0.45s var(--ease); }
-.tour-tabs .is-wager b { background: var(--wager); }
-.tour-tabs .is-hold b { background: var(--lean); }
-.tour-tabs .is-skip b { background: var(--fair-ink); }
-/* calls already stepped through keep a full bar in their color; the current one is lit text only */
-.tour-tabs .is-done b { transform: scaleX(1); }
-
-.tour-body { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 48px); align-items: start; }
-.tour-body > * { animation: tour-in 0.5s var(--ease) both; }
-.tour-body > :nth-child(2) { animation-delay: 0.12s; }
-@keyframes tour-in { from { opacity: 0; transform: translateY(8px); } }
-.tour-card { padding: 22px 24px 20px; background: var(--paper-2); border: 1px solid var(--rule); }
-.tour-q { font-weight: 700; font-size: 15px; color: var(--ink-soft); }
-.tour-nums { margin-top: 14px; display: flex; gap: 32px; align-items: flex-start; }
-.tour-nums b { display: block; font-weight: 900; font-size: 52px; letter-spacing: -0.055em; line-height: 1; }
-.tour-nums small { display: block; margin-top: 6px; font-weight: 700; font-size: 13px; color: var(--ink-faint); }
-.tour-call b { color: var(--tci); }
-.tour-call small { color: var(--ink); font-weight: 900; font-size: 15px; letter-spacing: -0.01em; }
-.tour-bar { margin-top: 22px; display: flex; gap: 3px; height: 10px; }
-.tour-bar i { display: block; flex-basis: 0; background: var(--rule-strong); animation: tour-grow 0.9s var(--ease) both; }
-.tour-bar i.fair { background: var(--fair); }
-.tour-bar i.lit { background: var(--tc); }
-@keyframes tour-grow { from { flex-grow: 0.001; } }
-.tour-lbls { margin-top: 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; font-weight: 700; font-size: 12.5px; color: var(--ink-faint); }
-.tour-lbls span:nth-child(2) { text-align: center; }
-.tour-lbls span:nth-child(3) { text-align: right; }
-.tour-lbls b { display: block; font-weight: 900; font-size: 20px; letter-spacing: -0.03em; }
-.tour-lbls .lit b { color: var(--tci); }
-.tour-lbls .lit { color: var(--ink); }
-.tour-lbls .fair b { color: var(--fair-ink); }
-
-.tour-beats { margin: 0; display: grid; gap: 0; }
-.tour-beats > div { padding: 14px 0; border-top: 1px solid var(--rule); }
-.tour-beats > div:first-child { border-top: 0; padding-top: 0; }
-.tour-beats dt { font: 700 12px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tci); }
-.tour-beats dd { margin: 6px 0 0; font-weight: 700; font-size: 16px; line-height: 1.5; color: var(--ink); }
-
-
-@media (max-width: 899.98px) {
-  .tour-body { grid-template-columns: 1fr; }
-  .tour-tabs button { font-size: 19px; }
-  .tour-nums b { font-size: 42px; }
-  .tour-lbls b { font-size: 17px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tour-body > *, .tour-bar i { animation: none; }
-  .tour-tabs b { transition: none; }
-}
-
 .hw-steps { margin-top: 22px; list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
 .hw-steps li { display: grid; gap: 6px; align-content: start; }
 .hw-steps span { font-weight: 900; font-size: 15px; color: var(--ink-faint); }
@@ -366,3 +306,5 @@
 .tp-big.is-paused { background: none; backdrop-filter: none; pointer-events: none; }
 .tp-big.is-paused .tp-big-go { pointer-events: auto; font-size: 0; gap: 0; }
 .tp-big.is-paused .tp-big-go span { width: 52px; height: 52px; font-size: 17px; box-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.45); }
+/* the tour already ends on a rule; no second one above the next section */
+.tp + .hw-sec { border-top: 0; }
