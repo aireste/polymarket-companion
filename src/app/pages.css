@@ -275,7 +275,7 @@
 .ts-bub.is-ai.on { opacity: 1; transform: none; }
 
 .ts-end { display: grid; justify-items: center; gap: 10px; text-align: center; }
-.ts-end-word { font-weight: 900; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.05em; opacity: 0; transform: scale(0.98); transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
+.ts-end-word { color: var(--accent-ink); font-weight: 900; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.05em; opacity: 0; transform: scale(0.98); transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
 .ts-end-word.on, .ts-end-3.on { opacity: 1; transform: none; }
 .ts-end-3 { font-weight: 900; font-size: 26px; letter-spacing: -0.03em; opacity: 0; transition: opacity 0.6s var(--ease); }
 .ts-end small { font-size: 13px; color: var(--ink-faint); }

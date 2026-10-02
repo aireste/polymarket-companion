@@ -349,15 +349,12 @@ function JevVerdict({ play }: { play: PlayDTO }) {
 
   return (
     <section className="hp-verdict" aria-label="HedgePredict's call">
-      {/* The headline already names the side; the header just states the call, quietly. */}
+      {/* The headline already names the call and the side, so the header doesn't repeat it; confidence sits under the headline. */}
       <div className="hp-verdict-row">
         <span className="hp-verdict-k">HedgePredict&apos;s call</span>
-        <span className={`hp-call hp-call-${JEV_ACTION_COPY[read.action].cls}`}>
-          {JEV_ACTION_COPY[read.action].label}
-          {conf && <small>{conf} confidence</small>}
-        </span>
       </div>
       <div className="hp-verdict-call">{headline}</div>
+      {conf && <div className="hp-verdict-conf">{conf[0].toUpperCase() + conf.slice(1)} confidence</div>}
       <div className="hp-verdict-sub">
         {!side
           ? `${pct(read.strength)} sure both prices are fair.`

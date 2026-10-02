@@ -1191,3 +1191,8 @@ body { font-variant-numeric: tabular-nums; }
 .connect-snippet { align-items: flex-start; }
 .connect-snippet pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; scrollbar-width: none; }
 .connect-snippet pre code { white-space: pre; display: block; line-height: 1.6; flex: none; overflow: visible; }
+
+/* The HedgePredict name wherever it's a title (header, Daily, tour) wears the brand's ice. */
+.hp-name { color: var(--accent-ink); }
+/* Call card: confidence sits under the headline instead of repeating the call in the header. */
+.hp-verdict-conf { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); }

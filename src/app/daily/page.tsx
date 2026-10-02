@@ -35,7 +35,9 @@ export default function Page() {
     <div className="hp-dl">
       <div className="hp-dl-copy">
         <Link href="/" className="hp-back">‹ Board</Link>
-        <h1>HedgePredict Daily</h1>
+        <h1>
+          <span className="hp-name">HedgePredict</span> Daily
+        </h1>
         <p className="hp-dl-lede">
           The day&apos;s best pick, what&apos;s about to resolve, and the day&apos;s biggest movers. In your inbox every weekday at 8 AM ET. A 2-minute read.
         </p>

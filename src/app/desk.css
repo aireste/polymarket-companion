@@ -20,7 +20,7 @@
     display: flex; align-items: center; gap: 28px; padding: 0 24px;
     background: var(--paper); border-bottom: 1px solid var(--rule);
   }
-  .hp-dh-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; font-size: 20px; letter-spacing: -0.05em; color: var(--ink); white-space: nowrap; }
+  .hp-dh-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; font-size: 20px; letter-spacing: -0.05em; color: var(--accent-ink); white-space: nowrap; }
   .hp-dh-mark { display: grid; color: var(--accent-ink); }
   .hp-dh-mark svg { width: 18px; height: 18px; }
   .hp-dh-nav { position: relative; display: flex; gap: 22px; height: var(--dh-h); }
@@ -133,6 +133,7 @@
   /* the call card (same card as the phone sheet), at desk scale */
   .hp-dd > .hp-verdict { margin-top: 34px; max-width: 760px; padding: 24px 26px; background: var(--paper-2); border: 1px solid var(--rule); }
   .hp-dd .hp-verdict-call { margin-top: 12px; font-size: 40px; font-weight: 900; letter-spacing: -0.05em; }
+  .hp-dd .hp-verdict-conf { margin-top: 10px; font-size: 15px; }
   .hp-dd .hp-verdict-sub { margin-top: 8px; font-size: 16px; font-weight: 700; }
   .hp-dd .hp-lean { margin-top: 22px; }
   .hp-dd .hp-lean-q { font-weight: 700; font-size: 14px; }
