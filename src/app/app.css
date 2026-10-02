@@ -522,8 +522,8 @@
     --rule-strong: oklch(0.35 0.012 260);
     --accent-soft: oklch(0.3 0.02 235);
     --accent-ink: oklch(0.84 0.075 236);
-  --lab-soft: oklch(0.3 0.05 215);
-  --lab-ink: oklch(0.83 0.11 205);
+  --lab-soft: oklch(0.3 0.06 102);
+  --lab-ink: oklch(0.9 0.16 102);
     --dark: oklch(0.13 0.007 260);
     --dark-2: oklch(0.25 0.01 260);
     --dark-3: oklch(0.19 0.008 260);
@@ -550,8 +550,8 @@
   --rule-strong: oklch(0.35 0.012 260);
   --accent-soft: oklch(0.3 0.02 235);
   --accent-ink: oklch(0.84 0.075 236);
-  --lab-soft: oklch(0.3 0.05 215);
-  --lab-ink: oklch(0.83 0.11 205);
+  --lab-soft: oklch(0.3 0.06 102);
+  --lab-ink: oklch(0.9 0.16 102);
   --dark: oklch(0.13 0.007 260);
   --dark-2: oklch(0.25 0.01 260);
   --dark-3: oklch(0.19 0.008 260);
@@ -1176,7 +1176,7 @@ body { font-variant-numeric: tabular-nums; }
 /* Polymarket links carry Polymarket's blue tile so people recognize where they're going. */
 .hp-pm-link, .rec-cta { display: inline-flex; align-items: center; gap: 7px; }
 
-/* Hedge Lab brand: cyan tile + its own accent, so the calculator reads as a tool, not an AI call. */
+/* Hedge Lab brand: lemon tile + its own accent, so the Lab reads as its own room, not an AI call. */
 .hl-mark { width: 22px; height: 22px; border-radius: 6px; flex: none; display: inline-grid; place-items: center; background: var(--lab); color: var(--dark); }
 .hl-mark svg { width: 14px; height: 14px; stroke-width: 2; }
 .hl-link { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; color: var(--ink); }
@@ -1201,11 +1201,11 @@ body { font-variant-numeric: tabular-nums; }
    Ice (--accent-ink: ice on dark, deep slate on light) for page and section titles, the small
    labels that name a card, where you are in the nav, and the main buttons. Prices, percentages,
    market questions and body copy stay ink/white so the numbers read first. Call colors and
-   Hedge Lab's cyan are untouched. */
+   Hedge Lab's lemon are untouched. */
 .hp-app :is(
   .hp-dlist-top h1, .hp-phone-title, .hw-hero h1, .hw-sec h2, .hp-dl-copy h1, .ask-head h2,
   .connect .collapse-title, .hp-askdrop-head b
-):not(#_) { color: var(--accent-ink); }
+):not(#_):not(#_) { color: var(--accent-ink); }
 .hp-app :is(.hp-verdict-k, .ts-k:not(.ts-lab), .hp-sub-copy b, .hp-dpick-k, .hp-dgrp:not(.is-live), .hp-group,
   .hw-tour b, .hp-dl-inside b):not(#_) { color: var(--accent-ink); }
 .hp-app .hp-dh-link[aria-current="page"]:not(#_) { color: var(--accent-ink); }

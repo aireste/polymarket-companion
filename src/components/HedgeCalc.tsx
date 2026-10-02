@@ -245,7 +245,7 @@ const yesNo = (p: PlayDTO) => p.outcomes.map((o) => `${o.label} ${cents(o.price)
  */
 type Hit = { play: PlayDTO; group: string };
 
-function MarketSearch({ value, onPick }: { value: PlayDTO | null; onPick: (m: PlayDTO | null) => void }) {
+export function MarketSearch({ value, onPick }: { value: PlayDTO | null; onPick: (m: PlayDTO | null) => void }) {
   const { plays, findPlay } = useBoard();
   // Markets this browser opened on the board, freshest first ("the one you had in mind").
   const [recent, setRecent] = useState<PlayDTO[]>([]);

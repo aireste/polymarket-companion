@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Geist_Mono, Unbounded } from "next/font/google";
 import "./globals.css";
 import "./app.css";
 import "./desk.css";
@@ -14,6 +14,8 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+// Hedge Lab's display type (OFL): wide, rounded, chunky. Only the Lab and its tour scene use it.
+const labFont = Unbounded({ variable: "--font-lab", subsets: ["latin"], display: "swap", preload: false });
 
 export const metadata: Metadata = {
   title: "HedgePredict",
@@ -25,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistMono.variable} h-full antialiased`}
+      className={`${geistMono.variable} ${labFont.variable} h-full antialiased`}
       // The theme script below sets data-theme before hydration.
       suppressHydrationWarning
     >
