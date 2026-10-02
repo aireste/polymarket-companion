@@ -7,8 +7,8 @@ key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("E
 
 # Each line: (spoken text, [(spoken anchor, caption text), ...])
 SCRIPT = [
- ("Hi! Welcome to HedgePredict. We read every market on Polymarket and flag the prices that look too cheap.",
-  [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("We read", "We read every market on Polymarket"), ("and flag", "and flag the prices that look too cheap.")]),
+ ("Hi! Welcome to HedgePredict. We check the top markets on Polymarket and flag the prices that look too cheap.",
+  [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("We check", "We check the top markets on Polymarket"), ("and flag", "and flag the prices that look too cheap.")]),
  ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
   [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
    ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
@@ -50,8 +50,10 @@ LINES = [l for l, _ in SCRIPT]
 CACHE = "scripts/tour_alignment.json"
 # Helen - Warm, Balanced and Articulate (ElevenLabs). Changing it needs --record.
 VOICE = "ImnfuV8oxhB7ya99oJfc"
-# 0.9s between lines; a longer rest after the AI line so the on-screen answer can be read.
-LONG_AFTER = {8: "2.2s", 9: "2.5s"}
+# 0.9s between lines, a touch more after the two chat demos so their answers can be read.
+LONG_AFTER = {8: "1.3s", 9: "1.3s"}
+# The closing chapter opens on "HedgePredict!" rather than "And that's", so the AI answer stays up a beat longer.
+HOLD = {10: 1000}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
 cached = json.load(open(CACHE)) if os.path.exists(CACHE) else None
 if cached and cached["text"] == text and "--record" not in sys.argv:
@@ -94,7 +96,9 @@ block = ("/** Where each line starts in tour.mp3 (s), from ElevenLabs word times
  f"const AUDIO_END = {end};\n"
  "/** Chapters open a beat before their line, so the picture lands as she starts speaking. */\n"
  "const LEAD = 250;\n"
- "const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - LEAD));\n"
+ "/** Chapters held a little past their line, so the previous scene can be read (ms). */\n"
+ f"const HOLD: Record<number, number> = {json.dumps({str(k): v for k, v in HOLD.items()})};\n"
+ "const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - LEAD + (HOLD[i] ?? 0)));\n"
  "const TOTAL = Math.round(AUDIO_END * 1000) + 1500;\n"
  "const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);\n"
  "/** In-chapter beats tied to words (s after the line starts). */\n"
