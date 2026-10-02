@@ -1,4 +1,4 @@
-"""Record the tour as one Liberty take and regenerate TourPlayer's timing block
+"""Record the tour as one Helen take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
 import json, re, ssl, base64, urllib.request
 
@@ -47,7 +47,7 @@ LONG_AFTER = {8: "2.5s"}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
 body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
     "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}).encode()
-req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/iBo5PWT1qLiEyqhM7TrG/with-timestamps?output_format=mp3_44100_128",
+req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/ImnfuV8oxhB7ya99oJfc/with-timestamps?output_format=mp3_44100_128",
     data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
 d = json.loads(urllib.request.urlopen(req, timeout=300, context=ctx).read())
 open("public/tour/tour.mp3", "wb").write(base64.b64decode(d["audio_base64"]))
