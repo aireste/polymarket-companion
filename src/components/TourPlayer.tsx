@@ -3,16 +3,22 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
- * The How it works tour: a ~48s "video" drawn in code (real type, real colors,
- * light/dark aware). Nothing moves until someone presses play; it pauses when
- * scrolled away and rests on the last frame when done. Each chapter is one idea
- * and one caption. Scenes read `lt` (ms into the chapter) and flip classes at
- * beats; CSS transitions do the motion.
+ * The How it works tour: a ~1 min "video" drawn in code (real type, real colors,
+ * light/dark aware) with an optional voiceover (Lily, ElevenLabs, /public/tour).
+ * Nothing moves until someone presses play, and sound only plays if they choose
+ * it. It pauses when scrolled away and rests on the last frame when done. Each
+ * chapter is one idea and one caption, timed to its voice line. Scenes read `lt`
+ * (ms into the chapter) and flip classes at beats; CSS transitions do the motion.
  */
-const CH = 6000;
+
+/** Voice line lengths in seconds (public/tour/tour-N.mp3). Re-measure if the clips change. */
+const CLIP_S = [3.9, 8.5, 5.8, 4.5, 4.2, 4.5, 4.2, 5.7, 4.1];
+/** Each chapter = its line plus a breath, never shorter than the scene's beats need. */
+const DUR = CLIP_S.map((s) => Math.max(5600, Math.round(s * 1000) + 1300));
+const START = DUR.map((_, i) => DUR.slice(0, i).reduce((a, b) => a + b, 0));
 
 const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => ReactNode }[] = [
-  { tab: "Hi", caption: "Hi, welcome to HedgePredict! Here's how it works, in under a minute.", Scene: Hello },
+  { tab: "Hi", caption: "Hi! Welcome to HedgePredict. Here's how it works.", Scene: Hello },
   { tab: "Prices", caption: "A price is the crowd's odds. 43¢ means about a 43% chance, and a winning share pays $1.", Scene: Prices },
   { tab: "The board", caption: "HedgePredict reads every market on the board and checks whether the price looks too cheap.", Scene: Board },
   { tab: "Calls", caption: "Every market gets one of three calls. The color tells you what to do.", Scene: Calls },
@@ -22,7 +28,8 @@ const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => Re
   { tab: "Your AI", caption: "Use HedgePredict inside Claude or ChatGPT. Just ask in plain English.", Scene: Ai },
   { tab: "That's it", caption: "You make the call. HedgePredict helps you see what the prices say.", Scene: End },
 ];
-const TOTAL = CH * CHAPTERS.length;
+const TOTAL = DUR.reduce((a, b) => a + b, 0);
+const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
 const mmss = (ms: number) => {
   const s = Math.round(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -32,8 +39,11 @@ export function TourPlayer() {
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
+  const [sound, setSound] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const last = useRef<number | null>(null);
+  const tRef = useRef(0);
+  const clips = useRef<HTMLAudioElement[]>([]);
 
   // The clock: advance only while playing; stop on the last frame.
   useEffect(() => {
@@ -70,16 +80,38 @@ export function TourPlayer() {
     if (t >= TOTAL) setT(0);
     setPlaying((p) => !p || t >= TOTAL);
   }, [t]);
+  const start = (withSound: boolean) => {
+    setSound(withSound);
+    toggle();
+  };
   const jump = (i: number) => {
     setStarted(true);
-    setT(i * CH);
+    setT(START[i]);
     setPlaying(true);
   };
 
   const done = t >= TOTAL;
   // Before the first play, show chapter 1 fully drawn as the poster.
-  const ch = started ? Math.min(CHAPTERS.length - 1, Math.floor(t / CH)) : 0;
-  const lt = started ? (done ? CH : t - ch * CH) : CH;
+  const ch = started ? Math.min(CHAPTERS.length - 1, chapterAt(t)) : 0;
+  const lt = started ? (done ? DUR[ch] : t - START[ch]) : DUR[0];
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
+  // Voice: play this chapter's line from wherever the chapter clock is. Clips
+  // load only once sound is turned on.
+  useEffect(() => {
+    const all = clips.current;
+    all.forEach((a) => a?.pause());
+    if (!playing || !sound || !started) return;
+    const a = (all[ch] ??= new Audio(`/tour/tour-${ch + 1}.mp3`));
+    const at = (tRef.current - START[ch]) / 1000;
+    if (at < CLIP_S[ch]) {
+      a.currentTime = Math.max(0, at);
+      a.play().catch(() => setSound(false));
+    }
+    return () => a.pause();
+  }, [ch, playing, sound, started]);
   const { Scene, caption } = CHAPTERS[ch];
 
   return (
@@ -90,10 +122,17 @@ export function TourPlayer() {
         </div>
         <p className="tp-cap" key={`c${ch}`}>{caption}</p>
         {!playing && (
-          <button className="tp-big" onClick={toggle} aria-label={done ? "Replay the tour" : "Play the tour"}>
-            <span aria-hidden>{done ? "↺" : "▶"}</span>
-            {done ? "Watch again" : started ? "Resume" : `Watch the tour · ${mmss(TOTAL)}`}
-          </button>
+          <div className="tp-big">
+            <button className="tp-big-go" onClick={() => start(started ? sound : true)} aria-label={done ? "Replay the tour" : "Play the tour"}>
+              <span aria-hidden>{done ? "↺" : "▶"}</span>
+              {done ? "Watch again" : started ? "Resume" : `Watch with sound · ${mmss(TOTAL)}`}
+            </button>
+            {!started && (
+              <button className="tp-big-mute" onClick={() => start(false)}>
+                or watch muted
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -109,6 +148,9 @@ export function TourPlayer() {
             </button>
           ))}
         </nav>
+        <button className="tp-sound" onClick={() => setSound((v) => !v)} aria-pressed={sound} aria-label={sound ? "Mute" : "Turn sound on"}>
+          {sound ? "Sound on" : "Muted"}
+        </button>
         <span className="tp-time num">
           {mmss(t)} / {mmss(TOTAL)}
         </span>

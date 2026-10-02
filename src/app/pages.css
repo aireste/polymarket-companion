@@ -229,10 +229,13 @@
 .tp-scene { display: grid; place-items: center; padding: 28px 28px 8px; animation: tp-in 0.5s var(--ease) both; }
 .tp-cap { padding: 0 28px 24px; text-align: center; font-weight: 700; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.4; animation: tp-in 0.5s 0.1s var(--ease) both; }
 @keyframes tp-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.tp-big { position: absolute; inset: 0; display: grid; place-content: center; gap: 10px; justify-items: center; background: color-mix(in srgb, var(--paper) 55%, transparent);
-  backdrop-filter: blur(2px); font-weight: 800; font-size: 16px; color: var(--ink); cursor: pointer; border: 0; }
-.tp-big span { width: 64px; height: 64px; display: grid; place-items: center; background: var(--ink); color: var(--paper); font-size: 20px; border-radius: 50% !important; transition: transform 0.2s var(--ease); }
-.tp-big:hover span { transform: scale(1.06); }
+.tp-big { position: absolute; inset: 0; display: grid; place-content: center; gap: 14px; justify-items: center; background: color-mix(in srgb, var(--paper) 55%, transparent);
+  backdrop-filter: blur(2px); }
+.tp-big-go { display: grid; gap: 10px; justify-items: center; font-weight: 800; font-size: 16px; color: var(--ink); cursor: pointer; border: 0; background: none; }
+.tp-big-mute { font-weight: 700; font-size: 13.5px; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
+.tp-big-mute:hover { color: var(--ink); }
+.tp-big-go span { width: 64px; height: 64px; display: grid; place-items: center; background: var(--ink); color: var(--paper); font-size: 20px; border-radius: 50% !important; transition: transform 0.2s var(--ease); }
+.tp-big-go:hover span { transform: scale(1.06); }
 .tp-bar { position: relative; display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
 .tp-prog { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--ink); transform-origin: 0 50%; }
 .tp-play { width: 34px; height: 34px; flex: none; display: grid; place-items: center; font-size: 12px; color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule-strong); }
@@ -240,6 +243,8 @@
 .tp-tabs::-webkit-scrollbar { display: none; }
 .tp-tabs button { flex: none; font-weight: 700; font-size: 13.5px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
 .tp-tabs button:hover, .tp-tabs button[aria-current] { color: var(--ink); }
+.tp-sound { flex: none; font-weight: 700; font-size: 13px; color: var(--ink-faint); }
+.tp-sound[aria-pressed="true"] { color: var(--ink); }
 .tp-time { flex: none; font-weight: 700; font-size: 13px; color: var(--ink-faint); }
 
 /* scene parts */
