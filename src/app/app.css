@@ -615,7 +615,6 @@
 .hl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
 .hl-head h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
 .hl-head p { font-size: 14px; color: var(--ink-soft); margin-top: 8px; max-width: 60ch; }
-.hl-badge { font: 500 11.5px var(--font-mono); color: var(--ink-soft); border: 1px solid var(--rule-strong); border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
 .hl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; align-items: start; }
 .hl-inputs { background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--r); padding: 20px; display: grid; gap: 20px; }
 .hl-field { display: grid; gap: 8px; }

@@ -21,7 +21,7 @@ input, textarea, select, button { font-weight: inherit; }
 }
 
 /* labels, captions and UI copy: Bold, so small text never reads thin */
-.hp-verdict-k, .hl-k, .hl-r-k, .hl-badge, .hl-chip, .hp-status, .hp-meta, .hp-group, .hp-date, .hp-next-k, .hp-chip, .hp-tab {
+.hp-verdict-k, .hl-k, .hl-r-k, .hl-chip, .hp-status, .hp-meta, .hp-group, .hp-date, .hp-next-k, .hp-chip, .hp-tab {
   font-weight: 700;
 }
 

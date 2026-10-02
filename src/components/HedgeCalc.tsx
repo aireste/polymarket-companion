@@ -6,7 +6,6 @@ import { analyzeHedge } from "@/lib/scoring";
 import { useBoard } from "@/lib/boardStore";
 import { Odo } from "./Odo";
 import { HedgeLabMark } from "./HedgeLabMark";
-import { LabIntro } from "./LabIntro";
 
 const STAKES = [25, 50, 100, 250];
 const money = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
@@ -61,12 +60,14 @@ export function HedgeCalc() {
             <HedgeLabMark />
             Hedge Lab
           </h1>
-          <p>Lock in a result on a bet you already hold. Drag the hedge and watch both outcomes settle.</p>
+          <p>Lock in a result on a bet you already hold.</p>
+          <ol className="hl-quick" aria-label="Quick start">
+            <li><b>1</b>Pick a market, or enter your bet.</li>
+            <li><b>2</b>Set your price and the other side&apos;s price now.</li>
+            <li><b>3</b>Put the amount shown on the other side. Drag to hedge less.</li>
+          </ol>
         </div>
-        <span className="hl-badge">Pure math · no AI</span>
       </header>
-
-      <LabIntro />
 
       <div className="hl-grid">
         <div className="hl-inputs">
