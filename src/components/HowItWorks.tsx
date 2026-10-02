@@ -3,18 +3,35 @@
 import Link from "next/link";
 import { price, type OddsFormat } from "@/lib/format";
 import { useOddsFormat } from "@/lib/oddsFormat";
-import { TourPlayer } from "./TourPlayer";
+import { TourPlayer, TOUR_AT, playTourAt } from "./TourPlayer";
 
 /**
  * How it works, short and structured: what HedgePredict is, the voiced tour
- * (the calls, odds, Hedge Lab, the Daily, your AI), how to use it in three
- * steps, the two numbers, then the FAQ. Example prices follow the viewer's ¢ / US setting.
+ * (the calls, odds, Hedge Lab, the Daily, your AI), the same tour as a short
+ * text list (each row jumps the video to its chapter), then the FAQ. Example prices follow the viewer's ¢ / US setting.
  */
-const STEPS = [
-  { t: "Pick a market", d: "Games, elections, crypto and more, sorted by when they resolve. Search finds anything else." },
-  { t: "Read the call", d: "Wager, Lean or Skip, with how sure HedgePredict is. Calls update as prices move." },
-  { t: "Ask why", d: "Tap \u201cWhy this call?\u201d for a plain explanation, or ask HedgePredict anything." },
-];
+/** The tour in text, one row per chapter, for people who'd rather skim. Prices follow the ¢ / US setting. */
+function TOUR_TEXT(fmt: OddsFormat): { tab: string; t: string; d: string }[] {
+  return [
+    {
+      tab: "Prices",
+      t: "The price is the odds",
+      d: `A ${price(0.43, fmt)} price means about a 43% chance. Win, and each share pays $1: your 43¢ back plus 57¢ profit. Flip ¢ / US at the top for sportsbook odds (${price(0.43, "us")}).`,
+    },
+    { tab: "Calls", t: "Every market gets a call", d: "Wager when a side looks too cheap, Lean when it's a mild tilt, Skip when the price looks about right." },
+    { tab: "How sure", t: "How sure we are", d: "\u201c74% sure\u201d is how sure HedgePredict is that a side is priced too cheap. It is not the chance of winning." },
+    { tab: "Hedge Lab", t: "Hedge Lab", d: "Already holding a bet? See how much to put on the other side to lock in a result either way." },
+    { tab: "The Daily", t: "The Daily", d: "The day's top pick, what resolves soon and the biggest movers, in your inbox weekdays at 8 AM ET." },
+    { tab: "Search & Ask", t: "Search & Ask", d: "Search any market on Polymarket, or ask HedgePredict about one in plain English." },
+    { tab: "Connect AI", t: "Connect your AI", d: "Use HedgePredict inside Claude, ChatGPT or any MCP app with one link." },
+  ];
+}
+
+/** Chapter timestamps on the text rows, like the player's clock. */
+const mmss = (ms: number) => {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
 
 /** Plain answers to what people actually ask. Example odds follow the ¢ / US toggle. */
 function FAQ(fmt: OddsFormat): { q: string; a: React.ReactNode }[] {
@@ -102,32 +119,18 @@ export function HowItWorks() {
       <TourPlayer />
 
       <section className="hw-sec" aria-labelledby="hw-use">
-        <h2 id="hw-use">How to use it</h2>
-        <ol className="hw-steps">
-          {STEPS.map((s, i) => (
-            <li key={s.t}>
-              <span>{i + 1}</span>
-              <b>{s.t}</b>
-              <p>{s.d}</p>
+        <h2 id="hw-use">The tour, in 20 seconds</h2>
+        <ol className="hw-tour">
+          {TOUR_TEXT(fmt).map((r) => (
+            <li key={r.tab}>
+              <b>{r.t}</b>
+              <p>{r.d}</p>
+              <button type="button" className="hw-at num" onClick={() => playTourAt(r.tab)} aria-label={`Play the tour from ${r.t}`}>
+                ▶ {mmss(TOUR_AT[r.tab])}
+              </button>
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="hw-sec" aria-labelledby="hw-two">
-        <h2 id="hw-two">Two numbers, two meanings</h2>
-        <div className="hw-two">
-          <div>
-            <span className="hw-big num">{price(0.5, fmt)}</span>
-            <b>The price</b>
-            <p>What the crowd on Polymarket thinks. Flip the ¢ / US switch at the top to see sportsbook odds.</p>
-          </div>
-          <div>
-            <span className="hw-big num">74%</span>
-            <b>How sure we are</b>
-            <p>How sure HedgePredict is that a side is too cheap. It is not the chance of winning.</p>
-          </div>
-        </div>
       </section>
 
       <section className="hw-sec" aria-labelledby="hw-faq">
@@ -147,7 +150,7 @@ export function HowItWorks() {
 
       <footer className="hw-foot">
         <p>
-          We built HedgePredict to do the homework: watch every market, point out the plays worth a look, and explain them like a friend
+          We built HedgePredict to do the homework: check the top markets, point out where there could be true value, and explain them like a friend
           would. Hope it helps you find better plays. <b>The team at HedgePredict</b>
         </p>
         <p className="hw-safe">No login, no wallet, nothing connected to your accounts. HedgePredict only reads public data and never places trades.</p>

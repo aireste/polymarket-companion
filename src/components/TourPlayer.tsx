@@ -88,6 +88,10 @@ const CHAPTERS: { tab: string; Scene: (p: SceneProps) => ReactNode }[] = [
   { tab: "Connect AI", Scene: Ai },
   { tab: "That's it", Scene: End },
 ];
+/** Where each chapter starts (ms), for links that jump into the tour. */
+export const TOUR_AT = Object.fromEntries(CHAPTERS.map((c, i) => [c.tab, START[i]])) as Record<string, number>;
+/** Ask the tour to play from a chapter (e.g. from the text version below it). */
+export const playTourAt = (tab: string) => window.dispatchEvent(new CustomEvent("hp-tour-play", { detail: tab }));
 const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
 const CC_KEY = "hp_tour_cc";
 const mmss = (ms: number) => {
@@ -183,6 +187,23 @@ export function TourPlayer() {
     seek(START[i]);
     setPlaying(true);
   };
+  // A text row below asked to play from a chapter: bring the player into view and play with sound
+  // (the click that sent it counts as the user's go-ahead for audio).
+  const jumpRef = useRef(jump);
+  useEffect(() => {
+    jumpRef.current = jump;
+  });
+  useEffect(() => {
+    const onPlay = (e: Event) => {
+      const i = CHAPTERS.findIndex((c) => c.tab === (e as CustomEvent<string>).detail);
+      if (i < 0) return;
+      box.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setSound(true);
+      jumpRef.current(i);
+    };
+    window.addEventListener("hp-tour-play", onPlay);
+    return () => window.removeEventListener("hp-tour-play", onPlay);
+  }, []);
 
   const done = t >= TOTAL;
   // Before the first play, show chapter 1 fully drawn as the poster.

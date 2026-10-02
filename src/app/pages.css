@@ -326,3 +326,15 @@
 .ts-search-bar { margin-top: 14px; padding: 12px 14px; min-height: 1.5em; background: var(--paper); box-shadow: inset 0 0 0 1px var(--rule-strong); font-weight: 600; font-size: 15px; color: var(--ink); }
 .ts-search .ts-row { grid-template-columns: 1fr 56px; padding: 11px 2px; }
 .ts-search .ts-row:last-child { border-bottom: 0; }
+/* How it works: the tour as text, one row per chapter, each jumping the video to it. */
+.hw-tour { margin-top: 18px; list-style: none; padding: 0; }
+.hw-tour li { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) auto; gap: 8px 24px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.hw-tour li:last-child { border-bottom: 0; }
+.hw-tour b { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
+.hw-tour p { font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.hw-at { font-weight: 700; font-size: 13px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
+.hw-at:hover { color: var(--accent-ink); }
+@media (max-width: 720px) {
+  .hw-tour li { grid-template-columns: minmax(0, 1fr) auto; }
+  .hw-tour p { grid-column: 1 / -1; grid-row: 2; }
+}
