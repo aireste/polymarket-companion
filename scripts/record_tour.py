@@ -7,8 +7,8 @@ key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("E
 
 # Each line: (spoken text, [(spoken anchor, caption text), ...])
 SCRIPT = [
- ("Hi! Welcome to HedgePredict. We check the top markets on Polymarket and flag the prices that look too cheap.",
-  [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("We check", "We check the top markets on Polymarket"), ("and flag", "and flag the prices that look too cheap.")]),
+ ("Hi! Welcome to HedgePredict. We check the top markets on Polymarket and point out where there could be true value.",
+  [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("We check", "We check the top markets on Polymarket"), ("and point", "and point out where there could be true value.")]),
  ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
   [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
    ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
