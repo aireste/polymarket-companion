@@ -1,4 +1,4 @@
-"""Record the tour as one Helen take and regenerate TourPlayer's timing block
+"""Record the tour as one Peach take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
 import json, os, re, ssl, sys, base64, urllib.request
 
@@ -48,8 +48,8 @@ LINES = [l for l, _ in SCRIPT]
 # lines reuses them (no new recording), so beats and captions can be retimed for free.
 # Pass --record to force a new take.
 CACHE = "scripts/tour_alignment.json"
-# Helen - Warm, Balanced and Articulate (ElevenLabs). Changing it needs --record.
-VOICE = "ImnfuV8oxhB7ya99oJfc"
+# Peach - Casual & Friendly British (ElevenLabs). Changing it needs --record.
+VOICE = "3cuC1hNj9E2jcHlIvndN"
 # 0.9s between lines, a touch more after the two chat demos so their answers can be read.
 LONG_AFTER = {8: "1.3s", 9: "1.0s"}
 # The closing chapter opens on "HedgePredict!" rather than "And that's", so the AI answer stays up a beat longer.
