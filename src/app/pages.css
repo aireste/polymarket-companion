@@ -308,3 +308,9 @@
 .tp-big.is-paused .tp-big-go span { width: 52px; height: 52px; font-size: 17px; box-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.45); }
 /* the tour already ends on a rule; no second one above the next section */
 .tp + .hw-sec { border-top: 0; }
+/* captions: one short phrase at a time in a fixed-height box, so the stage never jumps */
+.tp-capbox { min-height: 4.4em; display: grid; align-items: start; padding: 0 28px 20px; }
+.tp-capbox .tp-cap { padding: 0; }
+.ts-pay + .ts-pay { margin-top: 6px; }
+.tp-capbox .tp-cap { animation: tp-in 0.25s var(--ease) both; }
+.ts-pay b.is-wager { color: var(--wager-ink); }
