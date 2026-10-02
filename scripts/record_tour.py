@@ -1,4 +1,4 @@
-"""Record the tour as one Peach take and regenerate TourPlayer's timing block
+"""Record the tour as one Lara take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
 import json, os, re, ssl, sys, base64, urllib.request
 
@@ -48,8 +48,10 @@ LINES = [l for l, _ in SCRIPT]
 # lines reuses them (no new recording), so beats and captions can be retimed for free.
 # Pass --record to force a new take.
 CACHE = "scripts/tour_alignment.json"
-# Peach - Casual & Friendly British (ElevenLabs). Changing it needs --record.
-VOICE = "3cuC1hNj9E2jcHlIvndN"
+# Lara - Natural, Relatable & Engaging (ElevenLabs). Changing it needs --record.
+VOICE = "vChnJZ1Cu89g2XXumPfT"
+# A little looser than the defaults so lines get natural emphasis instead of a flat read.
+VOICE_SETTINGS = {"stability": 0.38, "similarity_boost": 0.8, "style": 0.3, "use_speaker_boost": True}
 # 0.9s between lines, a touch more after the two chat demos so their answers can be read.
 LONG_AFTER = {8: "1.3s", 9: "1.0s"}
 # The closing chapter opens on "HedgePredict!" rather than "And that's", so the AI answer stays up a beat longer.
@@ -60,7 +62,7 @@ if cached and cached["text"] == text and "--record" not in sys.argv:
     al = cached["alignment"]
 else:
     body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}).encode()
+        "voice_settings": VOICE_SETTINGS}).encode()
     req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}/with-timestamps?output_format=mp3_44100_128",
         data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
     d = json.loads(urllib.request.urlopen(req, timeout=300, context=ctx).read())

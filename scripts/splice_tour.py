@@ -46,7 +46,7 @@ t_a, t_b = k_a * fdur, k_b * fdur
 # The new segment exactly as it appears in the full script text (keeps the breaks between i..j).
 seg = text[text.index(LINES[i]): text.index(LINES[j]) + len(LINES[j])]
 body = {"text": seg, "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}
+        "voice_settings": g["VOICE_SETTINGS"]}
 if i > 0: body["previous_text"] = LINES[i - 1]
 if j < len(LINES) - 1: body["next_text"] = LINES[j + 1]
 req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}/with-timestamps?output_format=mp3_44100_128",
