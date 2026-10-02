@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { price, type OddsFormat } from "@/lib/format";
 import { useOddsFormat } from "@/lib/oddsFormat";
+import { TourPlayer } from "./TourPlayer";
 
 /**
  * How it works, short and structured: what HedgePredict is, the three calls
@@ -211,6 +212,8 @@ export function HowItWorks() {
           bet on DraftKings and FanDuel or already trade on Polymarket.
         </p>
       </header>
+
+      <TourPlayer />
 
       <section className="hw-sec" aria-labelledby="hw-calls">
         <h2 id="hw-calls">Every market gets one of three calls</h2>
