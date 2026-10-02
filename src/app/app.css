@@ -521,7 +521,7 @@
     --rule: oklch(0.28 0.01 260);
     --rule-strong: oklch(0.35 0.012 260);
     --accent-soft: oklch(0.3 0.02 235);
-    --accent-ink: oklch(0.9 0.035 235);
+    --accent-ink: oklch(0.84 0.075 236);
   --lab-soft: oklch(0.3 0.05 215);
   --lab-ink: oklch(0.83 0.11 205);
     --dark: oklch(0.13 0.007 260);
@@ -549,7 +549,7 @@
   --rule: oklch(0.28 0.01 260);
   --rule-strong: oklch(0.35 0.012 260);
   --accent-soft: oklch(0.3 0.02 235);
-  --accent-ink: oklch(0.9 0.035 235);
+  --accent-ink: oklch(0.84 0.075 236);
   --lab-soft: oklch(0.3 0.05 215);
   --lab-ink: oklch(0.83 0.11 205);
   --dark: oklch(0.13 0.007 260);
@@ -1196,3 +1196,17 @@ body { font-variant-numeric: tabular-nums; }
 .hp-name { color: var(--accent-ink); }
 /* Call card: confidence sits under the headline instead of repeating the call in the header. */
 .hp-verdict-conf { margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+
+/* ══ Brand pass: ice is HedgePredict's voice, white is the data ══
+   Ice (--accent-ink: ice on dark, deep slate on light) for page and section titles, the small
+   labels that name a card, where you are in the nav, and the main buttons. Prices, percentages,
+   market questions and body copy stay ink/white so the numbers read first. Call colors and
+   Hedge Lab's cyan are untouched. */
+.hp-app :is(
+  .hp-dlist-top h1, .hp-phone-title, .hw-hero h1, .hw-sec h2, .hp-dl-copy h1, .ask-head h2,
+  .connect .collapse-title, .hp-askdrop-head b
+):not(#_) { color: var(--accent-ink); }
+.hp-app :is(.hp-verdict-k, .ts-k:not(.ts-lab), .hp-sub-copy b):not(#_) { color: var(--accent-ink); }
+.hp-app .hp-dh-link[aria-current="page"]:not(#_) { color: var(--accent-ink); }
+.hp-app .hp-dh-ind:not(#_) { background: var(--accent-ink); }
+.hp-app .hp-sub-field button:not(#_) { background: var(--accent); color: var(--dark); }
