@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BoardProvider, useBoard, useNow } from "@/lib/boardStore";
-import { clockET } from "@/lib/format";
+import { BoardProvider, useBoard } from "@/lib/boardStore";
 import { CATEGORIES } from "@/lib/filters";
 import { CommandPalette } from "./CommandPalette";
 import { AskPanel } from "./AskPanel";
@@ -65,35 +64,23 @@ function PaletteHotkey() {
   return null;
 }
 
-/** Live clock in Eastern Time, the zone Polymarket uses. */
-function ClockET() {
-  const now = useNow(1000);
-  // The server's second never matches the browser's; render the time client-side only.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return (
-    <span className="hp-clock" title="All times are US Eastern, like Polymarket">
-      {mounted ? clockET(now) : "\u00a0"} <small>ET</small>
-    </span>
-  );
-}
-
 /** Desktop links. Ask lives in its own dropdown so it opens over the board. */
 const DESK_NAV = [
   { href: "/", label: "Board" },
-  { href: "/hedge", label: "Hedge Lab" },
-  { href: "/connect", label: "Connect your AI" },
-  { href: "/daily", label: "The Daily" },
   { href: "/how-it-works", label: "How it works" },
+  { href: "/hedge", label: "Hedge Lab" },
+  { href: "/daily", label: "The Daily" },
+  { href: "/connect", label: "Connect your AI" },
 ];
 
 /**
- * Desktop header: one row with the wordmark, section links, search, Ask, and
- * the clock/odds/theme/refresh tools. (Replaces the old sidebar + top bar.)
+ * Desktop header: one row with the wordmark, section links, search, Ask (the
+ * ✦ mark), and the odds/theme switches. No clock or refresh: times are shown in
+ * ET where they matter, and prices and calls update on their own.
  */
 function DeskHeader() {
   const path = usePathname();
-  const { asOf, loading, refresh, setPaletteOpen } = useBoard();
+  const { setPaletteOpen } = useBoard();
   const navRef = useRef<HTMLElement>(null);
   const on = (href: string) => (href === "/" ? BOARD_PATHS.has(path) : path === href);
   const ind = useSlider(navRef, '.hp-dh-link[aria-current="page"]', [path]);
@@ -119,18 +106,8 @@ function DeskHeader() {
       </button>
       <AskDropdown />
       <div className="hp-upd">
-        <ClockET />
         <OddsToggle />
         <ThemeToggle />
-        <button
-          className="hp-iconbtn"
-          onClick={refresh}
-          disabled={loading}
-          aria-label="Refresh markets"
-          title={asOf ? `Prices update every 20s · last ${new Date(asOf).toLocaleTimeString("en-US", { timeZone: "America/New_York" })} ET` : undefined}
-        >
-          <span className={loading ? "hp-spin" : undefined}>{Icon.refresh}</span>
-        </button>
       </div>
     </header>
   );
@@ -166,7 +143,20 @@ function AskDropdown() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [used, setUsed] = useState(false);
+  // The ✦ twinkles now and then until it's been opened once (remembered per browser).
+  const [fresh, setFresh] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let seen = true;
+    try {
+      seen = localStorage.getItem("hp_ask_seen") === "1";
+    } catch {
+      /* treat as seen: no animation */
+    }
+    if (seen) return;
+    const id = setTimeout(() => setFresh(true), 0);
+    return () => clearTimeout(id);
+  }, []);
 
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {
@@ -188,17 +178,25 @@ function AskDropdown() {
   return (
     <div className="hp-askwrap" ref={wrap}>
       <button
-        className={`hp-ask-btn${open ? " is-open" : ""}`}
+        className={`hp-ask-btn is-icon${open ? " is-open" : ""}${fresh ? " is-new" : ""}`}
         onClick={() => {
           setUsed(true);
           setOpen((o) => !o);
+          if (fresh) {
+            setFresh(false);
+            try {
+              localStorage.setItem("hp_ask_seen", "1");
+            } catch {
+              /* it'll twinkle again next visit */
+            }
+          }
         }}
         aria-expanded={open}
         aria-haspopup="dialog"
+        aria-label="Ask HedgePredict"
+        title="Ask HedgePredict"
       >
         <span className="hp-ask-mark">{Icon.spark}</span>
-        Ask HedgePredict
-        <span className="hp-ask-chev" aria-hidden>▾</span>
       </button>
       {used && (
         <div className={`hp-askdrop${open ? " is-open" : ""}`} role="dialog" aria-label="Ask HedgePredict" aria-hidden={!open}>

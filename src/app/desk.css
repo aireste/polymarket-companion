@@ -196,7 +196,6 @@
 @media (min-width: 900px) and (max-width: 1080px) {
   .hp-dh .hp-search { max-width: 44px; font-size: 0; gap: 0; padding: 0; justify-content: center; }
   .hp-dh .hp-search kbd { display: none; }
-  .hp-dh-link[href="/how-it-works"] { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -212,3 +211,17 @@
 @media (min-width: 900px) {
   .hp-dshowall { display: block; width: calc(100% - 44px); margin: 14px 22px 6px; }
 }
+
+/* header Ask = the ✦ mark alone. Until it's opened once it twinkles every ~10s:
+   a quick quarter turn + pop (the 4-point spark looks the same after 90°). */
+@media (min-width: 900px) {
+  .hp-dh .hp-ask-btn.is-icon { width: 36px; padding: 0; justify-content: center; }
+  .hp-dh .hp-ask-btn.is-icon .hp-ask-mark svg { width: 17px; height: 17px; }
+  .hp-dh .hp-ask-btn.is-new .hp-ask-mark svg { animation: hp-twinkle 10s var(--ease) 2.5s infinite; }
+}
+@keyframes hp-twinkle {
+  0%, 88% { transform: none; }
+  93% { transform: rotate(45deg) scale(1.3); }
+  100% { transform: rotate(90deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .hp-dh .hp-ask-btn.is-new .hp-ask-mark svg { animation: none; } }
