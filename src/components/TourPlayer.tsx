@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 const CH = 6000;
 
 const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => ReactNode }[] = [
+  { tab: "Hi", caption: "Hi, welcome to HedgePredict! Here's how it works, in under a minute.", Scene: Hello },
   { tab: "Prices", caption: "A price is the crowd's odds. 43¢ means about a 43% chance, and a winning share pays $1.", Scene: Prices },
   { tab: "The board", caption: "HedgePredict reads every market on the board and checks whether the price looks too cheap.", Scene: Board },
   { tab: "Calls", caption: "Every market gets one of three calls. The color tells you what to do.", Scene: Calls },
@@ -120,6 +121,16 @@ export function TourPlayer() {
 const on = (lt: number, ms: number) => (lt >= ms ? " on" : "");
 
 /* ── Scenes ── */
+
+function Hello({ lt }: { lt: number }) {
+  return (
+    <div className="ts-end">
+      <small className={`ts-note${on(lt, 200)}`}>Welcome to</small>
+      <strong className={`ts-end-word${on(lt, 500)}`}>HedgePredict</strong>
+      <p className={`ts-hello${on(lt, 1400)}`}>Your prediction market assistant.</p>
+    </div>
+  );
+}
 
 function Prices({ lt }: { lt: number }) {
   return (
