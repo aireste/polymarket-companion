@@ -1,4 +1,4 @@
-"""Record the tour as one Helen take and regenerate TourPlayer's timing block
+"""Record the tour as one Liberty take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
 import json, os, re, ssl, sys, base64, urllib.request
 
@@ -52,6 +52,8 @@ LINES = [l for l, _ in SCRIPT]
 # lines reuses them (no new recording), so beats and captions can be retimed for free.
 # Pass --record to force a new take.
 CACHE = "scripts/tour_alignment.json"
+# Liberty X - Transatlantic Global Narration (ElevenLabs). Changing it needs --record.
+VOICE = "iBo5PWT1qLiEyqhM7TrG"
 # 0.9s between lines; a longer rest after the AI line so the on-screen answer can be read.
 LONG_AFTER = {8: "2.2s", 9: "2.5s"}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
@@ -61,7 +63,7 @@ if cached and cached["text"] == text and "--record" not in sys.argv:
 else:
     body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
         "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}).encode()
-    req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/ImnfuV8oxhB7ya99oJfc/with-timestamps?output_format=mp3_44100_128",
+    req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}/with-timestamps?output_format=mp3_44100_128",
         data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
     d = json.loads(urllib.request.urlopen(req, timeout=300, context=ctx).read())
     open("public/tour/tour.mp3", "wb").write(base64.b64decode(d["audio_base64"]))
