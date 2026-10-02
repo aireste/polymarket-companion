@@ -3,41 +3,36 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
- * The How it works tour: a ~1 min "video" drawn in code (real type, real colors,
- * light/dark aware) with an optional voiceover: one continuous take in the
- * "HedgePredict Guide" voice (ElevenLabs custom design), public/tour/tour.mp3.
- * Nothing moves until someone presses play, and sound only plays if they choose
- * it. It pauses when scrolled away and rests on the last frame when done. Each
- * chapter is one idea and one caption. Scenes read `lt` (ms into the chapter)
- * and flip classes at beats; CSS transitions do the motion.
+ * The How it works tour: a ~1:15 "video" drawn in code (real type, real colors,
+ * light/dark aware) with an optional voiceover: one continuous take by Liberty
+ * (ElevenLabs, transatlantic), public/tour/tour.mp3. Nothing moves until someone
+ * presses play, and sound only plays if they choose it. Scrub, skip 10s, jump by
+ * chapter, captions on/off. It pauses when scrolled away and rests on the last
+ * frame when done. Scenes read `lt` (ms into the chapter) and flip classes at
+ * beats; CSS transitions do the motion.
  */
 
-/**
- * Voiceover takes (one continuous take each), with where each line starts (s)
- * from ElevenLabs word timestamps, and the odds chapter's beats ("plus one
- * thirty-three", "your sportsbook") in s from that line. Re-measure if audio changes.
- * Pick one locally with ?voice=liberty|sarah while auditioning.
- */
-const VOICES = {
-  guide: { src: "/tour/tour.mp3", at: [0.95, 5.9, 14.36, 32.05, 38.39, 43.28, 48.2, 55.2, 60.19, 66.8], end: 75.37, odds: { us: 7.6, note: 10.2 } },
-  liberty: { src: "/tour/tour-liberty.mp3", at: [0.08, 4.89, 13.99, 29.33, 35.62, 40.65, 45.55, 51.65, 56.76, 63.58], end: 71.61, odds: {us: 7.59, note: 9.59} },
-  sarah: { src: "/tour/tour-sarah.mp3", at: [0.06, 4.98, 14.7, 30.44, 37.31, 42.84, 48.03, 54.96, 60.37, 67.21], end: 75.47, odds: {us: 8.09, note: 10.17} },
+/** Where each line starts in tour.mp3 (s), from ElevenLabs word timestamps. Re-measure if the audio changes. */
+const LINE_AT = [0.07, 5.07, 20.56, 35.22, 41.24, 46.5, 51.4, 57.2, 62.38, 68.66];
+const AUDIO_END = 76.21;
+/** Chapters open a beat before their line, so the picture lands as she starts speaking. */
+const LEAD = 250;
+const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - LEAD));
+const TOTAL = Math.round(AUDIO_END * 1000) + 1500;
+const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
+/** In-chapter beats tied to words (s after the line starts). */
+const BEATS = {
+  pay: 5.23, // "A winning share pays one dollar"
+  pct: 9.74, // "So forty-three cents means…"
+  us: 6.84, // "plus one thirty-three"
+  note: 8.8, // "Your sportsbook's line…"
 };
-type VoiceKey = keyof typeof VOICES;
+const beat = (k: keyof typeof BEATS) => Math.round(BEATS[k] * 1000) + LEAD;
 
-function timing(k: VoiceKey) {
-  const v = VOICES[k];
-  /** Chapters open a beat before their line, so the picture lands as she starts speaking. */
-  const START = v.at.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - 250));
-  const TOTAL = Math.round(v.end * 1000) + 1500;
-  const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
-  return { src: v.src, END: v.end, START, TOTAL, DUR, odds: { us: v.odds.us * 1000, note: v.odds.note * 1000 } };
-}
-
-type SceneProps = { lt: number; odds: { us: number; note: number } };
+type SceneProps = { lt: number };
 const CHAPTERS: { tab: string; caption: string; Scene: (p: SceneProps) => ReactNode }[] = [
   { tab: "Hi", caption: "Hi! Welcome to HedgePredict. Here's how it works.", Scene: Hello },
-  { tab: "Prices", caption: "A price is the crowd's odds. 43¢ means about a 43% chance, and a winning share pays $1.", Scene: Prices },
+  { tab: "Prices", caption: "Quick refresher if you're new: every market is a yes-or-no question. A winning share pays $1, a losing one pays nothing. So 43¢ means about a 43% chance.", Scene: Prices },
   { tab: "Odds", caption: "Used to sportsbook odds? Flip the switch to see American odds: 43¢ becomes +133. Your sportsbook's line may differ a little, so treat it as a guide.", Scene: Odds },
   { tab: "The board", caption: "HedgePredict reads every market on the board and checks whether the price looks too cheap.", Scene: Board },
   { tab: "Calls", caption: "Every market gets one of three calls. The color tells you what to do.", Scene: Calls },
@@ -47,7 +42,8 @@ const CHAPTERS: { tab: string; caption: string; Scene: (p: SceneProps) => ReactN
   { tab: "Your AI", caption: "Use HedgePredict inside Claude or ChatGPT. Just ask in plain English.", Scene: Ai },
   { tab: "That's it", caption: "And that's HedgePredict! You make the call, and we'll help you see what the prices are really saying. Play smart, and go get 'em.", Scene: End },
 ];
-const chapterAt = (START: number[], t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
+const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
+const CC_KEY = "hp_tour_cc";
 const mmss = (ms: number) => {
   const s = Math.round(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -62,15 +58,27 @@ export function TourPlayer() {
   const last = useRef<number | null>(null);
   const tRef = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
-  const [vk, setVk] = useState<VoiceKey>("guide");
-  const { src, END, START, TOTAL, DUR, odds } = timing(vk);
-  // Audition helper: ?voice=liberty|sarah swaps the take.
+  const [cc, setCc] = useState(true);
+  // Captions: on by default, remembered per browser.
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get("voice");
-    if (!q || !(q in VOICES)) return;
-    const id = setTimeout(() => setVk(q as VoiceKey), 0);
-    return () => clearTimeout(id);
+    try {
+      if (localStorage.getItem(CC_KEY) === "0") {
+        const id = setTimeout(() => setCc(false), 0);
+        return () => clearTimeout(id);
+      }
+    } catch {
+      /* default on */
+    }
   }, []);
+  const toggleCc = () =>
+    setCc((v) => {
+      try {
+        localStorage.setItem(CC_KEY, v ? "0" : "1");
+      } catch {
+        /* not remembered */
+      }
+      return !v;
+    });
 
   // The clock: advance only while playing; stop on the last frame.
   useEffect(() => {
@@ -94,7 +102,7 @@ export function TourPlayer() {
       cancelAnimationFrame(raf);
       last.current = null;
     };
-  }, [playing, TOTAL]);
+  }, [playing]);
 
   // Scrolled out of view: pause (it never plays unseen).
   useEffect(() => {
@@ -112,21 +120,27 @@ export function TourPlayer() {
       if (audio.current) audio.current.currentTime = 0;
     }
     setPlaying((p) => !p || t >= TOTAL);
-  }, [t, TOTAL]);
+  }, [t]);
   const start = (withSound: boolean) => {
     setSound(withSound);
     toggle();
   };
-  const jump = (i: number) => {
+  /** Move the playhead (scrubber, ±10s, chapters); the voice follows. */
+  const seek = (ms: number) => {
+    const to = Math.min(TOTAL - 1, Math.max(0, ms));
     setStarted(true);
-    setT(START[i]);
-    if (audio.current) audio.current.currentTime = START[i] / 1000;
+    setT(to);
+    tRef.current = to;
+    if (audio.current) audio.current.currentTime = Math.min(to / 1000, AUDIO_END);
+  };
+  const jump = (i: number) => {
+    seek(START[i]);
     setPlaying(true);
   };
 
   const done = t >= TOTAL;
   // Before the first play, show chapter 1 fully drawn as the poster.
-  const ch = started ? Math.min(CHAPTERS.length - 1, chapterAt(START, t)) : 0;
+  const ch = started ? Math.min(CHAPTERS.length - 1, chapterAt(t)) : 0;
   const lt = started ? (done ? DUR[ch] : t - START[ch]) : DUR[0];
   useEffect(() => {
     tRef.current = t;
@@ -139,25 +153,24 @@ export function TourPlayer() {
       audio.current?.pause();
       return;
     }
-    if (audio.current && !audio.current.src.endsWith(src)) audio.current = null;
-    const a = (audio.current ??= new Audio(src));
+    const a = (audio.current ??= new Audio("/tour/tour.mp3"));
     const at = tRef.current / 1000;
-    if (at >= END) return;
+    if (at >= AUDIO_END) return;
     if (Math.abs(a.currentTime - at) > 0.3) a.currentTime = at;
     a.play().catch(() => setSound(false));
     return () => a.pause();
-  }, [playing, sound, started, src, END]);
+  }, [playing, sound, started]);
   const { Scene, caption } = CHAPTERS[ch];
 
   return (
     <div className={`tp${playing ? " is-playing" : ""}`} ref={box}>
       <div className="tp-stage">
         <div className="tp-scene" key={ch}>
-          <Scene lt={lt} odds={odds} />
+          <Scene lt={lt} />
         </div>
-        <p className="tp-cap" key={`c${ch}`}>{caption}</p>
+        {cc && <p className="tp-cap" key={`c${ch}`}>{caption}</p>}
         {!playing && (
-          <div className="tp-big">
+          <div className={`tp-big${started ? " is-paused" : ""}`}>
             <button className="tp-big-go" onClick={() => start(started ? sound : true)} aria-label={done ? "Replay the tour" : "Play the tour"}>
               <span aria-hidden>{done ? "↺" : "▶"}</span>
               {done ? "Watch again" : started ? "Resume" : `Watch with sound · ${mmss(TOTAL)}`}
@@ -171,10 +184,27 @@ export function TourPlayer() {
         )}
       </div>
 
+      <input
+        className="tp-scrub"
+        type="range"
+        min={0}
+        max={TOTAL}
+        step={100}
+        value={t}
+        onChange={(e) => seek(Number(e.target.value))}
+        style={{ ["--p" as string]: `${(t / TOTAL) * 100}%` }}
+        aria-label="Seek"
+        aria-valuetext={`${mmss(t)} of ${mmss(TOTAL)}`}
+      />
       <div className="tp-bar">
-        <span className="tp-prog" style={{ transform: `scaleX(${t / TOTAL})` }} aria-hidden />
         <button className="tp-play" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
           {playing ? "❚❚" : done ? "↺" : "▶"}
+        </button>
+        <button className="tp-skip" onClick={() => seek(t - 10_000)} aria-label="Back 10 seconds">
+          −10s
+        </button>
+        <button className="tp-skip" onClick={() => seek(t + 10_000)} aria-label="Forward 10 seconds">
+          +10s
         </button>
         <nav className="tp-tabs" aria-label="Tour chapters">
           {CHAPTERS.map((c, i) => (
@@ -183,6 +213,9 @@ export function TourPlayer() {
             </button>
           ))}
         </nav>
+        <button className="tp-sound" onClick={toggleCc} aria-pressed={cc} aria-label={cc ? "Hide captions" : "Show captions"}>
+          CC
+        </button>
         <button className="tp-sound" onClick={() => setSound((v) => !v)} aria-pressed={sound} aria-label={sound ? "Mute" : "Turn sound on"}>
           {sound ? "Sound on" : "Muted"}
         </button>
@@ -209,32 +242,33 @@ function Hello({ lt }: { lt: number }) {
   );
 }
 
-function Prices({ lt }: { lt: number }) {
+/** Beats follow the voice: the payout on "A winning share", the price on "So forty-three cents". */
+function Prices({ lt }: SceneProps) {
   return (
     <div className="ts-card ts-market">
-      <span className="ts-k">Polymarket · College football</span>
+      <span className="ts-k">Polymarket · a yes-or-no question</span>
       <b className="ts-q">Will Kentucky beat South Carolina?</b>
+      <p className={`ts-pay${on(lt, beat("pay"))}`}>
+        Win <span>→</span> <b>$1.00</b> a share · Lose <span>→</span> <b>$0</b>
+      </p>
       <div className="ts-prices">
-        <div className={`ts-price${on(lt, 900)}`}>
+        <div className={`ts-price${on(lt, beat("pct"))}`}>
           <small>Kentucky</small>
           <strong>43¢</strong>
-          <em className={`ts-note${on(lt, 1800)}`}>≈ 43% chance</em>
+          <em className={`ts-note${on(lt, beat("pct") + 900)}`}>≈ 43% chance</em>
         </div>
         <div className="ts-price is-dim">
           <small>South Carolina</small>
           <strong>58¢</strong>
         </div>
       </div>
-      <p className={`ts-pay${on(lt, 3000)}`}>
-        Buy a Kentucky share for 43¢ <span>→</span> it pays <b>$1.00</b> if Kentucky wins.
-      </p>
     </div>
   );
 }
 
 /** Beats follow the voice: the switch flips on "plus one thirty-three", the note on "your sportsbook". */
-function Odds({ lt, odds }: SceneProps) {
-  const us = lt >= odds.us;
+function Odds({ lt }: SceneProps) {
+  const us = lt >= beat("us");
   const sides = [
     { k: "Kentucky", c: "43¢", a: "+133" },
     { k: "South Carolina", c: "58¢", a: "-138" },
@@ -259,7 +293,7 @@ function Odds({ lt, odds }: SceneProps) {
           </div>
         ))}
       </div>
-      <p className={`ts-pay${on(lt, odds.note)}`}>Sportsbook lines can differ a little. Use it as a guide.</p>
+      <p className={`ts-pay${on(lt, beat("note"))}`}>Sportsbook lines can differ a little. Use it as a guide.</p>
     </div>
   );
 }
