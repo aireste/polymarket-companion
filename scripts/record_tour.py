@@ -12,9 +12,9 @@ SCRIPT = [
  ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
   [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
    ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
- ("More familiar with sportsbook odds? Flip the switch at the top, and forty-three cents becomes plus one hundred thirty-three.",
+ ("More familiar with sportsbook odds? Flip the switch at the top, and every price turns into the odds you're used to.",
   [("More familiar", "More familiar with sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
-   ("and forty-three cents becomes", "and 43¢ becomes +133.")]),
+   ("and every price", "and every price turns into the odds you're used to.")]),
  ("Here's the board: every market, its price, and HedgePredict's call.",
   [("Here's the board", "Here's the board:"), ("every market", "every market, its price, and HedgePredict's call.")]),
  ("Every market gets one of three calls. The color shows HedgePredict's recommendation.",
@@ -38,7 +38,7 @@ SCRIPT = [
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
 BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays a dollar"), ("profit", 1, "Buy at", "Buy at forty-three cents"),
-             ("pct", 1, "The price is", "The price is also the crowd's odds"), ("us", 2, "plus one", "plus one hundred thirty-three"),
+             ("pct", 1, "The price is", "The price is also the crowd's odds"), ("us", 2, "every price", "every price turns into…"),
              ("mail", 7, "Sign up", "Sign up for The Daily…"), ("srch", 8, "Search all", "Search all of Polymarket…"), ("askhp", 8, "or ask", "or ask HedgePredict…"),
              ("conn", 9, "connect HedgePredict", "connect HedgePredict…"), ("apps", 9, "or any AI tool", "or any AI tool…"),
              ("paste", 9, "Paste one link", "Paste one link…"), ("ask", 9, "then just ask", "then just ask…")]
