@@ -145,6 +145,8 @@ export interface FetchMarketsOptions {
   orderBy?: string;
   /** Abort the request after this many ms. Default 10s. */
   timeoutMs?: number;
+  /** Only markets in this Polymarket category (Gamma tag id). */
+  tagId?: number | null;
 }
 
 /**
@@ -154,7 +156,7 @@ export interface FetchMarketsOptions {
 export async function fetchMarkets(
   opts: FetchMarketsOptions = {}
 ): Promise<Market[]> {
-  const { limit = 100, orderBy = "volume24hr", timeoutMs = 10_000 } = opts;
+  const { limit = 100, orderBy = "volume24hr", timeoutMs = 10_000, tagId } = opts;
 
   const params = new URLSearchParams({
     active: "true",
@@ -163,6 +165,7 @@ export async function fetchMarkets(
     order: orderBy,
     ascending: "false",
   });
+  if (tagId != null) params.set("tag_id", String(tagId));
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

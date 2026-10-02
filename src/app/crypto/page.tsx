@@ -1,10 +1,13 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { Board } from "@/components/Board";
 
-export default function Home() {
+export const metadata: Metadata = { title: "Crypto · HedgePredict" };
+
+export default function Page() {
   return (
     <Suspense fallback={<div className="hp-boot" aria-hidden />}>
-      <Board category="all" />
+      <Board category="crypto" />
     </Suspense>
   );
 }

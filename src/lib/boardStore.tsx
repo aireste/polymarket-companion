@@ -2,8 +2,9 @@
 
 /**
  * One client-side store for the whole app shell. It lives in the root layout,
- * so switching pages (Board -> Live -> Ask -> back) never refetches: the board,
- * Jev's reads and the sparklines load once and are shared by every view.
+ * so switching pages (Board -> Sports -> Ask -> back) never refetches: each
+ * category board, Jev's reads and the sparklines load once and are shared by
+ * every view. Only the open category is polled.
  */
 
 import {
@@ -18,6 +19,7 @@ import {
 } from "react";
 import type { HistoryPoint, JevBoardResponse, JevReadDTO, PlayDTO } from "./dto";
 import { isLive } from "./format";
+import type { CategoryId } from "./filters";
 
 /** Same line as the server (lib/jev.ts): one side at 97%+ means the market is effectively decided. */
 const DECIDED_AT = 0.97;
@@ -25,7 +27,11 @@ const DECIDED_AT = 0.97;
 export type JevStatus = "loading" | "ready" | "offline" | "error";
 
 interface BoardState {
+  /** The board for the open category. */
   plays: PlayDTO[] | null;
+  category: CategoryId;
+  /** Boards call this with their route's category; loads it the first time. */
+  setCategory: (c: CategoryId) => void;
   asOf: string | null;
   loading: boolean;
   error: string | null;
@@ -72,7 +78,17 @@ export function useBoard(): BoardState {
 }
 
 export function BoardProvider({ children }: { children: ReactNode }) {
-  const [plays, setPlays] = useState<PlayDTO[] | null>(null);
+  const [category, setCategoryState] = useState<CategoryId>("all");
+  const [boards, setBoards] = useState<Partial<Record<CategoryId, PlayDTO[]>>>({});
+  const plays = boards[category] ?? null;
+  const setPlays = useCallback(
+    (c: CategoryId, fn: (cur: PlayDTO[] | null) => PlayDTO[] | null) =>
+      setBoards((b) => {
+        const next = fn(b[c] ?? null);
+        return next === (b[c] ?? null) ? b : { ...b, [c]: next ?? undefined };
+      }),
+    []
+  );
   const [asOf, setAsOf] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,17 +101,19 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const [moves, setMoves] = useState<Record<string, PriceMove>>({});
   const [jevReadAt, setJevReadAt] = useState<number | null>(null);
 
-  const lastJev = useRef(0);
+  const lastJev = useRef<Partial<Record<CategoryId, number>>>({});
   const playsRef = useRef<PlayDTO[] | null>(null);
-  const loadJev = useCallback(async () => {
+  const catRef = useRef<CategoryId>("all");
+  const q = (c: CategoryId) => (c === "all" ? "" : `?c=${c}`);
+  const loadJev = useCallback(async (c: CategoryId) => {
     setJevStatus("loading");
     try {
-      const data = (await (await fetch("/api/jev/board", { cache: "no-store" })).json()) as JevBoardResponse;
+      const data = (await (await fetch(`/api/jev/board${q(c)}`, { cache: "no-store" })).json()) as JevBoardResponse;
       if ("reads" in data) {
         setReads((cur) => ({ ...cur, ...data.reads }));
         setJevStatus("ready");
         setJevReadAt(Date.now());
-        lastJev.current = Date.now();
+        lastJev.current[c] = Date.now();
       } else {
         setJevStatus("available" in data ? "offline" : "error");
       }
@@ -117,30 +135,54 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const refresh = useCallback(async () => {
+  const load = useCallback(async (c: CategoryId) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/plays", { cache: "no-store" });
+      const res = await fetch(`/api/plays${q(c)}`, { cache: "no-store" });
       const data = (await res.json()) as { plays?: PlayDTO[]; asOf?: string; error?: string };
       if (data.error) throw new Error(data.error);
       const list = data.plays ?? [];
-      setPlays(list);
+      setPlays(c, () => list);
       setMoves({});
       setAsOf(data.asOf ?? new Date().toISOString());
       setNow(Date.now());
-      loadJev();
+      loadJev(c);
       loadSparks(list);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load markets.");
     } finally {
       setLoading(false);
     }
-  }, [loadJev, loadSparks]);
+  }, [loadJev, loadSparks, setPlays]);
 
+  /** The Refresh button: re-rank the open category. */
+  const refresh = useCallback(() => load(catRef.current), [load]);
+
+  const loaded = useRef(new Set<CategoryId>());
+  const setCategory = useCallback(
+    (c: CategoryId) => {
+      catRef.current = c;
+      setCategoryState(c);
+      setError(null);
+      if (loaded.current.has(c)) {
+        // Cached board: show it now, and catch its calls up if they're stale.
+        if (Date.now() - (lastJev.current[c] ?? 0) >= JEV_REFRESH_MS) loadJev(c);
+        return;
+      }
+      loaded.current.add(c);
+      load(c);
+    },
+    [load, loadJev]
+  );
+
+  // Pages without a board (Ask, Hedge Lab…) still want the main board for search and picks.
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    const t = setTimeout(() => {
+      if (!loaded.current.size) setCategory("all");
+    }, 0);
+    return () => clearTimeout(t);
+  }, [setCategory]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30_000);
@@ -155,14 +197,15 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const pollPrices = useCallback(async () => {
     if (document.visibilityState !== "visible") return;
     try {
-      const data = (await (await fetch("/api/plays", { cache: "no-store" })).json()) as {
+      const c = catRef.current;
+      const data = (await (await fetch(`/api/plays${q(c)}`, { cache: "no-store" })).json()) as {
         plays?: PlayDTO[];
         asOf?: string;
       };
       if (!data.plays) return;
       const fresh = new Map(data.plays.map((p) => [p.id, p]));
       const at = Date.now();
-      setPlays((cur) => {
+      setPlays(c, (cur) => {
         if (!cur) return cur;
         const moved: Record<string, PriceMove> = {};
         const next = cur.map((p) => {
@@ -201,15 +244,16 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     } catch {
       /* next poll will try again */
     }
-  }, []);
+  }, [setPlays]);
 
   useEffect(() => {
     const prices = setInterval(pollPrices, PRICE_POLL_MS);
     // Check every 30s: refresh calls after 10 minutes, or after 2 while a game is live.
     const jev = setInterval(() => {
-      const age = Date.now() - lastJev.current;
+      const c = catRef.current;
+      const age = Date.now() - (lastJev.current[c] ?? 0);
       const live = playsRef.current?.some((p) => isLive(p.gameStartTime)) ?? false;
-      if (age >= JEV_REFRESH_MS || (live && age >= JEV_LIVE_REFRESH_MS)) loadJev();
+      if (age >= JEV_REFRESH_MS || (live && age >= JEV_LIVE_REFRESH_MS)) loadJev(c);
     }, 30_000);
     return () => {
       clearInterval(prices);
@@ -225,9 +269,15 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     (p: PlayDTO) => setExtras((cur) => (cur[p.id] ? cur : { ...cur, [p.id]: p })),
     []
   );
+  // Every market we've loaded, across categories, so a market opened from one board still resolves on another.
+  const known = useMemo(() => {
+    const m = new Map<string, PlayDTO>();
+    for (const list of Object.values(boards)) list?.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [boards]);
   const findPlay = useCallback(
-    (id: string | null) => (id ? plays?.find((p) => p.id === id) ?? extras[id] ?? null : null),
-    [plays, extras]
+    (id: string | null) => (id ? plays?.find((p) => p.id === id) ?? known.get(id) ?? extras[id] ?? null : null),
+    [plays, known, extras]
   );
 
   // A cached call can lag a fast live game. The moment the live price (polled
@@ -236,7 +286,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const liveReads = useMemo(() => {
     const out: Record<string, JevReadDTO> = {};
     for (const [id, r] of Object.entries(reads)) {
-      const p = plays?.find((x) => x.id === id) ?? extras[id];
+      const p = known.get(id) ?? extras[id];
       out[id] =
         p && !r.settled && p.outcomes.some((o) => o.price >= DECIDED_AT)
           ? {
@@ -252,7 +302,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
           : r;
     }
     return out;
-  }, [reads, plays, extras]);
+  }, [reads, known, extras]);
 
   useEffect(() => {
     playsRef.current = plays;
@@ -260,12 +310,12 @@ export function BoardProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<BoardState>(
     () => ({
-      plays, asOf, loading, error, refresh,
+      plays, category, setCategory, asOf, loading, error, refresh,
       reads: liveReads, jevStatus, setRead,
       sparks, extras, addExtra, findPlay,
       paletteOpen, setPaletteOpen, now, moves, jevReadAt,
     }),
-    [plays, asOf, loading, error, refresh, liveReads, jevStatus, setRead, sparks, extras, addExtra, findPlay, paletteOpen, now, moves, jevReadAt]
+    [plays, category, setCategory, asOf, loading, error, refresh, liveReads, jevStatus, setRead, sparks, extras, addExtra, findPlay, paletteOpen, now, moves, jevReadAt]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

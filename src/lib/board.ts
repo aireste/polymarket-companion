@@ -6,6 +6,7 @@
 import { fetchMarkets, type Market } from "./polymarket";
 import { rankMarkets, type ScoredMarket, type Signals } from "./scoring";
 import type { PlayDTO } from "./dto";
+import { categoryById, type CategoryId } from "./filters";
 
 const NO_SIGNALS: Signals = {
   momentum: 0,
@@ -14,9 +15,13 @@ const NO_SIGNALS: Signals = {
   timeliness: 0,
 };
 
-/** Today's ranked board: the 18 markets worth a look. */
-export async function fetchBoard(): Promise<ScoredMarket[]> {
-  const markets = await fetchMarkets({ limit: 150, orderBy: "volume24hr" });
+/**
+ * Today's ranked board: the 18 markets worth a look. A category board ranks the
+ * same way inside one Polymarket category (Gamma returns at most 100 per tag).
+ */
+export async function fetchBoard(category: CategoryId = "all"): Promise<ScoredMarket[]> {
+  const { tagId } = categoryById(category);
+  const markets = await fetchMarkets({ limit: tagId == null ? 150 : 100, orderBy: "volume24hr", tagId });
   return rankMarkets(markets, { limit: 18, minLiquidity: 1000 });
 }
 

@@ -58,11 +58,6 @@
   .hp-dlist { border-right: 1px solid var(--rule); overflow-y: auto; overscroll-behavior: contain; }
   .hp-dlist-top { position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 24px 22px 0; }
   .hp-dlist-top h1 { margin-top: 6px; font-weight: 900; font-size: 34px; letter-spacing: -0.05em; line-height: 1; }
-  .hp-dtabs { position: relative; display: flex; gap: 22px; margin-top: 18px; border-bottom: 1px solid var(--rule); }
-  .hp-dtab { padding-bottom: 12px; font-weight: 700; font-size: 14px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
-  .hp-dtab:hover, .hp-dtab[aria-current="page"] { color: var(--ink); }
-  .hp-dtab span { margin-left: 5px; font-weight: 500; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
-  .hp-dtabs-ind { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--ink); transition: transform 0.35s var(--ease), width 0.35s var(--ease); }
 
   .hp-dpick {
     display: grid; grid-template-columns: 1fr; gap: 2px; width: 100%; text-align: left;
@@ -205,7 +200,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hp-dh-ind, .hp-dtabs-ind, .hp-dd { transition: none; animation: none; }
+  .hp-dh-ind, .hp-dd { transition: none; animation: none; }
 }
 
 /* the desktop header never shows on the phone (it has its own top + tab bar) */

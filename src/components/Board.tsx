@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { PlayDTO } from "@/lib/dto";
 import { useBoard, useNow } from "@/lib/boardStore";
 import { selectMarket, useIsDesktop, useSelectedId } from "@/lib/useSelection";
-import { FILTERS, TIME_GROUPS, applyFilter, filterCount, timeGroup, type FilterId } from "@/lib/filters";
+import { CATEGORIES, TIME_GROUPS, pickLabel, timeGroup, type CategoryId } from "@/lib/filters";
 import { MARKET_TZ, clockLabel, countdownShort, isLive, price, whenMs } from "@/lib/format";
 import { DeskDetail, Inspector } from "./Inspector";
 import { JevPill } from "./JevPill";
@@ -22,11 +22,51 @@ import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
 import { Countdown } from "./Countdown";
 import { useOddsFormat } from "@/lib/oddsFormat";
 
-/** The market board for one filter route. Desktop: time list + detail. Phone: time board + sheet. */
-export function Board({ filter }: { filter: FilterId }) {
+/** The market board for one category route. Desktop: time list + detail. Phone: time board + sheet. */
+export function Board({ category }: { category: CategoryId }) {
   const desk = useIsDesktop();
+  const { setCategory } = useBoard();
+  useEffect(() => setCategory(category), [category, setCategory]);
   if (desk === null) return <div className="hp-boot" aria-hidden />;
-  return desk ? <DeskBoard filter={filter} /> : <PhoneBoard filter={filter} />;
+  return desk ? <DeskBoard category={category} /> : <PhoneBoard category={category} />;
+}
+
+/**
+ * The category row. One line of text tabs that scrolls sideways when it runs out
+ * of room (no wrapping, no counts), keeping the open tab in view.
+ */
+function CategoryTabs({ category, variant }: { category: CategoryId; variant: "desk" | "phone" }) {
+  const ref = useRef<HTMLElement>(null);
+  const ind = useSlider(ref, '[aria-current="page"]', [category]);
+  // Fade only the edge that has more tabs past it.
+  const [edge, setEdge] = useState({ l: false, r: false });
+  useEffect(() => {
+    const nav = ref.current;
+    if (!nav) return;
+    const check = () =>
+      setEdge({ l: nav.scrollLeft > 2, r: nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2 });
+    const on = nav.querySelector<HTMLElement>('[aria-current="page"]');
+    if (on) nav.scrollTo({ left: on.offsetLeft - nav.clientWidth / 2 + on.offsetWidth / 2, behavior: "smooth" });
+    check();
+    nav.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      nav.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [category]);
+  return (
+    <div className={`hp-cats is-${variant}${edge.l ? " fade-l" : ""}${edge.r ? " fade-r" : ""}`}>
+      <nav className="hp-cats-row" aria-label="Market categories" ref={ref}>
+        {ind && <span className="hp-cats-ind" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} aria-hidden />}
+        {CATEGORIES.map((c) => (
+          <Link key={c.id} href={c.href} className="hp-cat" aria-current={c.id === category ? "page" : undefined} scroll={false}>
+            {c.label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
 }
 
 function useFocusedPlay(list: PlayDTO[], fallbackToFirst: boolean) {
@@ -86,14 +126,14 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
 /** Today's pick as one line at the top of the list; click to open it. */
 function DeskPick() {
   const fmt = useOddsFormat();
-  const { plays, reads } = useBoard();
+  const { plays, reads, category } = useBoard();
   const pick = todaysPick(plays, reads);
   if (!pick) return null;
   const side = leanSide(pick.read);
   const a = JEV_ACTION_COPY[pick.read.action];
   return (
     <button className="hp-dpick" onClick={() => selectMarket(pick.play.id)}>
-      <span className="hp-dpick-k">Today&apos;s pick</span>
+      <span className="hp-dpick-k">{pickLabel(category)}</span>
       <b>
         {a.label} {side ? shortSide(side.label, 18) : ""} at {side ? price(side.price, fmt) : ""}
       </b>
@@ -129,24 +169,23 @@ function DeskWhen({ p, now }: { p: PlayDTO; now: number }) {
   );
 }
 
-function DeskBoard({ filter }: { filter: FilterId }) {
+function DeskBoard({ category }: { category: CategoryId }) {
   const fmt = useOddsFormat();
-  const { plays, loading, error, now, moves } = useBoard();
-  const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
+  const { plays: all, category: loadedCat, error, now, moves } = useBoard();
+  // Until this category's board lands, show nothing rather than the previous tab's markets.
+  const plays = loadedCat === category ? all : null;
+  const list = useMemo(() => plays ?? [], [plays]);
   const focused = useFocusedPlay(list, true);
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
-  const tabsRef = useRef<HTMLElement>(null);
-  const ind = useSlider(tabsRef, '.hp-dtab[aria-current="page"]', [filter, plays?.length]);
 
-  // Flighty order: grouped by when it resolves. "Hot" is a volume ranking, so it stays one list.
+  // Flighty order: grouped by when it resolves.
   const sections = useMemo(() => {
-    if (filter === "hot") return [{ id: "all", label: "", rows: list }];
     return TIME_GROUPS.map((g) => ({
       id: g.id as string,
       label: g.label as string,
       rows: list.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
     })).filter((g) => g.rows.length > 0);
-  }, [list, filter, now]);
+  }, [list, now]);
   const order = useMemo(() => sections.flatMap((g) => g.rows), [sections]);
 
   const move = useCallback(
@@ -180,31 +219,14 @@ function DeskBoard({ filter }: { filter: FilterId }) {
             {new Date(now).toLocaleDateString("en-US", { timeZone: MARKET_TZ, weekday: "long", month: "short", day: "numeric" })}
           </p>
           <h1>What&apos;s resolving</h1>
-          <nav className="hp-dtabs" aria-label="Filter markets" ref={tabsRef}>
-            {ind && <span className="hp-dtabs-ind" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} aria-hidden />}
-            {FILTERS.map((x) => {
-              const n = plays ? filterCount(plays, x.id, now) : null;
-              return (
-                <Link key={x.id} href={x.href} className="hp-dtab" aria-current={x.id === filter ? "page" : undefined}>
-                  {x.label}
-                  {n != null && <span>{n}</span>}
-                </Link>
-              );
-            })}
-          </nav>
+          <CategoryTabs category={category} variant="desk" />
         </div>
 
         <DeskPick />
         {plays && <JevSummary plays={list} />}
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
-        {loading && !plays && Array.from({ length: 8 }).map((_, i) => <div key={i} className="hp-dr hp-dr-skl" aria-hidden />)}
-        {plays && list.length === 0 && (
-          <p className="hp-empty">
-            {filter === "live"
-              ? "No games are live right now. They show up here at first pitch, puck drop or kickoff."
-              : "Nothing in this filter right now."}
-          </p>
-        )}
+        {!plays && !error && Array.from({ length: 8 }).map((_, i) => <div key={i} className="hp-dr hp-dr-skl" aria-hidden />)}
+        {plays && list.length === 0 && <p className="hp-empty">Nothing worth a look in this category right now.</p>}
 
         {sections.map((g) => (
           <section key={g.id}>
@@ -268,10 +290,11 @@ function Credit() {
 /** How many markets the phone board shows before "Show all". Soonest first, live on top. */
 const PHONE_PEEK = 6;
 
-function PhoneBoard({ filter }: { filter: FilterId }) {
+function PhoneBoard({ category }: { category: CategoryId }) {
   const fmt = useOddsFormat();
-  const { plays, loading, error, now, setPaletteOpen, moves } = useBoard();
-  const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
+  const { plays: all, category: loadedCat, error, now, setPaletteOpen, moves } = useBoard();
+  const plays = loadedCat === category ? all : null;
+  const list = useMemo(() => plays ?? [], [plays]);
   const open = useFocusedPlay(list, false);
   const [showAll, setShowAll] = useState(false);
   const pushed = useRef(false);
@@ -322,6 +345,7 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
           </span>
         </div>
         <h1 className="hp-phone-title">What&apos;s resolving</h1>
+        <CategoryTabs category={category} variant="phone" />
 
         <button className="hp-searchbar" onClick={() => setPaletteOpen(true)}>
           {Icon.search}
@@ -340,20 +364,9 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
         <TodaysPick variant="phone" onOpen={openSheet} />
         {plays && <NextUp plays={list} onOpen={openSheet} />}
 
-        <nav className="hp-chips" aria-label="Filter markets">
-          {FILTERS.map((x) => (
-            <Link key={x.id} href={x.href} className="hp-chip" aria-current={x.id === filter ? "page" : undefined}>
-              {x.id === "live" && plays?.some((p) => isLive(p.gameStartTime, now)) && <span className="hp-live-dot" aria-hidden />}
-              {x.label}
-            </Link>
-          ))}
-        </nav>
-
         {error && <p className="state err">Couldn&apos;t load markets: {error}.</p>}
-        {loading && !plays && Array.from({ length: 4 }).map((_, i) => <div key={i} className="hp-fcard hp-fcard-skl" aria-hidden />)}
-        {plays && list.length === 0 && (
-          <p className="hp-empty">{filter === "live" ? "No games are live right now." : "Nothing in this filter right now."}</p>
-        )}
+        {!plays && !error && Array.from({ length: 4 }).map((_, i) => <div key={i} className="hp-fcard hp-fcard-skl" aria-hidden />)}
+        {plays && list.length === 0 && <p className="hp-empty">Nothing worth a look in this category right now.</p>}
 
         {groups.map((g) => (
           <section key={g.id}>

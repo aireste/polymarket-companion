@@ -11,6 +11,7 @@ import { Countdown } from "./Countdown";
 import { Icon } from "./icons";
 import { useOddsFormat } from "@/lib/oddsFormat";
 import { polymarketUs } from "@/lib/links";
+import { pickLabel } from "@/lib/filters";
 
 const KEY = "hp_pick_collapsed";
 
@@ -20,7 +21,8 @@ const KEY = "hp_pick_collapsed";
  */
 export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onOpen?: (id: string) => void }) {
   const fmt = useOddsFormat();
-  const { plays, reads, jevStatus, sparks } = useBoard();
+  const { plays, reads, jevStatus, sparks, category } = useBoard();
+  const label = pickLabel(category);
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     try {
@@ -49,8 +51,8 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
 
   if (!pick) {
     return (
-      <section className={`hp-pick hp-pick-${variant} is-empty`} aria-label="Today's pick">
-        <span className="hp-pick-k">Today&apos;s pick</span>
+      <section className={`hp-pick hp-pick-${variant} is-empty`} aria-label={label}>
+        <span className="hp-pick-k">{label}</span>
         <p>
           <b>No standout play right now.</b> Today&apos;s board looks fairly priced. That&apos;s a real answer: check back as prices move.
         </p>
@@ -71,7 +73,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
   if (variant === "desk" && collapsed) {
     return (
       <button className="hp-pick hp-pick-desk is-collapsed" onClick={toggle} aria-expanded={false}>
-        <span className="hp-pick-k">Today&apos;s pick</span>
+        <span className="hp-pick-k">{label}</span>
         <span className="hp-pick-mini">
           {verb} <b>{side.label}</b> at {price(side.price, fmt)} · {play.question}
         </span>
@@ -81,7 +83,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
   }
 
   return (
-    <section className={`hp-pick hp-pick-${variant} featured`} aria-label="Today's pick">
+    <section className={`hp-pick hp-pick-${variant} featured`} aria-label={label}>
       {variant === "desk" && (
         <button className="hp-pick-hide" onClick={toggle} aria-label="Collapse today's pick">
           Hide ▴
@@ -91,7 +93,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
         <div className="hp-pick-top">
           <span className="hp-pick-k">
             <span className="hp-pick-spark">{Icon.spark}</span>
-            Today&apos;s pick
+            {label}
           </span>
           <span className={`hp-pick-tag ${a.cls}`}>
             {a.label}

@@ -8,6 +8,7 @@ import { jevRead, toJevDTO, MissingJevKeyError } from "./jev";
 import type { ScoredMarket } from "./scoring";
 import type { JevReadDTO } from "./dto";
 import { LIVE_WINDOW_MS } from "./format";
+import type { CategoryId } from "./filters";
 
 const TTL_MS = 10 * 60 * 1000;
 /** Live games move fast, and only a handful are live at once, so their calls refresh more often. */
@@ -26,9 +27,10 @@ export interface BoardReads {
 }
 
 /** Throws MissingJevKeyError if TypeSafe isn't configured. */
-export async function getBoardReads(): Promise<BoardReads> {
+/** Category boards share the per-market cache, so a market on two boards is read once. */
+export async function getBoardReads(category: CategoryId = "all"): Promise<BoardReads> {
   if (!process.env.TYPESAFE_API_KEY) throw new MissingJevKeyError();
-  const markets = await fetchBoard();
+  const markets = await fetchBoard(category);
 
   const now = Date.now();
   const reads: Record<string, JevReadDTO> = {};

@@ -1,49 +1,32 @@
 /**
- * Board filters. Each one is a real route, so the sidebar, the phone chips and
- * shared links all agree on what "Live" or "Coin-flips" means.
+ * Board categories. Each one is a real route backed by a Polymarket category
+ * (Gamma tag id), so the tabs, the phone chips and shared links all agree.
+ * "All" is the main ranked board the Daily and the track record use.
  */
 import type { PlayDTO } from "./dto";
 import { isLive, whenMs } from "./format";
 
-export type FilterId = "all" | "live" | "hot" | "coinflips";
+export type CategoryId = "all" | "sports" | "politics" | "crypto" | "finance" | "tech" | "culture" | "world";
 
-export const FILTERS: {
-  id: FilterId;
-  href: string;
-  label: string;
-  title: string;
-  caption: string;
-}[] = [
-  { id: "all", href: "/", label: "Today", title: "Today", caption: "Ranked by signal: momentum, liquidity, uncertainty, timing" },
-  { id: "live", href: "/live", label: "Live", title: "Live now", caption: "Games in progress right now" },
-  { id: "hot", href: "/hot", label: "Hot", title: "Hot", caption: "Most traded in the last 24 hours" },
-  { id: "coinflips", href: "/coinflips", label: "Coin-flips", title: "Coin-flips", caption: "No strong favorite, where a read matters most" },
+export const CATEGORIES: { id: CategoryId; href: string; label: string; tagId: number | null }[] = [
+  { id: "all", href: "/", label: "All", tagId: null },
+  { id: "sports", href: "/sports", label: "Sports", tagId: 1 },
+  { id: "politics", href: "/politics", label: "Politics", tagId: 2 },
+  { id: "crypto", href: "/crypto", label: "Crypto", tagId: 21 },
+  { id: "finance", href: "/finance", label: "Finance", tagId: 120 },
+  { id: "tech", href: "/tech", label: "Tech", tagId: 1401 },
+  { id: "culture", href: "/culture", label: "Culture", tagId: 596 },
+  { id: "world", href: "/world", label: "World", tagId: 100265 },
 ];
 
-export const filterById = (id: FilterId) => FILTERS.find((f) => f.id === id)!;
+export const categoryById = (id: CategoryId) => CATEGORIES.find((c) => c.id === id)!;
 
-/** A genuine coin-flip: no outcome is a strong favorite (top price <= 60%). */
-export function isCoinflip(p: PlayDTO): boolean {
-  if (p.outcomes.length === 0) return false;
-  return Math.max(...p.outcomes.map((o) => o.price)) <= 0.6;
-}
+/** "Today's pick" on the main board (it matches the Daily); "Sports pick" etc. on a category board. */
+export const pickLabel = (id: CategoryId) => (id === "all" ? "Today's pick" : `${categoryById(id).label} pick`);
 
-export function applyFilter(plays: PlayDTO[], f: FilterId, now = Date.now()): PlayDTO[] {
-  switch (f) {
-    case "live":
-      return plays.filter((p) => isLive(p.gameStartTime, now)).sort((a, b) => whenMs(a) - whenMs(b));
-    case "hot":
-      return [...plays].sort((a, b) => b.volume24hr - a.volume24hr);
-    case "coinflips":
-      return plays.filter(isCoinflip).sort((a, b) => b.volume24hr - a.volume24hr);
-    default:
-      return plays;
-  }
-}
-
-export function filterCount(plays: PlayDTO[], f: FilterId, now = Date.now()): number | null {
-  if (f === "hot") return null; // a re-sort, not a subset
-  return applyFilter(plays, f, now).length;
+/** Parse a ?c= value; anything unknown is the main board. */
+export function toCategory(v: string | null | undefined): CategoryId {
+  return CATEGORIES.some((c) => c.id === v) ? (v as CategoryId) : "all";
 }
 
 /** Phone board groups, Flighty-style: by when the market resolves. */

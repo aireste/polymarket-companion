@@ -13,6 +13,10 @@ const lanAddresses = Object.values(networkInterfaces())
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: lanAddresses,
+  // The board's old Live / Hot / Coin-flips tabs became categories; keep shared links working.
+  async redirects() {
+    return ["/live", "/hot", "/coinflips"].map((source) => ({ source, destination: "/", permanent: false }));
+  },
 };
 
 export default nextConfig;

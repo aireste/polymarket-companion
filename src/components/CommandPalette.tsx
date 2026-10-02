@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { PlayDTO } from "@/lib/dto";
 import { useBoard } from "@/lib/boardStore";
-import { FILTERS } from "@/lib/filters";
+import { CATEGORIES } from "@/lib/filters";
 import { price } from "@/lib/format";
 import { JevPill } from "./JevPill";
 import { Icon } from "./icons";
@@ -16,7 +16,7 @@ type Item =
   | { kind: "ask"; q: string };
 
 const GO: { label: string; href: string }[] = [
-  ...FILTERS.map((f) => ({ label: f.id === "all" ? "Board" : f.label, href: f.href })),
+  ...CATEGORIES.map((c) => ({ label: c.id === "all" ? "Board" : c.label, href: c.href })),
   { label: "Ask", href: "/ask" },
   { label: "Hedge Lab", href: "/hedge" },
   { label: "Connect your AI", href: "/connect" },
@@ -96,8 +96,8 @@ export function CommandPalette() {
     if (it.kind === "go") return router.push(it.href);
     if (it.kind === "ask") return router.push(`/ask?q=${encodeURIComponent(it.q)}`);
     if (!it.onBoard) addExtra(it.play);
-    // Stay on the current board filter when it contains the market; else Today.
-    const base = FILTERS.some((f) => f.href === path) && it.onBoard ? path : "/";
+    // Stay on the current category board when it contains the market; else the main board.
+    const base = CATEGORIES.some((c) => c.href === path) && it.onBoard ? path : "/";
     router.push(`${base}?m=${it.play.id}`);
   };
 

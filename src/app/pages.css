@@ -192,3 +192,21 @@
 .hp-app .connect-chip:hover:not(#_) { color: var(--ink); background: none; }
 .hp-app .connect-chip-c:not(#_) { font: 700 12px var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
 .hp-app .connect .collapse-trigger svg, .hp-app .connect .collapse-chev { display: none; }
+
+/* ───────── Board categories (All · Sports · Politics …) ─────────
+   One row of text tabs with a sliding underline, the same on desktop and phone.
+   It scrolls sideways when it runs out of room; only the side with more tabs fades. */
+.hp-cats { position: relative; margin-top: 18px; border-bottom: 1px solid var(--rule); }
+.hp-cats-row { position: relative; display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.hp-cats-row::-webkit-scrollbar { display: none; }
+.hp-cat { flex: none; padding-bottom: 12px; font-weight: 700; font-size: 14px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
+.hp-cat:hover, .hp-cat[aria-current="page"] { color: var(--ink); }
+.hp-cats-ind { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--ink); transition: transform 0.35s var(--ease), width 0.35s var(--ease); }
+.hp-cats.fade-r .hp-cats-row { mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+.hp-cats.fade-l .hp-cats-row { mask-image: linear-gradient(to right, transparent, #000 36px); }
+.hp-cats.fade-l.fade-r .hp-cats-row { mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+/* phone: full-bleed so the row scrolls to the screen edge, a little air before the cards */
+.hp-cats.is-phone { margin: 4px -16px 16px; }
+.hp-cats.is-phone .hp-cats-row { padding: 0 16px; gap: 22px; }
+.hp-cats.is-phone .hp-cat { font-size: 15px; }
+@media (prefers-reduced-motion: reduce) { .hp-cats-ind { transition: none; } }

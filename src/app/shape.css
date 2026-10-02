@@ -30,8 +30,6 @@
   /* Live is red type, not a dot */
   .hp-group .hp-live-dot, .hp-chip .hp-live-dot, .hp-next-k::before { display: none; }
   .hp-group { color: var(--ink-faint); }
-  .hp-chips .hp-chip[href="/live"] { color: var(--live); }
-  .hp-chips .hp-chip[href="/live"][aria-current="page"] { color: var(--paper); background: var(--live); border-color: var(--live); }
 
   /* "How it works": a flat ruled link, not a lime-tinted bubble */
   .hp-howcard { background: var(--paper-2); border: 1px solid var(--rule); }

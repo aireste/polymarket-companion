@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BoardProvider, useBoard, useNow } from "@/lib/boardStore";
 import { clockET } from "@/lib/format";
-import { FILTERS } from "@/lib/filters";
+import { CATEGORIES } from "@/lib/filters";
 import { CommandPalette } from "./CommandPalette";
 import { AskPanel } from "./AskPanel";
 import { ThemeToggle } from "./ThemeToggle";
@@ -13,7 +13,7 @@ import { OddsToggle } from "./OddsToggle";
 import { useSlider } from "@/lib/useSlider";
 import { Icon } from "./icons";
 
-const BOARD_PATHS = new Set(FILTERS.map((f) => f.href));
+const BOARD_PATHS = new Set(CATEGORIES.map((c) => c.href));
 
 /**
  * The app frame. Desktop: a single header row (links, search, Ask, tools)
