@@ -183,7 +183,7 @@ export function LiveDaily({ lt, dur, fallback, at }: LiveProps & { at: number })
   if (!desk || !html) return fallback;
   const doc = html.replace("<head>", '<head><base target="_blank">');
   return (
-    <div className={`ts-live ts-live-mail${shown(lt, at)}`}>
+    <div className={`ts-live ts-live-mail${shown(lt, 150)}`}>
       <div className="hp-ep-window">
         <div className="hp-ep-chrome" aria-hidden>
           <i />

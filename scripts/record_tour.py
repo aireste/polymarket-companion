@@ -1,4 +1,4 @@
-"""Record the tour as one Helen take and regenerate TourPlayer's timing block
+"""Record the tour as one Brielle take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
 import json, os, re, ssl, sys, base64, urllib.request
 
@@ -17,12 +17,14 @@ SCRIPT = [
    ("and every price", "and every price turns into the odds you're used to.")]),
  ("Here's the board: every market, its price, and HedgePredict's call.",
   [("Here's the board", "Here's the board:"), ("every market", "every market, its price, and HedgePredict's call.")]),
- ("Every market gets one of three calls. The color shows HedgePredict's recommendation.",
-  [("Every market gets", "Every market gets one of three calls."), ("The color", "The color shows HedgePredict's recommendation.")]),
- ("Each call says how sure it is, so you know how hard to lean on it.",
-  [("Each call", "Each call says how sure it is,"), ("so you know", "so you know how hard to lean on it.")]),
- ("Already holding a bet? Hedge Lab shows how to lock in a result, either way.",
-  [("Already holding", "Already holding a bet?"), ("Hedge Lab shows", "Hedge Lab shows how to lock in a result, either way.")]),
+ ("Every market gets one of three calls: Wager, Lean or Skip. Each one shows you how confident HedgePredict is.",
+  [("Every market gets", "Every market gets one of three calls:"), ("Wager, Lean", "Wager, Lean or Skip."),
+   ("Each one shows", "Each one shows you how confident HedgePredict is.")]),
+ ("Then there's Hedge Lab, your own betting sandbox. Drop in the bets you're holding, and see every way your slip can land. Lock in what you can, size a bet to your bankroll, or play it all out a thousand times before you risk a dollar.",
+  [("Then there's", "Then there's Hedge Lab,"), ("your own", "your own betting sandbox."),
+   ("Drop in", "Drop in the bets you're holding,"), ("and see every", "and see every way your slip can land."),
+   ("Lock in what", "Lock in what you can,"), ("size a bet", "size a bet to your bankroll,"),
+   ("or play it all", "or play it all out a thousand times"), ("before you risk", "before you risk a dollar.")]),
  ("Want the best pick without checking the board? Sign up for The Daily, our free newsletter. It sends the day's top pick to your inbox, weekday mornings.",
   [("Want the best", "Want the best pick without checking the board?"), ("Sign up", "Sign up for The Daily, our free newsletter."),
    ("It sends", "It sends the day's top pick to your inbox,"), ("weekday mornings", "weekday mornings.")]),
@@ -39,24 +41,29 @@ SCRIPT = [
 # Word-tied beats: (name, line index, spoken anchor, comment)
 BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays a dollar"), ("profit", 1, "Buy at", "Buy at forty-three cents"),
              ("pct", 1, "The price is", "The price is also the crowd's odds"), ("us", 2, "every price", "every price turns into…"),
-             ("mail", 7, "Sign up", "Sign up for The Daily…"), ("srch", 8, "Search all", "Search all of Polymarket…"), ("askhp", 8, "or ask", "or ask HedgePredict…"),
-             ("conn", 9, "connect HedgePredict", "connect HedgePredict…"), ("apps", 9, "or any AI tool", "or any AI tool…"),
-             ("paste", 9, "Paste one link", "Paste one link…"), ("ask", 9, "then just ask", "then just ask…")]
+             ("sure", 4, "Each one shows", "Each one shows you how confident…"),
+             ("lab", 5, "your own", "your own betting sandbox…"), ("drop", 5, "Drop in", "Drop in the bets…"),
+             ("map", 5, "and see every", "and see every way…"), ("lock", 5, "Lock in what", "Lock in what you can…"),
+             ("size", 5, "size a bet", "size a bet to your bankroll…"), ("sim", 5, "or play it all", "or play it all out…"),
+             ("mail", 6, "Sign up", "Sign up for The Daily…"), ("srch", 7, "Search all", "Search all of Polymarket…"), ("askhp", 7, "or ask", "or ask HedgePredict…"),
+             ("conn", 8, "connect HedgePredict", "connect HedgePredict…"), ("apps", 8, "or any AI tool", "or any AI tool…"),
+             ("paste", 8, "Paste one link", "Paste one link…"), ("ask", 8, "then just ask", "then just ask…")]
 
 LINES = [l for l, _ in SCRIPT]
 # The take's word timings are saved next to this script. Re-running with the same
 # lines reuses them (no new recording), so beats and captions can be retimed for free.
 # Pass --record to force a new take.
 CACHE = "scripts/tour_alignment.json"
-# Helen - Warm, Balanced and Articulate (ElevenLabs). Changing it needs --record.
-VOICE = "ImnfuV8oxhB7ya99oJfc"
-# The settings Helen's approved take was recorded with; keep them for single-line re-records.
-VOICE_SETTINGS = {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}
-# 0.9s between lines, a touch more after the two chat demos so their answers can be read.
-LONG_AFTER = {8: "1.3s", 9: "1.0s"}
+# Brielle - Podcast girl, extremely natural (ElevenLabs). Changing it needs --record.
+VOICE = "6u6JbqKdaQy89ENzLSju"
+# Delivery settings shared by full takes and single-line re-records. Brielle: steadier and no style exaggeration
+# (looser settings add laughs and breaths), a touch faster than her natural pace.
+VOICE_SETTINGS = {"stability": 0.6, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True, "speed": 1.03}
+# 0.85s between lines, a touch more after the two chat demos so their answers can be read.
+LONG_AFTER = {7: "1.3s", 8: "1.0s"}
 # The closing chapter opens on "HedgePredict!" rather than "And that's", so the AI answer stays up a beat longer.
-HOLD = {10: 1000}
-text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
+HOLD = {9: 1000}
+text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.85s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
 cached = json.load(open(CACHE)) if os.path.exists(CACHE) else None
 if cached and cached["text"] == text and "--record" not in sys.argv:
     al = cached["alignment"]
@@ -101,7 +108,8 @@ block = ("/** Where each line starts in tour.mp3 (s), from ElevenLabs word times
  "/** Chapters held a little past their line, so the previous scene can be read (ms). */\n"
  f"const HOLD: Record<number, number> = {json.dumps({str(k): v for k, v in HOLD.items()})};\n"
  "const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - LEAD + (HOLD[i] ?? 0)));\n"
- "const TOTAL = Math.round(AUDIO_END * 1000) + 1500;\n"
+ "/** The closing card holds until 1:30 if the voice finishes early. */\n"
+ f"const TOTAL = {max(round(end * 1000) + 500, 90000)};\n"
  "const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);\n"
  "/** In-chapter beats tied to words (s after the line starts). */\n"
  "const BEATS = {\n" + "".join(f"  {n}: {v}, // \"{c}\"\n" for n, v, c in beats) + "};\n"

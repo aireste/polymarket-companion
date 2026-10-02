@@ -373,3 +373,54 @@
 /* Search: the real search palette. */
 .ts-live-pal .hp-pal { width: min(620px, 100%); margin: 0 auto; max-height: none; animation: none; }
 .ts-live-q { font: 500 16px var(--font-sans); color: var(--ink); min-height: 1.3em; }
+/* Tour, Hedge Lab: the Lab's own look (lemon title in Unbounded, floor/ceiling readout, green/red outcomes). */
+.ts-lab-title { display: flex; align-items: center; gap: 10px; }
+.ts-lab-title .hl-mark { width: 28px; height: 28px; border-radius: 7px; }
+.ts-lab-title .hl-mark svg { width: 17px; height: 17px; }
+.ts-lab-title b { font-family: var(--font-lab), var(--font-sans); font-weight: 700; font-size: 22px; letter-spacing: -0.04em; color: var(--lab-ink); }
+.ts-lab-read { display: flex; gap: 32px; margin-top: 14px; }
+.ts-lab-read > div { display: grid; gap: 2px; }
+.ts-lab-read small { font-size: 13px; font-weight: 700; color: var(--ink-faint); }
+.ts-lab-read b { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 26px; letter-spacing: -0.02em; transition: color 0.4s var(--ease); }
+.ts-hedge .is-pos { color: var(--pos-ink); }
+.ts-hedge .is-neg { color: var(--neg-ink); }
+.ts-hedge .ts-out-track i { background: var(--pos-ink); }
+.ts-hedge .ts-out-track i.is-neg { background: var(--neg-ink); }
+.ts-hedge .ts-out b { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 17px; }
+.ts-hedge .ts-locked { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 17px; }
+/* Tour, Hedge Lab mini demo: one panel that builds up (readout on top, slip left, outcomes right). */
+.ts-lab-demo { width: min(780px, 100%); display: grid; gap: 14px; }
+.ts-lab-demo .ts-lab-title { opacity: 0; transform: translateY(6px); transition: opacity 0.5s var(--ease), transform 0.6s var(--expo); }
+.ts-lab-demo .ts-lab-title.is-in { opacity: 1; transform: none; }
+.ts-lab-step { margin-left: auto; font-size: 13.5px; font-weight: 700; color: var(--ink-faint); opacity: 0; transition: opacity 0.4s var(--ease); }
+.ts-lab-step.on { opacity: 1; }
+.ts-lab-demo .ts-lab-read { margin-top: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; background: var(--rule); }
+.ts-lab-demo .ts-lab-read > div { position: relative; padding: 10px 14px; background: var(--paper); }
+.ts-lab-demo .ts-lab-read b { font-size: 22px; color: var(--ink-faint); }
+.ts-lab-spark { position: absolute; right: 14px; bottom: 12px; display: flex; align-items: flex-end; gap: 3px; height: 26px; opacity: 0; transition: opacity 0.4s var(--ease); }
+.ts-lab-spark.on { opacity: 1; }
+.ts-lab-spark i { width: 9px; border-radius: 2px 2px 0 0; transform-origin: bottom; }
+.ts-lab-spark.on i { animation: lab-grow-t 0.6s var(--expo) both; }
+.ts-lab-spark i.is-neg { height: 45%; background: var(--neg-ink); }
+.ts-lab-spark i.is-pos { height: 55%; background: var(--pos-ink); animation-delay: 120ms; }
+@keyframes lab-grow-t { from { transform: scaleY(0); } }
+.ts-lab-body { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+.ts-lab-slip { display: grid; gap: 8px; }
+.ts-lab-bet { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; padding: 10px 12px; background: var(--paper); opacity: 0; transform: translateY(-12px); transition: opacity 0.4s var(--ease), transform 0.5s var(--expo); }
+.ts-lab-bet.on { opacity: 1; transform: none; }
+.ts-lab-bet i { grid-row: span 2; font-style: normal; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--lab); color: var(--dark); font-size: 12px; font-weight: 800; }
+.ts-lab-bet span { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts-lab-bet b { font-weight: 800; font-size: 14px; }
+.ts-lab-bet em { grid-column: 2; font-style: normal; font-size: 12.5px; font-weight: 800; animation: tp-in 0.4s var(--ease) both; }
+.ts-lab-bet em.is-lock { color: var(--lab-ink); }
+.ts-lab-bet em.is-size { color: var(--pos-ink); }
+.ts-lab-map { display: grid; }
+.ts-lab-row { display: grid; grid-template-columns: 1fr 40px 86px; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--rule); opacity: 0; transition: opacity 0.35s var(--ease); }
+.ts-lab-row:first-child { border-top: 0; }
+.ts-lab-row.on { opacity: 1; }
+.ts-lab-row span { font-size: 13.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
+.ts-lab-row em { font-style: normal; }
+.ts-lab-row small { font-size: 12px; font-weight: 700; color: var(--ink-faint); text-align: right; }
+.ts-lab-row b { text-align: right; font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 14.5px; transition: color 0.4s var(--ease); }
+.ts-lab-demo .ts-lab-read b.is-pos { color: var(--pos-ink); }
+.ts-lab-demo .ts-lab-read b.is-neg { color: var(--neg-ink); }

@@ -19,8 +19,8 @@ function TOUR_TEXT(fmt: OddsFormat): { tab: string; t: string; d: string }[] {
       d: `A ${price(0.43, fmt)} price means about a 43% chance. Win, and each share pays $1: your 43¢ back plus 57¢ profit. Flip ¢ / US at the top for sportsbook odds (${price(0.43, "us")}).`,
     },
     { tab: "Calls", t: "Every market gets a call", d: "Wager when a side looks too cheap, Lean when it's a mild tilt, Skip when the price looks about right." },
-    { tab: "How sure", t: "How sure we are", d: "\u201c74% sure\u201d is how sure HedgePredict is that a side is priced too cheap. It is not the chance of winning." },
-    { tab: "Hedge Lab", t: "Hedge Lab", d: "Already holding a bet? See how much to put on the other side to lock in a result either way." },
+    { tab: "Calls", t: "How sure we are", d: "\u201c74% sure\u201d is how sure HedgePredict is that a side is priced too cheap. It is not the chance of winning." },
+    { tab: "Hedge Lab", t: "Hedge Lab", d: "Your betting sandbox: build a slip, see every way it can land, lock in what you can, size it to your bankroll, and run it 1,000 times." },
     { tab: "The Daily", t: "The Daily", d: "The day's top pick, what resolves soon and the biggest movers, in your inbox weekdays at 8 AM ET." },
     { tab: "Search & Ask", t: "Search & Ask", d: "Search any market on Polymarket, or ask HedgePredict about one in plain English." },
     { tab: "Connect AI", t: "Connect your AI", d: "Use HedgePredict inside Claude, ChatGPT or any MCP app with one link." },
@@ -122,7 +122,7 @@ export function HowItWorks() {
         <h2 id="hw-use">The tour, in 20 seconds</h2>
         <ol className="hw-tour">
           {TOUR_TEXT(fmt).map((r) => (
-            <li key={r.tab}>
+            <li key={r.t}>
               <b>{r.t}</b>
               <p>{r.d}</p>
               <button type="button" className="hw-at num" onClick={() => playTourAt(r.tab)} aria-label={`Play the tour from ${r.t}`}>
