@@ -143,6 +143,7 @@ function TabBar() {
     { href: "/ask", label: "Ask", icon: Icon.ask, on: path === "/ask" },
     { href: "/hedge", label: "Hedge", icon: Icon.hedge, on: path === "/hedge" },
     { href: "/connect", label: "Your AI", icon: Icon.connect, on: path === "/connect" },
+    { href: "/daily", label: "Daily", icon: Icon.mail, on: path === "/daily" },
   ];
   return (
     <nav className="hp-tabs" aria-label="Sections">

@@ -67,6 +67,10 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
           <span className="hp-pm-tile">{Icon.polymarket}</span>
           Open on Polymarket ↗
         </a>
+        <Link className="pill" href={`/ask?q=${encodeURIComponent(`What's the call on "${play.question}"?`)}`}>
+          <span className="hp-ico-sm">{Icon.ask}</span>
+          Ask about this
+        </Link>
         <Link className="pill" href="/hedge">
           <span className="hp-ico-sm">{Icon.hedge}</span>
           Hedge Lab
@@ -548,7 +552,11 @@ export function JevPass({ play }: { play: PlayDTO }) {
         )}
       </div>
       <p className={`hp-pass-verdict ${tone}`}>
-        {side ? `${shortSide(side.label, 22)} looks cheap` : "Both prices look fair"}
+        {r.action === "wager"
+          ? `We like ${shortSide(side?.label ?? "", 22)} at this price.`
+          : r.action === "hold"
+            ? `${shortSide(side?.label ?? "", 22)} looks a little cheap. Not a strong play.`
+            : "Priced fair. Sit this one out."}
         <span> · {pct(r.strength)} sure</span>
       </p>
       <LeanBar read={r} shown compact />

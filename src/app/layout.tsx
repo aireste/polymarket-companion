@@ -5,6 +5,7 @@ import "./app.css";
 import "./desk.css";
 import "./type.css";
 import "./shape.css";
+import "./pages.css";
 import { AppShell } from "@/components/AppShell";
 import { THEME_BOOT } from "@/components/ThemeToggle";
 

@@ -82,10 +82,8 @@
 .hp-app .hp-pick-lean i.on.hold:not(#_) { background: oklch(0.8 0.14 80); }
 .hp-app .hp-pick-lean i.on.wager:not(#_) { background: oklch(0.72 0.17 150); }
 
-/* How it works demo: a Wager on Molcan */
-.hp-app .hiw-bar i:first-child { background: var(--wager); }
-.hp-app .hiw-bar i:nth-child(2) { background: var(--fair); }
-.hp-app .hiw-bar i:nth-child(3) { background: var(--rule-strong); }
-.hp-app .hiw-legend span b { color: var(--ink-faint); }
-.hp-app .hiw-legend span:first-child b { color: var(--wager-ink); }
-.hp-app .hiw-legend span:nth-child(2) b { color: var(--fair-ink); }
+/* phone tab bar: five tabs (Board, Ask, Hedge, Your AI, Daily) fit a 375px screen */
+@media (max-width: 899.98px) {
+  .hp-app .hp-tab:not(#_) { width: 62px; }
+  .hp-insp-actions { flex-wrap: wrap; }
+}
