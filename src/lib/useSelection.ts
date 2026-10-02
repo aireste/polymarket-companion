@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { rememberMarket } from "./recent";
 
 /** The market in focus lives in the URL (?m=<id>), so any view is a shareable link. */
 export function useSelectedId(): string | null {
@@ -14,6 +15,7 @@ export function useSelectedId(): string | null {
  * button/gesture closes it. Next syncs useSearchParams with native history.
  */
 export function selectMarket(id: string | null, mode: "replace" | "push" = "replace") {
+  if (id) rememberMarket(id);
   const url = new URL(window.location.href);
   if (id) url.searchParams.set("m", id);
   else url.searchParams.delete("m");

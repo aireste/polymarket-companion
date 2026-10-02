@@ -214,7 +214,9 @@ export async function searchMarkets(
   const q = query.trim();
   if (!q) return [];
 
-  const params = new URLSearchParams({ q, limit_per_type: "20" });
+  // events_status=active: without it the top 20 matches are often finished games
+  // (e.g. "chiefs"), which we drop below, leaving nothing.
+  const params = new URLSearchParams({ q, limit_per_type: "20", events_status: "active" });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -254,8 +256,15 @@ export async function searchMarkets(
     }
   }
 
-  markets.sort((a, b) => b.volume24hr - a.volume24hr);
-  return markets.slice(0, limit);
+  // Search matches whole events, so "chiefs" brings back every team in the Super
+  // Bowl winner event. Rank markets that name the query's words first, and drop
+  // the bystanders when there are real matches; volume breaks ties.
+  const words = q.toLowerCase().split(/\s+/).filter((w) => w.length > 1);
+  const hits = (m: Market) => words.filter((w) => m.question.toLowerCase().includes(w)).length;
+  const scored = markets.map((m) => ({ m, n: hits(m) }));
+  const pool = scored.some((x) => x.n > 0) ? scored.filter((x) => x.n > 0) : scored;
+  pool.sort((a, b) => b.n - a.n || b.m.volume24hr - a.m.volume24hr);
+  return pool.slice(0, limit).map((x) => x.m);
 }
 
 /** Fetch and normalize a single market by its Gamma id. Null if not found. */
