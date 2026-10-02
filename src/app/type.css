@@ -1,0 +1,38 @@
+/* ───────────────────────────────────────────────────────────────────────
+   One type system (2026-10-01). Every title gets the "What's resolving"
+   look: Satoshi Black (900) with tight tracking. UI text is Bold, body text
+   Medium, and nothing on the site is lighter than 500.
+   Loaded last so it wins over the older per-page weights.
+   ─────────────────────────────────────────────────────────────────────── */
+
+body { font-weight: 500; }
+input, textarea, select, button { font-weight: inherit; }
+
+/* page titles */
+.hp-phone-title, .hl-head h1, .hp-dl-copy h1, .hiw-hero h1, .ask-head h2, .connect .collapse-title {
+  font-weight: 900; letter-spacing: -0.05em; line-height: 1.02;
+}
+
+/* section titles and big numbers */
+.hiw-sec, .hiw-card h2, .hiw-two h2, .hiw-faq-side h2, .hiw-tips h2, .hiw-note h2, .hiw-big, .hiw-dark strong,
+.hp-askdrop-head b, .hp-verdict-lead, .hp-verdict-call, .hp-pick-head, .hp-insp-head h2,
+.featured-pct, .hp-price .featured-pct, .hl-r-big, .hp-next-cd, .hp-pass-prices b, .hp-fcard-top b, .hp-sub-copy b {
+  font-weight: 900; letter-spacing: -0.035em;
+}
+
+/* labels, captions and UI copy: Bold, so small text never reads thin */
+.hp-verdict-k, .hl-k, .hl-r-k, .hl-badge, .hl-chip, .hp-status, .hp-meta, .hp-group, .hp-date, .hp-next-k, .hp-chip, .hp-tab {
+  font-weight: 700;
+}
+
+/* desktop: page titles at the board's scale */
+@media (min-width: 900px) {
+  .hl-head h1, .ask-head h2, .connect .collapse-title, .hiw-hero h1 { font-size: 44px; }
+  .hp-dl-copy h1 { font-size: 52px; }
+  .hiw-sec, .hiw-faq-side h2 { font-size: 28px; }
+  .hiw-card h2, .hiw-two h2, .hiw-tips h2, .hiw-note h2 { font-size: 20px; }
+  .hl-head p, .ask-sub, .collapse-sub, .hiw-hero p { font-size: 16px; }
+}
+@media (max-width: 899.98px) {
+  .hl-head h1, .ask-head h2, .connect .collapse-title { font-size: 32px; }
+}

@@ -1534,7 +1534,7 @@ body {
 }
 .rec-read-vs {
   color: var(--ink-faint);
-  font-weight: 400;
+  font-weight: 500;
 }
 .rec-block-k {
   font-family: var(--font-mono);
@@ -2800,7 +2800,7 @@ body {
 }
 .jev-read-vs {
   color: var(--ink-faint);
-  font-weight: 400;
+  font-weight: 500;
 }
 .jev-edge {
   font-family: var(--font-mono);

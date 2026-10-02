@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { PlayDTO } from "@/lib/dto";
 import { analyzeHedge } from "@/lib/scoring";
 import { useBoard } from "@/lib/boardStore";
 import { Odo } from "./Odo";
@@ -15,18 +16,14 @@ const cents = (p: number) => Math.min(99, Math.max(1, Math.round(p * 100)));
  * the same analyzeHedge() the MCP analyze_edge tool uses.
  */
 export function HedgeCalc() {
-  const { plays } = useBoard();
-  const [marketId, setMarketId] = useState("");
+  const [market, setMarket] = useState<PlayDTO | null>(null);
   const [stake, setStake] = useState(50);
   const [priceA, setPriceA] = useState(40); // cents you paid
   const [priceB, setPriceB] = useState(62); // cents for the other side now
   const [hedgePct, setHedgePct] = useState(100); // % of a full lock
 
-  const market = plays?.find((p) => p.id === marketId) ?? null;
-
-  const loadMarket = (id: string) => {
-    setMarketId(id);
-    const m = plays?.find((p) => p.id === id);
+  const loadMarket = (m: PlayDTO | null) => {
+    setMarket(m);
     if (!m) return;
     const [a, b] = m.outcomes;
     setPriceA(cents(a?.price ?? 0.5));
@@ -66,19 +63,10 @@ export function HedgeCalc() {
 
       <div className="hl-grid">
         <div className="hl-inputs">
-          <label className="hl-field">
-            <span className="hl-k">Start from a live market</span>
-            <select value={marketId} onChange={(e) => loadMarket(e.target.value)}>
-              <option value="">Enter my own numbers</option>
-              {(plays ?? [])
-                .filter((p) => p.outcomes.length === 2)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.question}
-                  </option>
-                ))}
-            </select>
-          </label>
+          <div className="hl-field">
+            <span className="hl-k">Start from a market</span>
+            <MarketSearch value={market} onPick={loadMarket} />
+          </div>
 
           <div className="hl-field">
             <span className="hl-k">Your stake</span>
@@ -234,6 +222,137 @@ function OutcomeBar({ label, value, scale }: { label: string; value: number; sca
       <span className={`hl-bar-v num ${value >= 0 ? "pos" : "neg"}`}>
         <Odo value={money(value)} />
       </span>
+    </div>
+  );
+}
+
+const yesNo = (p: PlayDTO) => p.outcomes.map((o) => `${o.label} ${cents(o.price)}¢`).join(" · ");
+
+/**
+ * Find the market you're holding: today's board matches show instantly, then
+ * all of Polymarket (debounced, like ⌘K). Only two-sided markets, since the
+ * hedge math needs exactly one "other side". Empty = enter your own numbers.
+ */
+function MarketSearch({ value, onPick }: { value: PlayDTO | null; onPick: (m: PlayDTO | null) => void }) {
+  const { plays } = useBoard();
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [remote, setRemote] = useState<PlayDTO[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [hi, setHi] = useState(0);
+  const wrap = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const term = q.trim().toLowerCase();
+
+  const board = useMemo(() => (plays ?? []).filter((p) => p.outcomes.length === 2), [plays]);
+  const local = useMemo(
+    () => (term ? board.filter((p) => p.question.toLowerCase().includes(term)) : [...board].sort((a, b) => b.volume24hr - a.volume24hr)).slice(0, term ? 4 : 5),
+    [board, term]
+  );
+
+  // All of Polymarket, once there's something to search for.
+  useEffect(() => {
+    if (term.length < 2) {
+      setRemote([]);
+      return;
+    }
+    const ctl = new AbortController();
+    const t = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: ctl.signal })
+        .then((r) => r.json())
+        .then((d: { plays?: PlayDTO[] }) => setRemote((d.plays ?? []).filter((p) => p.outcomes.length === 2)))
+        .catch(() => {})
+        .finally(() => setSearching(false));
+    }, 250);
+    return () => {
+      clearTimeout(t);
+      ctl.abort();
+    };
+  }, [term]);
+
+  const results = useMemo(() => {
+    const seen = new Set(local.map((p) => p.id));
+    return [...local, ...remote.filter((p) => !seen.has(p.id))].slice(0, 7);
+  }, [local, remote]);
+
+  useEffect(() => setHi(0), [term]);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => wrap.current && !wrap.current.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const pick = (m: PlayDTO) => {
+    onPick(m);
+    setQ("");
+    setOpen(false);
+  };
+
+  if (value) {
+    return (
+      <div className="hl-picked">
+        <div>
+          <b>{value.question}</b>
+          <span className="num">{yesNo(value)}</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            onPick(null);
+            requestAnimationFrame(() => input.current?.focus());
+          }}
+        >
+          Change
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="hl-search" ref={wrap}>
+      <input
+        ref={input}
+        value={q}
+        placeholder="Search a team, player or topic"
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") (e.preventDefault(), setHi((h) => Math.min(results.length - 1, h + 1)));
+          else if (e.key === "ArrowUp") (e.preventDefault(), setHi((h) => Math.max(0, h - 1)));
+          else if (e.key === "Enter" && results[hi]) (e.preventDefault(), pick(results[hi]));
+          else if (e.key === "Escape") setOpen(false);
+        }}
+        role="combobox"
+        aria-expanded={open}
+        aria-controls="hl-results"
+        aria-autocomplete="list"
+      />
+      {open && (
+        <div className="hl-results" id="hl-results" role="listbox">
+          <p className="hl-results-k">{term ? (searching && !remote.length ? "Searching Polymarket…" : "Markets") : "Most traded today"}</p>
+          {results.map((m, i) => (
+            <button
+              type="button"
+              key={m.id}
+              role="option"
+              aria-selected={i === hi}
+              className={i === hi ? "is-hi" : undefined}
+              onMouseEnter={() => setHi(i)}
+              onClick={() => pick(m)}
+            >
+              <b>{m.question}</b>
+              <span className="num">{yesNo(m)}</span>
+            </button>
+          ))}
+          {term.length >= 2 && !searching && results.length === 0 && <p className="hl-results-none">No two-sided markets match. Try another word.</p>}
+          <p className="hl-results-foot">Or skip this and enter your own numbers below.</p>
+        </div>
+      )}
     </div>
   );
 }

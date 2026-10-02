@@ -1,0 +1,91 @@
+/* ───────────────────────────────────────────────────────────────────────
+   Shape + phone branding (2026-10-01). Loaded last.
+
+   1. One shape everywhere: every box gets sharp 4px corners (the desktop
+      look), so cards, chips, buttons and inputs stop reading as bubbly.
+      The `:not(#_)` raises specificity so this wins over the ~80 older
+      per-component radii; true circles are listed back below.
+   2. Phone: same brand, Flighty layout untouched. No status dots (Live is
+      red type), call colors on the pick card, flat "how it works" link,
+      a squared tab bar and sheet.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.hp-app :not(#_), .hp-app:not(#_) { border-radius: 4px; }
+
+/* things that are meant to be round stay round */
+.hp-app .hp-live-dot:not(#_), .hp-app .hp-next-line i:not(#_), .hp-app .hp-rail-bar i:not(#_),
+.hp-app .hp-sub-check:not(#_), .hp-app .hp-sub-spin:not(#_), .hp-app .rec-spinner:not(#_), .hp-app .chart-dot:not(#_),
+.hp-app .hp-ep-avatar:not(#_), .hp-app .hp-ep-chrome i:not(#_) { border-radius: 50%; }
+/* the bottom sheet keeps a little top rounding so it reads as a sheet on iOS */
+.hp-app .hp-sheet:not(#_) { border-radius: 10px 10px 0 0; }
+/* tiny bars and tracks: 2px so a 4px radius doesn't turn them into pills */
+.hp-app :is(.hp-split, .hp-lean-bar, .hp-lean-bar i, .hp-rail-bar, .hp-rail-bar b, .hp-pick-lean, .hp-pick-lean i,
+  .hp-next-line, .hp-next-line b, .hp-dist-track, .hp-dist-track i):not(#_) { border-radius: 1px; }
+
+/* glows off: markers sit flat */
+.hp-next-line i { box-shadow: none; }
+
+/* ═════════════════════════════ PHONE (< 900px) ═════════════════════════════ */
+@media (max-width: 899.98px) {
+  /* Live is red type, not a dot */
+  .hp-group .hp-live-dot, .hp-chip .hp-live-dot, .hp-next-k::before { display: none; }
+  .hp-group { color: var(--ink-faint); }
+  .hp-chips .hp-chip[href="/live"] { color: var(--live); }
+  .hp-chips .hp-chip[href="/live"][aria-current="page"] { color: var(--paper); background: var(--live); border-color: var(--live); }
+
+  /* "How it works": a flat ruled link, not a lime-tinted bubble */
+  .hp-howcard { background: var(--paper-2); border: 1px solid var(--rule); }
+  .hp-howcard b { font-weight: 900; letter-spacing: -0.02em; }
+  .hp-howcard-ic { background: var(--dark); color: var(--accent); }
+
+  /* market cards: hairline edge, chunky question, call colors from the shared tokens */
+  .hp-fcard { border: 1px solid var(--rule); }
+  .hp-fcard-q { font-weight: 700; letter-spacing: -0.01em; }
+  .hp-fcard .hp-jev { font-weight: 700; }
+
+  /* tab bar: a squared dock instead of a pill */
+  .hp-tabs { padding: 5px; gap: 4px; }
+  .hp-tab { font-weight: 700; }
+
+  /* bottom sheet: chunky title */
+  .hp-sheet .hp-insp-head h2 { font-weight: 900; letter-spacing: -0.035em; }
+}
+
+/* Today's pick card (dark on both themes): the call reads in its color */
+.hp-pick:has(.hp-pick-tag.hold) .hp-pick-head em, .hp-pick-tag.hold { color: oklch(0.82 0.13 80); }
+.hp-pick:has(.hp-pick-tag.wager) .hp-pick-head em, .hp-pick-tag.wager { color: oklch(0.78 0.16 150); }
+.hp-pick-tag { font-weight: 700; }
+
+
+/* price change reads as plain colored type, not a chip */
+.hp-app .hp-price .delta:not(#_) { background: none; padding: 0; font-weight: 700; }
+
+/* ───────────── Bar colors (2026-10-01): color = what to do, never which side ─────────────
+   The side HedgePredict points at is lit in the CALL's color: green only on a Wager,
+   amber on a Lean. Fair price is gray (and it's the lit segment on a Skip). The other
+   side stays dim. So green can never appear on a Lean, and the size of the lit
+   segment shows how strongly it leans. */
+.hp-app .hp-lean-bar i:not(#_) { background: var(--rule-strong); }
+.hp-app .hp-lean-bar i.is-n:not(#_) { background: var(--fair); }
+.hp-app .hp-lean-bar i.is-lean.wager:not(#_) { background: var(--wager); }
+.hp-app .hp-lean-bar i.is-lean.hold:not(#_) { background: var(--lean); }
+.hp-app .hp-lean-bar i.is-n.is-lean:not(#_) { background: var(--fair-ink); }
+.hp-app .hp-lean-lbls span, .hp-app .hp-lean-lbls span b { color: var(--ink-faint); }
+.hp-app .hp-lean-lbls span.is-n b { color: var(--fair-ink); }
+.hp-app .hp-lean.wager .hp-lean-lbls span.is-lean, .hp-app .hp-lean.wager .hp-lean-lbls span.is-lean b { color: var(--wager-ink); }
+.hp-app .hp-lean.hold .hp-lean-lbls span.is-lean, .hp-app .hp-lean.hold .hp-lean-lbls span.is-lean b { color: var(--lean-ink); }
+.hp-app .hp-lean.skip .hp-lean-lbls span.is-lean, .hp-app .hp-lean.skip .hp-lean-lbls span.is-lean b { color: var(--ink); }
+
+/* Today's pick card bar (dark card): the picked side in the call color, fair gray, the rest dim */
+.hp-app .hp-pick-lean i:not(#_) { background: oklch(0.34 0.008 260); }
+.hp-app .hp-pick-lean i.n:not(#_) { background: oklch(0.52 0.01 260); }
+.hp-app .hp-pick-lean i.on.hold:not(#_) { background: oklch(0.8 0.14 80); }
+.hp-app .hp-pick-lean i.on.wager:not(#_) { background: oklch(0.72 0.17 150); }
+
+/* How it works demo: a Wager on Molcan */
+.hp-app .hiw-bar i:first-child { background: var(--wager); }
+.hp-app .hiw-bar i:nth-child(2) { background: var(--fair); }
+.hp-app .hiw-bar i:nth-child(3) { background: var(--rule-strong); }
+.hp-app .hiw-legend span b { color: var(--ink-faint); }
+.hp-app .hiw-legend span:first-child b { color: var(--wager-ink); }
+.hp-app .hiw-legend span:nth-child(2) b { color: var(--fair-ink); }

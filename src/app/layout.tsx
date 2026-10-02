@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./app.css";
+import "./desk.css";
+import "./type.css";
+import "./shape.css";
 import { AppShell } from "@/components/AppShell";
 import { THEME_BOOT } from "@/components/ThemeToggle";
 

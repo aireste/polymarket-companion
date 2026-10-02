@@ -17,6 +17,9 @@ import {
 } from "react";
 import type { HistoryPoint, JevBoardResponse, JevReadDTO, PlayDTO } from "./dto";
 
+/** Same line as the server (lib/jev.ts): one side at 97%+ means the market is effectively decided. */
+const DECIDED_AT = 0.97;
+
 export type JevStatus = "loading" | "ready" | "offline" | "error";
 
 interface BoardState {
@@ -215,14 +218,38 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     [plays, extras]
   );
 
+  // A cached call can lag a fast live game. The moment the live price (polled
+  // every 20s) puts either side at 97%+, show it as Decided everywhere, the same
+  // rule the server applies, instead of waiting up to 10 minutes for a fresh read.
+  const liveReads = useMemo(() => {
+    const out: Record<string, JevReadDTO> = {};
+    for (const [id, r] of Object.entries(reads)) {
+      const p = plays?.find((x) => x.id === id) ?? extras[id];
+      out[id] =
+        p && !r.settled && p.outcomes.some((o) => o.price >= DECIDED_AT)
+          ? {
+              ...r,
+              sides: p.outcomes.map((o) => ({ label: o.label, price: o.price })),
+              lean: null,
+              strength: 1,
+              distribution: { sides: p.outcomes.map(() => 0), neither: 1 },
+              action: "skip",
+              confidence: null,
+              settled: true,
+            }
+          : r;
+    }
+    return out;
+  }, [reads, plays, extras]);
+
   const value = useMemo<BoardState>(
     () => ({
       plays, asOf, loading, error, refresh,
-      reads, jevStatus, setRead,
+      reads: liveReads, jevStatus, setRead,
       sparks, extras, addExtra, findPlay,
       paletteOpen, setPaletteOpen, now, moves, jevReadAt,
     }),
-    [plays, asOf, loading, error, refresh, reads, jevStatus, setRead, sparks, extras, addExtra, findPlay, paletteOpen, now, moves, jevReadAt]
+    [plays, asOf, loading, error, refresh, liveReads, jevStatus, setRead, sparks, extras, addExtra, findPlay, paletteOpen, now, moves, jevReadAt]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

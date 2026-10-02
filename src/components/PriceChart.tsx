@@ -28,7 +28,8 @@ interface Hover {
  * accent line with a soft gradient fill, current-price dot, and a hover
  * crosshair + tooltip. Pure SVG — no chart lib. (dataviz: one series → no legend.)
  */
-export function PriceChart({ points }: { points: HistoryPoint[] }) {
+/** `flat` drops the gradient fill: just the line (the desktop detail view). */
+export function PriceChart({ points, flat = false }: { points: HistoryPoint[]; flat?: boolean }) {
   const fmt = useOddsFormat();
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<Hover | null>(null);
@@ -108,7 +109,7 @@ export function PriceChart({ points }: { points: HistoryPoint[] }) {
           </linearGradient>
         </defs>
 
-        <path d={geo.area} fill="url(#pcFill)" />
+        {!flat && <path d={geo.area} fill="url(#pcFill)" />}
         <path
           d={geo.line}
           fill="none"

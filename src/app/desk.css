@@ -1,0 +1,215 @@
+/* ───────────────────────────────────────────────────────────────────────
+   Desktop "Terminal, time-first" (HP4, 2026-10-01). Desktop only (≥ 900px);
+   the phone board is untouched. Built on the same tokens as app.css, so the
+   light and dark themes both work.
+   Type ("Bold"): UI text 700, titles 900 with tight tracking, the big
+   numbers Satoshi Black. Hairlines instead of boxes, 3px corners, lime only
+   for the pick, the call and the main button.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media (min-width: 900px) {
+  :root { --dh-h: 60px; --dlist-w: 400px; --r-desk: 3px; }
+
+  .hp-app { flex-direction: column; }
+  .hp-work { flex: 1; min-height: 0; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── header ── */
+  .hp-dh {
+    height: var(--dh-h); flex: none; position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 28px; padding: 0 24px;
+    background: var(--paper); border-bottom: 1px solid var(--rule);
+  }
+  .hp-dh-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; font-size: 20px; letter-spacing: -0.05em; color: var(--ink); white-space: nowrap; }
+  .hp-dh-mark { display: grid; color: var(--accent-ink); }
+  .hp-dh-mark svg { width: 18px; height: 18px; }
+  .hp-dh-nav { position: relative; display: flex; gap: 22px; height: var(--dh-h); }
+  .hp-dh-link { display: flex; align-items: center; font-weight: 700; font-size: 14.5px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
+  .hp-dh-link:hover, .hp-dh-link[aria-current="page"] { color: var(--ink); }
+  .hp-dh-ind { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--ink); transition: transform 0.35s var(--ease), width 0.35s var(--ease); }
+
+  .hp-dh .hp-search {
+    flex: 1; max-width: 340px; margin: 0 0 0 auto; height: 36px; border-radius: var(--r-desk);
+    background: var(--paper-2); border: 1px solid var(--rule); font-weight: 500; font-size: 13.5px;
+  }
+  .hp-dh .hp-search kbd { border-radius: 2px; }
+  .hp-dh .hp-search { white-space: nowrap; overflow: hidden; min-width: 0; }
+  .hp-dh .hp-upd { min-width: 0; gap: 10px; font: 700 13px var(--font-sans); }
+  .hp-dh .hp-clock small { font-weight: 500; }
+  .hp-dh .hp-iconbtn, .hp-dh .hp-theme { border-radius: var(--r-desk); width: 32px; height: 32px; }
+
+  /* Ask: a square ghost button, not a glowing pill */
+  .hp-dh .hp-ask-btn {
+    height: 36px; border-radius: var(--r-desk); padding: 0 14px; gap: 8px;
+    background: transparent; color: var(--ink); border: 1px solid var(--rule-strong);
+    font: 700 13.5px var(--font-sans); box-shadow: none; filter: none;
+  }
+  .hp-dh .hp-ask-btn:hover, .hp-dh .hp-ask-btn.is-open { background: var(--paper-3); filter: none; }
+  .hp-dh .hp-ask-mark { width: auto; height: auto; background: none; color: var(--accent-ink); border-radius: 0; }
+  .hp-dh .hp-askdrop { border-radius: 6px; }
+
+  /* other pages: centered under the header now that the sidebar is gone */
+  .hp-page { margin: 0 auto; }
+
+  /* ── the desk: list | detail, each scrolling on its own ── */
+  .hp-desk { display: grid; grid-template-columns: var(--dlist-w) minmax(0, 1fr); height: calc(100dvh - var(--dh-h)); }
+  .hp-dk { font: 700 12px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+
+  .hp-dlist { border-right: 1px solid var(--rule); overflow-y: auto; overscroll-behavior: contain; }
+  .hp-dlist-top { position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 24px 22px 0; }
+  .hp-dlist-top h1 { margin-top: 6px; font-weight: 900; font-size: 34px; letter-spacing: -0.05em; line-height: 1; }
+  .hp-dtabs { position: relative; display: flex; gap: 22px; margin-top: 18px; border-bottom: 1px solid var(--rule); }
+  .hp-dtab { padding-bottom: 12px; font-weight: 700; font-size: 14px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
+  .hp-dtab:hover, .hp-dtab[aria-current="page"] { color: var(--ink); }
+  .hp-dtab span { margin-left: 5px; font-weight: 500; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .hp-dtabs-ind { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--ink); transition: transform 0.35s var(--ease), width 0.35s var(--ease); }
+
+  .hp-dpick {
+    display: grid; grid-template-columns: 1fr; gap: 2px; width: 100%; text-align: left;
+    padding: 16px 22px; border-bottom: 1px solid var(--rule); transition: background 0.15s var(--ease);
+  }
+  .hp-dpick:hover { background: var(--paper-2); }
+  .hp-dpick-k { font: 700 11.5px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); }
+  .hp-dpick b { font-weight: 900; font-size: 19px; letter-spacing: -0.03em; }
+  .hp-dpick small { font-weight: 700; font-size: 12.5px; color: var(--ink-faint); }
+  .hp-dlist .hp-summary {
+    margin: 0; padding: 12px 22px; background: none; border: 0; border-radius: 0;
+    font-weight: 500; font-size: 13px; color: var(--ink-faint);
+  }
+  .hp-dlist .hp-summary b { font-weight: 700; color: var(--ink-soft); }
+
+  .hp-dgrp { padding: 18px 22px 8px; font: 700 11.5px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .hp-dgrp.is-live { color: var(--live); }
+
+  .hp-dr {
+    display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 14px; align-items: center;
+    width: 100%; text-align: left; padding: 13px 22px; border-top: 1px solid var(--rule);
+    transition: background 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  }
+  .hp-dr:hover { background: var(--paper-2); }
+  .hp-dr.is-sel { background: var(--paper-2); box-shadow: inset 2px 0 0 var(--accent); }
+  .hp-dr-t { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; white-space: nowrap; }
+  .hp-dr-t small { display: block; font-weight: 500; font-size: 12px; color: var(--ink-faint); letter-spacing: 0; }
+  .hp-dr-t.is-live { color: var(--live); }
+  .hp-dr-mid { min-width: 0; display: grid; gap: 3px; }
+  .hp-dr-q { font-weight: 700; font-size: 14px; line-height: 1.3; letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hp-dr .hp-jev { font-size: 12.5px; font-weight: 700; }
+  .hp-dr .hp-jev-skip, .hp-dr .hp-jev-none { font-weight: 500; }
+  .hp-dr-px { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; text-align: right; }
+  .hp-dr-skl { height: 64px; background: linear-gradient(var(--paper-3), var(--paper-3)) 22px 50% / 60% 10px no-repeat; }
+
+  .hp-dlist-foot { padding: 22px; border-top: 1px solid var(--rule); display: grid; gap: 14px; }
+  .hp-dlist-foot .hp-keys { margin: 0; flex-wrap: wrap; font-weight: 500; }
+  .hp-dlist-foot .hp-keys a:hover { color: var(--ink); }
+
+  /* ── detail ── */
+  .hp-ddetail { overflow-y: auto; overscroll-behavior: contain; }
+  .hp-dd { max-width: 1120px; padding: 34px clamp(28px, 4vw, 64px) 60px; animation: hp-in 0.22s var(--ease); }
+  .hp-dd-q { margin-top: 8px; font-weight: 900; font-size: 28px; letter-spacing: -0.035em; line-height: 1.15; text-wrap: balance; max-width: 34ch; }
+
+  .hp-dd-twin { margin-top: 24px; display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
+  /* both big numbers share one line; captions hang below; buttons sit level with the numbers */
+  .hp-dd-acts { align-self: start; margin-top: clamp(14px, 1.6vw, 22px); }
+  .hp-dd-big b { display: block; font-weight: 900; font-size: clamp(56px, 5.6vw, 80px); letter-spacing: -0.055em; line-height: 1.02; white-space: nowrap; }
+  .hp-dd-big small { display: block; margin-top: 6px; font-weight: 700; font-size: 14px; color: var(--ink-faint); white-space: nowrap; }
+  .hp-dd-big em { font-style: normal; color: var(--accent-ink); }
+  .hp-dd-big em.dn { color: var(--neg-ink); }
+  .hp-dd-acts { justify-self: end; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .hp-btn {
+    height: 40px; padding: 0 18px; border-radius: var(--r-desk); display: inline-flex; align-items: center;
+    background: var(--accent); color: oklch(0.2 0.04 118); font: 700 14px var(--font-sans); white-space: nowrap;
+    transition: filter 0.2s var(--ease), background 0.2s var(--ease);
+  }
+  .hp-btn:hover { filter: brightness(1.06); }
+  .hp-btn.ghost { background: none; color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule-strong); }
+  .hp-btn.ghost:hover { background: var(--paper-2); filter: none; }
+
+  .hp-dd-chart { margin-top: 28px; --chart-line: var(--accent-ink); }
+  .hp-dd-chart .chart-svg { height: 260px; }
+  .hp-dd-chart .chart-skl, .hp-dd-chart .chart-empty { height: 260px; border-radius: var(--r-desk); }
+  .hp-dd-ranges { margin-top: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .hp-dd-ranges [role="tablist"] { display: flex; gap: 20px; }
+  .hp-dd-ranges button { font: 700 13px var(--font-sans); color: var(--ink-faint); padding-bottom: 4px; border-bottom: 2px solid transparent; transition: color 0.2s var(--ease); }
+  .hp-dd-ranges button:hover { color: var(--ink); }
+  .hp-dd-ranges button[aria-selected="true"] { color: var(--accent-ink); border-color: var(--accent-ink); }
+  .hp-dd-ranges > span { font-weight: 700; font-size: 13px; color: var(--ink-faint); }
+
+  /* the call card (same card as the phone sheet), at desk scale */
+  .hp-dd > .hp-verdict { margin-top: 34px; max-width: 760px; padding: 24px 26px; background: var(--paper-2); border: 1px solid var(--rule); }
+  .hp-dd .hp-verdict-call { margin-top: 12px; font-size: 40px; font-weight: 900; letter-spacing: -0.05em; }
+  .hp-dd .hp-verdict-sub { margin-top: 8px; font-size: 16px; font-weight: 700; }
+  .hp-dd .hp-lean { margin-top: 22px; }
+  .hp-dd .hp-lean-q { font-weight: 700; font-size: 14px; }
+  .hp-dd .hp-lean-bar { height: 12px; }
+  .hp-dd .hp-lean-lbls b { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; }
+  .hp-dd .hp-lean-lbls span { font-size: 13.5px; font-weight: 700; }
+  .hp-dd .hp-lean-freq { font-size: 15px; font-weight: 500; line-height: 1.55; }
+
+  /* deep read + stats */
+  .hp-dd > .hp-deep, .hp-dd > .hp-deep-lock, .hp-dd > .rec-loading, .hp-dd > .rec { margin-top: 34px; border-radius: var(--r-desk); }
+  .hp-dd-stats { margin-top: 34px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .hp-dd-stats div { padding: 16px 0; }
+  .hp-dd-stats div + div { padding-left: 20px; border-left: 1px solid var(--rule); }
+  .hp-dd-stats dt { font: 700 11.5px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .hp-dd-stats dd { margin-top: 4px; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  .hp-dd-more { margin-top: 22px; display: flex; align-items: baseline; gap: 26px; font-weight: 700; font-size: 14px; }
+  .hp-dd-more > a { color: var(--ink-soft); white-space: nowrap; }
+  .hp-dd-more > a:hover { color: var(--ink); }
+  .hp-dd-more .manual { flex: 1; }
+  .hp-dd .hp-disc { margin-top: 18px; }
+
+  /* newsletter boxes: flat and square like the rest of the desk */
+  .hp-dlist-foot .hp-sub, .hp-dd .hp-sub { grid-template-columns: 1fr; gap: 12px; border-radius: var(--r-desk); box-shadow: none; }
+  .hp-dlist-foot .hp-sub { padding: 16px; }
+  .hp-dlist-foot .hp-sub-copy b, .hp-dd .hp-sub-copy b { font-weight: 900; letter-spacing: -0.03em; }
+  .hp-dlist-foot .hp-sub-field, .hp-dd .hp-sub-field { border-radius: var(--r-desk); }
+  .hp-dlist-foot .hp-sub-field button, .hp-dd .hp-sub-field button { border-radius: 2px; font-weight: 700; }
+  .hp-dd .hp-deep-lock .hp-sub { border-style: solid; }
+  .hp-dd .hp-sub-msg { margin: 0 2px; }
+  .hp-dd > .hp-deep { border-radius: var(--r-desk); }
+  .hp-dd .pill { border-radius: var(--r-desk); }
+
+  /* time: one bold line under the title (Live in red) */
+  .hp-dd-when { margin-top: 10px; font-weight: 700; font-size: 16px; color: var(--ink-soft); }
+  .hp-dd-when.is-live { color: var(--live); }
+
+  /* the call: second big number, colored by what to do */
+  .hp-dd-call b { color: var(--ink); }
+  .hp-dd-call.is-wager b, .hp-dd-call.is-wager em { color: var(--wager-ink); }
+  .hp-dd-call.is-hold b, .hp-dd-call.is-hold em { color: var(--lean-ink); }
+  .hp-dd-call.is-skip b { color: var(--fair-ink); }
+  .hp-dd-call.is-none b { color: var(--ink-faint); }
+  .hp-dd-call em { font-style: normal; }
+  .hp-dd-mean { display: block; margin-top: 8px; font-weight: 900; font-size: 18px; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
+  .hp-dd-call .hp-dd-mean em { color: inherit; }
+  .hp-dd-call.is-wager .hp-dd-mean em { color: var(--wager-ink); }
+  .hp-dd-call.is-hold .hp-dd-mean em { color: var(--lean-ink); }
+  .hp-dd-call small { margin-top: 4px; }
+  .hp-dr .hp-jev { font-size: 13px; }
+
+  .hp-insp-empty { padding-top: 80px; }
+}
+
+/* narrower desktops: tighter list, drop the clock words */
+@media (min-width: 900px) and (max-width: 1240px) {
+  :root { --dlist-w: 340px; }
+  .hp-dh { gap: 20px; }
+  .hp-dh-nav { gap: 16px; }
+  .hp-dh .hp-clock { display: none; }
+  .hp-dd-twin { grid-template-columns: auto auto; }
+  .hp-dd-acts { grid-column: 1 / -1; justify-self: start; justify-content: flex-start; margin-top: 4px; }
+}
+@media (min-width: 900px) and (max-width: 1080px) {
+  .hp-dh .hp-search { max-width: 44px; font-size: 0; gap: 0; padding: 0; justify-content: center; }
+  .hp-dh .hp-search kbd { display: none; }
+  .hp-dh-link[href="/how-it-works"] { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-dh-ind, .hp-dtabs-ind, .hp-dd { transition: none; animation: none; }
+}
+
+/* the desktop header never shows on the phone (it has its own top + tab bar) */
+@media (max-width: 899.98px) {
+  .hp-dh { display: none; }
+}

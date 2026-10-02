@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { JevReadDTO, PlayDTO } from "@/lib/dto";
-import { useBoard } from "@/lib/boardStore";
+import { useBoard, useNow } from "@/lib/boardStore";
 import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
 import { JEV_ACTION_COPY, confidenceLabel, leanSide, shortSide } from "@/lib/jevDisplay";
-import { clockLabel, price, resolveAt, usd } from "@/lib/format";
+import { clockLabel, countdownShort, isLive, price, resolveAt, usd, whenMs } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
 import { EdgePanel } from "./EdgePanel";
@@ -83,6 +83,176 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
   );
 }
 
+const RANGE_WORD: Record<string, string> = { "1d": "day", "1w": "week", "1m": "month" };
+const sinceMin = (ms: number) => {
+  const m = Math.max(0, Math.floor(ms / 60_000));
+  return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
+};
+
+/**
+ * The call as the second big number: Wager (green), Lean (amber) or Skip
+ * (gray), with the side and how sure underneath. What to do, at a glance.
+ */
+function CallBig({ play }: { play: PlayDTO }) {
+  const { reads, jevStatus } = useBoard();
+  const r = reads[play.id];
+  if (!r) {
+    return (
+      <div className="hp-dd-big hp-dd-call is-none">
+        <b>{jevStatus === "offline" ? "Off" : "…"}</b>
+        <small>{jevStatus === "offline" ? "Calls are offline right now" : "Reading the call"}</small>
+      </div>
+    );
+  }
+  if (r.settled) {
+    return (
+      <div className="hp-dd-big hp-dd-call is-skip">
+        <b>Decided</b>
+        <small>One side is already at 97% or more</small>
+      </div>
+    );
+  }
+  const a = JEV_ACTION_COPY[r.action];
+  const side = leanSide(r);
+  const conf = confidenceLabel(r.confidence);
+  const sure = Math.round(r.strength * 100);
+  // One plain sentence on what to do, in the same words How it works uses.
+  const meaning =
+    r.action === "wager" ? (
+      <>
+        We like <em>{shortSide(side?.label ?? "", 18)}</em> at this price.
+      </>
+    ) : r.action === "hold" ? (
+      <>
+        <em>{shortSide(side?.label ?? "", 18)}</em> looks a little cheap. Not a strong play.
+      </>
+    ) : (
+      <>Priced fair. Sit this one out.</>
+    );
+  return (
+    <div className={`hp-dd-big hp-dd-call is-${a.cls}`}>
+      <b>{a.label}</b>
+      <span className="hp-dd-mean">{meaning}</span>
+      <small>
+        {sure}% sure{side ? " it's too cheap" : " both prices are fair"}
+        {conf && <> · {conf} confidence</>}
+      </small>
+    </div>
+  );
+}
+
+/**
+ * Desktop detail (HP4 "Terminal, time-first"): the price and the countdown as
+ * two big numbers, a clean line chart, then the call beside its 100-reads
+ * breakdown. Same data and pieces as the phone sheet, laid out for a wide screen.
+ */
+export function DeskDetail({ play }: { play: PlayDTO }) {
+  const fmt = useOddsFormat();
+  const now = useNow(1000);
+  const target = play.outcomes[0];
+  const [range, setRange] = useState("1w");
+  const { history, loading, error } = usePriceHistory(target?.tokenId, range);
+  const current = target?.price ?? (history?.length ? history[history.length - 1].p : 0);
+  const first = history?.length ? history[0].p : current;
+  const delta = (current - first) * 100;
+  const live = isLive(play.gameStartTime, now);
+  const at = play.gameStartTime ?? play.endDate;
+  const others = play.outcomes.slice(1, 4);
+
+  return (
+    <div className="hp-dd" key={play.id}>
+      <p className="hp-dk">
+        {usd(play.volume24hr)} traded today · {usd(play.liquidity)} liquidity
+      </p>
+      <h2 className="hp-dd-q">{play.question}</h2>
+      <p className={`hp-dd-when${live ? " is-live" : ""}`}>
+        {live
+          ? `Live · ${sinceMin(now - whenMs(play))} in`
+          : `${play.gameStartTime ? "Starts" : "Resolves"} in ${countdownShort(play, now, true)} · ${resolveAt(at)}`}
+      </p>
+
+      <div className="hp-dd-twin">
+        <div className="hp-dd-big">
+          <b className="num">
+            <Odo value={price(current, fmt, "pct")} />
+          </b>
+          <small>
+            {target?.label}
+            {history && Math.abs(delta) >= 0.05 && (
+              <>
+                {" · "}
+                <em className={delta >= 0 ? "up" : "dn"}>
+                  {delta >= 0 ? "+" : "−"}
+                  {Math.abs(delta).toFixed(1)} pts
+                </em>{" "}
+                past {RANGE_WORD[range]}
+              </>
+            )}
+          </small>
+        </div>
+        <CallBig play={play} />
+        <div className="hp-dd-acts">
+          <a className="hp-btn" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
+            Open on Polymarket
+          </a>
+          <Link className="hp-btn ghost" href={`/ask?q=${encodeURIComponent(`What's the call on "${play.question}"?`)}`}>
+            Ask about this
+          </Link>
+        </div>
+      </div>
+
+      <div className="hp-dd-chart">
+        {loading && <div className="chart-skl" aria-hidden />}
+        {!loading && error && <div className="chart-empty">No price history for this market yet.</div>}
+        {!loading && !error && history && <PriceChart points={history} flat />}
+      </div>
+      <div className="hp-dd-ranges">
+        <div role="tablist" aria-label="Time range">
+          {RANGES.map((r) => (
+            <button key={r.id} role="tab" aria-selected={range === r.id} onClick={() => setRange(r.id)}>
+              {r.label}
+            </button>
+          ))}
+        </div>
+        {others.length > 0 && (
+          <span className="num">{others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}</span>
+        )}
+      </div>
+
+      <JevVerdict play={play} />
+      <DeepRead play={play} />
+
+      <dl className="hp-dd-stats">
+        <div>
+          <dt>{play.gameStartTime ? "Starts" : "Resolves"}</dt>
+          <dd>{resolveAt(at)}</dd>
+        </div>
+        <div>
+          <dt>24h volume</dt>
+          <dd className="num">{usd(play.volume24hr)}</dd>
+        </div>
+        <div>
+          <dt>Liquidity</dt>
+          <dd className="num">{usd(play.liquidity)}</dd>
+        </div>
+        <div>
+          <dt>All-time volume</dt>
+          <dd className="num">{usd(play.volume)}</dd>
+        </div>
+      </dl>
+
+      <div className="hp-dd-more">
+        <Link href="/hedge">Hedge Lab →</Link>
+        <details className="manual">
+          <summary>Run your own numbers</summary>
+          <EdgePanel play={play} />
+        </details>
+      </div>
+      <p className="hp-disc">Decision support, not financial advice. HedgePredict never places trades.</p>
+    </div>
+  );
+}
+
 function PriceCard({ play }: { play: PlayDTO }) {
   const fmt = useOddsFormat();
   const target = play.outcomes[0];
@@ -123,7 +293,7 @@ function PriceCard({ play }: { play: PlayDTO }) {
       <div className="featured-chart">
         {loading && <div className="chart-skl" aria-hidden />}
         {!loading && error && <div className="chart-empty">No price history for this market yet.</div>}
-        {!loading && !error && history && <PriceChart points={history} />}
+        {!loading && !error && history && <PriceChart points={history} flat />}
       </div>
       <div className="featured-foot">
         <span className="featured-meta num">
@@ -315,26 +485,29 @@ function freqSentence(order: { key: string; label: string; p: number }[]) {
 function LeanBar({ read, shown, compact = false }: { read: JevReadDTO; shown: boolean; compact?: boolean }) {
   const fmt = useOddsFormat();
   const pct = (x: number) => `${Math.round(x * 100)}%`;
-  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${price(s.price, fmt)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i }));
-  const neither = { key: "n", label: "Fair price", sub: "", p: read.distribution.neither, lean: read.lean == null };
+  // Three colors, always: the side we'd back (green), the other side (amber: how
+  // torn the read is), fair price (gray). On a skip, "the side we'd back" is the bigger share.
+  const top = read.lean ?? read.distribution.sides.reduce((best, p, i, all) => (p > all[best] ? i : best), 0);
+  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${price(s.price, fmt)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i, kind: i === top ? "is-top" : "is-alt" }));
+  const neither = { key: "n", label: "Fair price", sub: "", p: read.distribution.neither, lean: read.lean == null, kind: "is-n" };
   // Two-sided markets read left side / neither / right side; others put neither last.
   const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
   const tone = read.action === "wager" ? "wager" : read.action === "hold" ? "hold" : "skip";
   return (
-    <div className="hp-lean" aria-label="How the call splits">
+    <div className={`hp-lean ${tone}`} aria-label="How the call splits">
       {!compact && <div className="hp-lean-q">Is either side a bargain at these prices?</div>}
       <div className="hp-lean-bar">
         {order.map((g) => (
           <i
             key={g.key}
-            className={`${g.key === "n" ? "is-n" : ""} ${g.lean ? `is-lean ${tone}` : ""}`}
+            className={`${g.kind} ${g.lean ? `is-lean ${tone}` : ""}`}
             style={{ flexGrow: shown ? Math.max(g.p, 0.015) : 1 }}
           />
         ))}
       </div>
       <div className="hp-lean-lbls">
         {order.map((g) => (
-          <span key={g.key} className={g.lean ? "is-lean" : undefined}>
+          <span key={g.key} className={`${g.kind}${g.lean ? " is-lean" : ""}`}>
             <b>{pct(g.p)}</b> {g.label}
             {g.sub && <small>{g.sub}</small>}
           </span>

@@ -153,7 +153,7 @@ export function HowItWorks() {
             <div className="hiw-legend">
               <span><b>74%</b> Molcan is a bargain</span>
               <span><b>22%</b> Fair price</span>
-              <span><b>4%</b> Other side</span>
+              <span><b>4%</b> Rinderknech is a bargain</span>
             </div>
             <div className="hiw-chips">
               <span>Why this call?</span>

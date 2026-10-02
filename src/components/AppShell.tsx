@@ -5,35 +5,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BoardProvider, useBoard, useNow } from "@/lib/boardStore";
 import { clockET } from "@/lib/format";
-import { FILTERS, filterCount } from "@/lib/filters";
+import { FILTERS } from "@/lib/filters";
 import { CommandPalette } from "./CommandPalette";
 import { AskPanel } from "./AskPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { OddsToggle } from "./OddsToggle";
-import { POLYMARKET_US } from "@/lib/links";
 import { useSlider } from "@/lib/useSlider";
 import { Icon } from "./icons";
 
 const BOARD_PATHS = new Set(FILTERS.map((f) => f.href));
 
-const TOOLS = [
-  { href: "/ask", label: "Ask", icon: Icon.ask },
-  { href: "/hedge", label: "Hedge Lab", icon: Icon.hedge },
-  { href: "/connect", label: "Use in your AI", icon: Icon.connect },
-  { href: "/daily", label: "The Daily", icon: Icon.mail },
-];
-
-const PAGE_TITLES: Record<string, string> = {
-  "/ask": "Ask",
-  "/hedge": "Hedge Lab",
-  "/connect": "Use in your AI",
-  "/how-it-works": "How it works",
-  "/daily": "HedgePredict Daily",
-};
-
 /**
- * The app frame. Desktop: dark labeled sidebar + top bar (breadcrumb, search,
- * refresh). Phone: the page itself + a floating bottom tab bar. Every nav item
+ * The app frame. Desktop: a single header row (links, search, Ask, tools)
+ * over the page. Phone: the page itself + a floating bottom tab bar. Every nav item
  * is a real route; the shared board data lives in BoardProvider so moving
  * between pages is instant.
  */
@@ -41,9 +25,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <BoardProvider>
       <div className="hp-app">
-        <Sidebar />
+        <DeskHeader />
         <div className="hp-work">
-          <TopBar />
           <main className="hp-main">
             <RouteFade>{children}</RouteFade>
           </main>
@@ -82,56 +65,6 @@ function PaletteHotkey() {
   return null;
 }
 
-function Sidebar() {
-  const path = usePathname();
-  const { plays, now } = useBoard();
-  const liveN = plays ? filterCount(plays, "live", now) : null;
-  const navRef = useRef<HTMLElement>(null);
-  const ind = useSlider(navRef, '.hp-nav[aria-current="page"]', [path]);
-
-  return (
-    <nav className="hp-side" aria-label="Sections" ref={navRef}>
-      {ind && <span className="hp-nav-ind" style={{ transform: `translateY(${ind.y}px)`, height: ind.h }} aria-hidden />}
-      <Link href="/" className="hp-brand">
-        <span className="hp-brand-mark">{Icon.spark}</span>
-        HedgePredict
-      </Link>
-
-      <div className="hp-side-grp">Markets</div>
-      {FILTERS.map((f) => {
-        const n = plays ? filterCount(plays, f.id, now) : null;
-        return (
-          <Link key={f.id} href={f.href} className="hp-nav" title={f.id === "all" ? "Board" : f.label} aria-current={path === f.href ? "page" : undefined}>
-            {Icon[f.id === "all" ? "board" : f.id]}
-            {f.id === "all" ? "Board" : f.label}
-            {f.id === "live" && liveN ? <span className="hp-live-dot" aria-hidden /> : null}
-            {n != null && <span className="hp-nav-n">{n}</span>}
-          </Link>
-        );
-      })}
-
-      <div className="hp-side-grp">Tools</div>
-      {TOOLS.map((t) => (
-        <Link key={t.href} href={t.href} className="hp-nav" title={t.label} aria-current={path === t.href ? "page" : undefined}>
-          {t.icon}
-          {t.label}
-        </Link>
-      ))}
-
-      <span className="hp-grow" />
-      <Link href="/how-it-works" className="hp-nav" title="How it works" aria-current={path === "/how-it-works" ? "page" : undefined}>
-        {Icon.help}
-        How it works
-      </Link>
-      <a className="hp-nav hp-nav-pm" title="Open Polymarket" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
-        <span className="hp-pm-tile">{Icon.polymarket}</span>
-        Polymarket
-        <span className="hp-nav-ext" aria-hidden>↗</span>
-      </a>
-    </nav>
-  );
-}
-
 /** Live clock in Eastern Time, the zone Polymarket uses. */
 function ClockET() {
   const now = useNow(1000);
@@ -145,32 +78,46 @@ function ClockET() {
   );
 }
 
-function TopBar() {
+/** Desktop links. Ask lives in its own dropdown so it opens over the board. */
+const DESK_NAV = [
+  { href: "/", label: "Board" },
+  { href: "/hedge", label: "Hedge Lab" },
+  { href: "/connect", label: "Your AI" },
+  { href: "/daily", label: "The Daily" },
+  { href: "/how-it-works", label: "How it works" },
+];
+
+/**
+ * Desktop header: one row with the wordmark, section links, search, Ask, and
+ * the clock/odds/theme/refresh tools. (Replaces the old sidebar + top bar.)
+ */
+function DeskHeader() {
   const path = usePathname();
   const { asOf, loading, refresh, setPaletteOpen } = useBoard();
-  const f = FILTERS.find((x) => x.href === path);
+  const navRef = useRef<HTMLElement>(null);
+  const on = (href: string) => (href === "/" ? BOARD_PATHS.has(path) : path === href);
+  const ind = useSlider(navRef, '.hp-dh-link[aria-current="page"]', [path]);
 
   return (
-    <header className="hp-top">
-      <div className="hp-crumb">
-        {f ? (
-          <>
-            <Link href="/">Board</Link>
-            <span aria-hidden>›</span>
-            <b>{f.label}</b>
-          </>
-        ) : (
-          <b>{PAGE_TITLES[path] ?? "HedgePredict"}</b>
-        )}
-      </div>
-      <div className="hp-top-mid">
-        <button className="hp-search" onClick={() => setPaletteOpen(true)}>
-          {Icon.search}
-          Search all of Polymarket…
-          <kbd>⌘K</kbd>
-        </button>
-        <AskDropdown />
-      </div>
+    <header className="hp-dh">
+      <Link href="/" className="hp-dh-brand">
+        <span className="hp-dh-mark" aria-hidden>{Icon.spark}</span>
+        HedgePredict
+      </Link>
+      <nav className="hp-dh-nav" aria-label="Sections" ref={navRef}>
+        {ind && <span className="hp-dh-ind" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} aria-hidden />}
+        {DESK_NAV.map((n) => (
+          <Link key={n.href} href={n.href} className="hp-dh-link" aria-current={on(n.href) ? "page" : undefined}>
+            {n.label}
+          </Link>
+        ))}
+      </nav>
+      <button className="hp-search" onClick={() => setPaletteOpen(true)}>
+        {Icon.search}
+        Search all of Polymarket
+        <kbd>⌘K</kbd>
+      </button>
+      <AskDropdown />
       <div className="hp-upd">
         <ClockET />
         <OddsToggle />

@@ -5,12 +5,10 @@ import Link from "next/link";
 import type { PlayDTO } from "@/lib/dto";
 import { useBoard, useNow } from "@/lib/boardStore";
 import { selectMarket, useIsDesktop, useSelectedId } from "@/lib/useSelection";
-import { FILTERS, TIME_GROUPS, applyFilter, filterById, filterCount, timeGroup, type FilterId } from "@/lib/filters";
-import { MARKET_TZ, clockLabel, isLive, price, usd, whenMs } from "@/lib/format";
-import { Inspector } from "./Inspector";
+import { FILTERS, TIME_GROUPS, applyFilter, filterCount, timeGroup, type FilterId } from "@/lib/filters";
+import { MARKET_TZ, clockLabel, countdownShort, isLive, price, whenMs } from "@/lib/format";
+import { DeskDetail, Inspector } from "./Inspector";
 import { JevPill } from "./JevPill";
-import { Sparkline } from "./Sparkline";
-import { Status } from "./Status";
 import { Icon } from "./icons";
 import { Odo } from "./Odo";
 import { useSlider } from "@/lib/useSlider";
@@ -20,10 +18,11 @@ import { POLYMARKET_US } from "@/lib/links";
 import { TodaysPick } from "./TodaysPick";
 import { SubscribeBox } from "./SubscribeBox";
 import { todaysPick } from "@/lib/pick";
+import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
 import { Countdown } from "./Countdown";
 import { useOddsFormat } from "@/lib/oddsFormat";
 
-/** The market board for one filter route. Desktop: table + inspector. Phone: time board + sheet. */
+/** The market board for one filter route. Desktop: time list + detail. Phone: time board + sheet. */
 export function Board({ filter }: { filter: FilterId }) {
   const desk = useIsDesktop();
   if (desk === null) return <div className="hp-boot" aria-hidden />;
@@ -79,38 +78,89 @@ function JevSummary({ plays }: { plays: PlayDTO[] }) {
       </>
     );
 
-  return (
-    <div className="hp-summary">
-      <span className="hp-brand-mark hp-brand-sm">{Icon.spark}</span>
-      <span>{text}</span>
-    </div>
-  );
+  return <p className="hp-summary">{text}</p>;
 }
 
 /* ─────────────────────────── Desktop: the Desk ─────────────────────────── */
 
+/** Today's pick as one line at the top of the list; click to open it. */
+function DeskPick() {
+  const fmt = useOddsFormat();
+  const { plays, reads } = useBoard();
+  const pick = todaysPick(plays, reads);
+  if (!pick) return null;
+  const side = leanSide(pick.read);
+  const a = JEV_ACTION_COPY[pick.read.action];
+  return (
+    <button className="hp-dpick" onClick={() => selectMarket(pick.play.id)}>
+      <span className="hp-dpick-k">Today&apos;s pick</span>
+      <b>
+        {a.label} {side ? shortSide(side.label, 18) : ""} at {side ? price(side.price, fmt) : ""}
+      </b>
+      <small>{Math.round(pick.read.strength * 100)}% sure it&apos;s too cheap</small>
+    </button>
+  );
+}
+
+/** "52m" or "2h 52m" since a live game started. */
+function sinceStart(p: PlayDTO, now: number) {
+  const m = Math.max(0, Math.floor((now - whenMs(p)) / 60_000));
+  return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
+}
+
+/** The time column: live time in, a countdown inside a day, else the date. */
+function DeskWhen({ p, now }: { p: PlayDTO; now: number }) {
+  if (isLive(p.gameStartTime, now)) {
+    return (
+      <span className="hp-dr-t is-live">
+        Live<small>{sinceStart(p, now)} in</small>
+      </span>
+    );
+  }
+  const t = whenMs(p);
+  if (!Number.isFinite(t)) return <span className="hp-dr-t">Open</span>;
+  const tod = new Date(t).toLocaleTimeString("en-US", { timeZone: MARKET_TZ, hour: "numeric", minute: "2-digit" });
+  const soon = t - now < 86_400_000;
+  return (
+    <span className="hp-dr-t num">
+      {soon ? countdownShort(p, now) : clockLabel(p, now)}
+      <small>{tod}</small>
+    </span>
+  );
+}
+
 function DeskBoard({ filter }: { filter: FilterId }) {
   const fmt = useOddsFormat();
-  const { plays, loading, error, sparks, now, moves } = useBoard();
-  const f = filterById(filter);
+  const { plays, loading, error, now, moves } = useBoard();
   const list = useMemo(() => (plays ? applyFilter(plays, filter, now) : []), [plays, filter, now]);
   const focused = useFocusedPlay(list, true);
-  const rowRefs = useRef(new Map<string, HTMLTableRowElement>());
-  const segRef = useRef<HTMLElement>(null);
-  const thumb = useSlider(segRef, '.hp-seg-btn[aria-current="page"]', [filter, plays?.length]);
+  const rowRefs = useRef(new Map<string, HTMLButtonElement>());
+  const tabsRef = useRef<HTMLElement>(null);
+  const ind = useSlider(tabsRef, '.hp-dtab[aria-current="page"]', [filter, plays?.length]);
+
+  // Flighty order: grouped by when it resolves. "Hot" is a volume ranking, so it stays one list.
+  const sections = useMemo(() => {
+    if (filter === "hot") return [{ id: "all", label: "", rows: list }];
+    return TIME_GROUPS.map((g) => ({
+      id: g.id as string,
+      label: g.label as string,
+      rows: list.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
+    })).filter((g) => g.rows.length > 0);
+  }, [list, filter, now]);
+  const order = useMemo(() => sections.flatMap((g) => g.rows), [sections]);
 
   const move = useCallback(
     (step: number) => {
-      if (!list.length) return;
-      const i = focused ? list.findIndex((p) => p.id === focused.id) : -1;
-      const next = list[Math.min(list.length - 1, Math.max(0, i + step))];
+      if (!order.length) return;
+      const i = focused ? order.findIndex((p) => p.id === focused.id) : -1;
+      const next = order[Math.min(order.length - 1, Math.max(0, i + step))];
       selectMarket(next.id);
       rowRefs.current.get(next.id)?.scrollIntoView({ block: "nearest" });
     },
-    [list, focused]
+    [order, focused]
   );
 
-  // Arrow keys walk the table; typing in a field is left alone.
+  // Arrow keys walk the list; typing in a field is left alone.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
@@ -124,120 +174,85 @@ function DeskBoard({ filter }: { filter: FilterId }) {
 
   return (
     <div className="hp-desk">
-      <div className="hp-list">
-        <div className="hp-list-head">
-          <div>
-            <h1>{f.title}</h1>
-            <p>{f.caption}</p>
-          </div>
-          <nav className="hp-seg" aria-label="Filter markets" ref={segRef}>
-            {thumb && (
-              <span className="hp-seg-thumb" style={{ transform: `translateX(${thumb.x}px)`, width: thumb.w }} aria-hidden />
-            )}
+      <aside className="hp-dlist" aria-label="Markets">
+        <div className="hp-dlist-top">
+          <p className="hp-dk">
+            {new Date(now).toLocaleDateString("en-US", { timeZone: MARKET_TZ, weekday: "long", month: "short", day: "numeric" })}
+          </p>
+          <h1>What&apos;s resolving</h1>
+          <nav className="hp-dtabs" aria-label="Filter markets" ref={tabsRef}>
+            {ind && <span className="hp-dtabs-ind" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} aria-hidden />}
             {FILTERS.map((x) => {
               const n = plays ? filterCount(plays, x.id, now) : null;
               return (
-                <Link key={x.id} href={x.href} className="hp-seg-btn" aria-current={x.id === filter ? "page" : undefined}>
-                  {x.id === "live" && n ? <span className="hp-live-dot" aria-hidden /> : null}
+                <Link key={x.id} href={x.href} className="hp-dtab" aria-current={x.id === filter ? "page" : undefined}>
                   {x.label}
-                  {n != null && <span className="hp-seg-n">{n}</span>}
+                  {n != null && <span>{n}</span>}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <TodaysPick variant="desk" />
+        <DeskPick />
         {plays && <JevSummary plays={list} />}
-
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
+        {loading && !plays && Array.from({ length: 8 }).map((_, i) => <div key={i} className="hp-dr hp-dr-skl" aria-hidden />)}
+        {plays && list.length === 0 && (
+          <p className="hp-empty">
+            {filter === "live"
+              ? "No games are live right now. They show up here at first pitch, puck drop or kickoff."
+              : "Nothing in this filter right now."}
+          </p>
+        )}
 
-        <div className="hp-table-wrap">
-        <table className="hp-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Market</th>
-              <th>Price</th>
-              <th>1W</th>
-              <th>Call</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && !plays &&
-              Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i} className="hp-skl-row" aria-hidden>
-                  <td colSpan={5}>
-                    <span className="bar" style={{ width: `${70 - i * 4}%` }} />
-                  </td>
-                </tr>
-              ))}
-            {plays && list.length === 0 && (
-              <tr>
-                <td colSpan={5} className="hp-empty">
-                  {filter === "live"
-                    ? "No games are live right now. They show up here at first pitch, puck drop or kickoff."
-                    : "Nothing in this filter right now."}
-                </td>
-              </tr>
-            )}
-            {list.map((p, i) => (
-              <tr
+        {sections.map((g) => (
+          <section key={g.id}>
+            {g.label && <h2 className={`hp-dgrp${g.id === "live" ? " is-live" : ""}`}>{g.label}</h2>}
+            {g.rows.map((p) => (
+              <button
                 key={p.id}
                 ref={(el) => {
                   if (el) rowRefs.current.set(p.id, el);
                   else rowRefs.current.delete(p.id);
                 }}
-                className={focused?.id === p.id ? "is-sel" : undefined}
+                className={`hp-dr${focused?.id === p.id ? " is-sel" : ""}`}
                 onClick={() => selectMarket(p.id)}
-                aria-selected={focused?.id === p.id}
+                aria-current={focused?.id === p.id ? "true" : undefined}
               >
-                <td className="hp-rk">{String(i + 1).padStart(2, "0")}</td>
-                <td>
-                  <div className="hp-q">{p.question}</div>
-                  <div className="hp-meta">
-                    <Status play={p} now={now} />
-                    <span>24h {usd(p.volume24hr)}</span>
-                  </div>
-                </td>
-                <td className="hp-odds">
-                  <Odo value={price(p.outcomes[0]?.price ?? 0, fmt, "pct")} flash={moves[p.id]} />
-                  {p.outcomes[0] && p.outcomes[0].label.length <= 10 && <small>{p.outcomes[0].label}</small>}
-                  {moves[p.id] && Math.abs(moves[p.id].delta) >= 0.001 && (
-                    <span className={`hp-delta ${moves[p.id].delta > 0 ? "up" : "dn"}`}>
-                      {moves[p.id].delta > 0 ? "▲" : "▼"}
-                      {Math.abs(moves[p.id].delta * 100).toFixed(1)}
-                    </span>
-                  )}
-                </td>
-                <td className="hp-spark-cell">
-                  <Sparkline points={sparks[p.outcomes[0]?.tokenId ?? ""]} />
-                </td>
-                <td>
+                <DeskWhen p={p} now={now} />
+                <span className="hp-dr-mid">
+                  <span className="hp-dr-q">{p.question}</span>
                   <JevPill id={p.id} />
-                </td>
-              </tr>
+                </span>
+                <span className="hp-dr-px num">
+                  <Odo value={price(p.outcomes[0]?.price ?? 0, fmt, "pct")} flash={moves[p.id]} />
+                </span>
+              </button>
             ))}
-          </tbody>
-        </table>
-        </div>
+          </section>
+        ))}
 
-        <SubscribeBox compact source="board-desktop" />
-
-        <div className="hp-keys">
-          <span>
-            <kbd>↑</kbd> <kbd>↓</kbd> move
-          </span>
-          <span>
-            <kbd>⌘K</kbd> search all of Polymarket
-          </span>
+        <div className="hp-dlist-foot">
+          <SubscribeBox compact source="board-desktop" />
+          <div className="hp-keys">
+            <span>
+              <kbd>↑</kbd> <kbd>↓</kbd> move
+            </span>
+            <span>
+              <kbd>⌘K</kbd> search
+            </span>
+            <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
+              Polymarket ↗
+            </a>
+          </div>
           <Credit />
         </div>
-      </div>
-
-      <aside className="hp-insp" aria-label="Market details">
-        {focused ? <Inspector play={focused} /> : <div className="hp-insp-empty">Pick a market to see the call.</div>}
       </aside>
+
+      <main className="hp-ddetail" aria-label="Market details">
+        {focused ? <DeskDetail play={focused} /> : <div className="hp-insp-empty">Pick a market to see the call.</div>}
+      </main>
     </div>
   );
 }

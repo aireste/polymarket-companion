@@ -123,6 +123,28 @@ export function countdown(
   return `in ${m}m${seconds ? ` ${ss}s` : ""}`;
 }
 
+/**
+ * Compact countdown for big desktop numbers: "2d 14h", "11h 58m", "42m 10s"
+ * (seconds only inside the last hour, and only if asked). No "in " prefix.
+ */
+export function countdownShort(
+  p: { gameStartTime: string | null; endDate: string | null },
+  now = Date.now(),
+  seconds = false
+): string {
+  if (isLive(p.gameStartTime, now)) return "LIVE";
+  const ms = whenMs(p) - now;
+  if (!Number.isFinite(ms)) return "Open";
+  if (ms < 0) return "Awaiting";
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d >= 1) return `${d}d ${h}h`;
+  if (h >= 1) return `${h}h ${String(m).padStart(2, "0")}m`;
+  return seconds ? `${m}m ${String(s % 60).padStart(2, "0")}s` : `${m}m`;
+}
+
 /** Clock face for the board: "9:30 PM" within a day, else "Oct 28". */
 export function clockLabel(
   p: { gameStartTime: string | null; endDate: string | null },
