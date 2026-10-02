@@ -1,6 +1,6 @@
 """Record the tour as one Helen take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
-import json, re, ssl, base64, urllib.request
+import json, os, re, ssl, sys, base64, urllib.request
 
 ctx = ssl.create_default_context(cafile="/etc/ssl/cert.pem")
 key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("ELEVENLABS_API_KEY=")][0]
@@ -29,30 +29,44 @@ SCRIPT = [
  ("Want the best pick without checking the board? Sign up for The Daily, our free newsletter. It sends the day's top pick to your inbox, weekday mornings.",
   [("Want the best", "Want the best pick without checking the board?"), ("Sign up", "Sign up for The Daily, our free newsletter."),
    ("It sends", "It sends the day's top pick to your inbox,"), ("weekday mornings", "weekday mornings.")]),
- ("Use your own AI? Paste one link into Claude, ChatGPT, or any other, then just ask in plain English.",
-  [("Use your own", "Use your own AI?"), ("Paste one link", "Paste one link into Claude, ChatGPT, or any other,"),
-   ("then just ask", "then just ask in plain English.")]),
- ("And that's HedgePredict! You bring the plan. We'll help you spot the value the market might be missing. Play smart, and go get 'em.",
+ ("Don't see your pick on the board? Search all of Polymarket from the search bar, or ask HedgePredict anything about any market.",
+  [("Don't see", "Don't see your pick on the board?"), ("Search all", "Search all of Polymarket from the search bar,"),
+   ("or ask", "or ask HedgePredict anything about any market.")]),
+ ("You can also connect HedgePredict to Claude, ChatGPT, or any AI tool through our M C P. Paste one link, then just ask.",
+  [("You can also", "You can also connect HedgePredict to Claude, ChatGPT,"), ("or any AI tool", "or any AI tool through our MCP."),
+   ("Paste one link", "Paste one link,"), ("then just ask", "then just ask.")]),
+ ("And that's HedgePredict! You bring the plan. We'll help you spot the value the market might be missing. Play smart, and go get 'em!",
   [("And that's", "And that's HedgePredict!"), ("You bring", "You bring the plan."),
-   ("We'll help", "We'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em.")]),
+   ("We'll help", "We'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em!")]),
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
 BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays one dollar"), ("profit", 1, "So if you buy", "So if you buy at forty-three cents"),
              ("pct", 1, "And that price", "And that price means…"), ("us", 2, "plus one", "plus one hundred thirty-three"),
              ("note", 2, "Your sportsbook", "Your sportsbook's line…"),
-             ("mail", 7, "Sign up", "Sign up for The Daily…"), ("paste", 8, "Paste one link", "Paste one link…"), ("ask", 8, "then just ask", "then just ask…")]
+             ("mail", 7, "Sign up", "Sign up for The Daily…"), ("srch", 8, "Search all", "Search all of Polymarket…"), ("askhp", 8, "or ask", "or ask HedgePredict…"),
+             ("conn", 9, "connect HedgePredict", "connect HedgePredict…"), ("apps", 9, "or any AI tool", "or any AI tool…"),
+             ("paste", 9, "Paste one link", "Paste one link…"), ("ask", 9, "then just ask", "then just ask…")]
 
 LINES = [l for l, _ in SCRIPT]
+# The take's word timings are saved next to this script. Re-running with the same
+# lines reuses them (no new recording), so beats and captions can be retimed for free.
+# Pass --record to force a new take.
+CACHE = "scripts/tour_alignment.json"
 # 0.9s between lines; a longer rest after the AI line so the on-screen answer can be read.
-LONG_AFTER = {8: "2.5s"}
+LONG_AFTER = {8: "2.2s", 9: "2.5s"}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
-body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
-    "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}).encode()
-req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/ImnfuV8oxhB7ya99oJfc/with-timestamps?output_format=mp3_44100_128",
-    data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
-d = json.loads(urllib.request.urlopen(req, timeout=300, context=ctx).read())
-open("public/tour/tour.mp3", "wb").write(base64.b64decode(d["audio_base64"]))
-al = d.get("normalized_alignment") or d["alignment"]
+cached = json.load(open(CACHE)) if os.path.exists(CACHE) else None
+if cached and cached["text"] == text and "--record" not in sys.argv:
+    al = cached["alignment"]
+else:
+    body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
+        "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}).encode()
+    req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/ImnfuV8oxhB7ya99oJfc/with-timestamps?output_format=mp3_44100_128",
+        data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
+    d = json.loads(urllib.request.urlopen(req, timeout=300, context=ctx).read())
+    open("public/tour/tour.mp3", "wb").write(base64.b64decode(d["audio_base64"]))
+    al = d.get("normalized_alignment") or d["alignment"]
+    json.dump({"text": text, "alignment": al}, open(CACHE, "w"))
 s = "".join(al["characters"]); st = al["character_start_times_seconds"]
 end = round(al["character_end_times_seconds"][-1], 2)
 
