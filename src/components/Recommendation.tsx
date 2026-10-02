@@ -3,6 +3,7 @@
 import type { RecommendationDTO } from "@/lib/dto";
 import { price, timingLabel } from "@/lib/format";
 import { useOddsFormat } from "@/lib/oddsFormat";
+import { Icon } from "./icons";
 
 const ACTION_COPY: Record<
   RecommendationDTO["aiAction"],
@@ -77,6 +78,7 @@ export function Recommendation({
             target="_blank"
             rel="noopener noreferrer"
           >
+            <span className="hp-pm-tile">{Icon.polymarket}</span>
             Trade on Polymarket ↗
           </a>
         )}

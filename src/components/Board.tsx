@@ -236,13 +236,8 @@ function DeskBoard({ filter }: { filter: FilterId }) {
         <div className="hp-dlist-foot">
           <SubscribeBox compact source="board-desktop" />
           <div className="hp-keys">
-            <span>
-              <kbd>↑</kbd> <kbd>↓</kbd> move
-            </span>
-            <span>
-              <kbd>⌘K</kbd> search
-            </span>
-            <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
+            <a className="hp-pm-link" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
+              <span className="hp-pm-tile">{Icon.polymarket}</span>
               Polymarket ↗
             </a>
           </div>

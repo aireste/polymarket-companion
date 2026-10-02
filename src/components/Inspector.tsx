@@ -210,9 +210,15 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
             </button>
           ))}
         </div>
-        {others.length > 0 && (
-          <span className="num">{others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}</span>
-        )}
+        <div className="hp-dd-side">
+          {others.length > 0 && (
+            <span className="num">{others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}</span>
+          )}
+          <a className="hp-dd-pm" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
+            <span className="hp-pm-tile">{Icon.polymarket}</span>
+            Polymarket ↗
+          </a>
+        </div>
       </div>
 
       <JevVerdict play={play} />

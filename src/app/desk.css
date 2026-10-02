@@ -130,7 +130,10 @@
   .hp-dd-ranges button { font: 700 13px var(--font-sans); color: var(--ink-faint); padding-bottom: 4px; border-bottom: 2px solid transparent; transition: color 0.2s var(--ease); }
   .hp-dd-ranges button:hover { color: var(--ink); }
   .hp-dd-ranges button[aria-selected="true"] { color: var(--accent-ink); border-color: var(--accent-ink); }
-  .hp-dd-ranges > span { font-weight: 700; font-size: 13px; color: var(--ink-faint); }
+  .hp-dd-side { display: flex; align-items: center; gap: 16px; }
+  .hp-dd-side > span { font-weight: 700; font-size: 13px; color: var(--ink-faint); }
+  .hp-dd-pm { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; color: var(--ink-soft); transition: color 0.2s var(--ease); }
+  .hp-dd-pm:hover { color: var(--ink); }
 
   /* the call card (same card as the phone sheet), at desk scale */
   .hp-dd > .hp-verdict { margin-top: 34px; max-width: 760px; padding: 24px 26px; background: var(--paper-2); border: 1px solid var(--rule); }

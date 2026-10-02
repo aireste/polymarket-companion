@@ -1181,3 +1181,6 @@ body { font-variant-numeric: tabular-nums; }
 .hl-picked > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .hl-picked b { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
 .hl-picked button { flex: none; font: 700 13px var(--font-sans); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
+
+/* Polymarket links carry Polymarket's blue tile so people recognize where they're going. */
+.hp-pm-link, .rec-cta { display: inline-flex; align-items: center; gap: 7px; }
