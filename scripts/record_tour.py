@@ -26,20 +26,21 @@ SCRIPT = [
   [("Each call", "Each call says how sure it is,"), ("so you know", "so you know how hard to lean on it.")]),
  ("Already holding a bet? Hedge Lab shows how to lock in a result, either way.",
   [("Already holding", "Already holding a bet?"), ("Hedge Lab shows", "Hedge Lab shows how to lock in a result, either way.")]),
- ("The Daily sends the day's best pick to your inbox, weekday mornings.",
-  [("The Daily sends", "The Daily sends the day's best pick to your inbox,"), ("weekday mornings", "weekday mornings.")]),
- ("Connect your own AI, like Claude, ChatGPT, or any other. Paste one link into its connector settings, then just ask in plain English.",
-  [("Connect your own", "Connect your own AI,"), ("like Claude", "like Claude, ChatGPT, or any other."),
-   ("Paste one link", "Paste one link into its connector settings,"), ("then just ask", "then just ask in plain English.")]),
- ("And that's HedgePredict! You make the call, and we'll help you see what the prices are really saying. Play smart, and go get 'em.",
-  [("And that's", "And that's HedgePredict!"), ("You make the call", "You make the call, and we'll help you see what the prices are really saying."),
-   ("Play smart", "Play smart, and go get 'em.")]),
+ ("Want the best pick without checking the board? Sign up for The Daily, our free newsletter. It sends the day's top pick to your inbox, weekday mornings.",
+  [("Want the best", "Want the best pick without checking the board?"), ("Sign up", "Sign up for The Daily, our free newsletter."),
+   ("It sends", "It sends the day's top pick to your inbox,"), ("weekday mornings", "weekday mornings.")]),
+ ("Use your own AI? Paste one link into Claude, ChatGPT, or any other, then just ask in plain English.",
+  [("Use your own", "Use your own AI?"), ("Paste one link", "Paste one link into Claude, ChatGPT, or any other,"),
+   ("then just ask", "then just ask in plain English.")]),
+ ("And that's HedgePredict! You bring the plan. We'll help you spot the value the market might be missing. Play smart, and go get 'em.",
+  [("And that's", "And that's HedgePredict!"), ("You bring", "You bring the plan."),
+   ("We'll help", "We'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em.")]),
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
 BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays one dollar"), ("profit", 1, "So if you buy", "So if you buy at forty-three cents"),
              ("pct", 1, "And that price", "And that price means…"), ("us", 2, "plus one", "plus one hundred thirty-three"),
              ("note", 2, "Your sportsbook", "Your sportsbook's line…"),
-             ("paste", 8, "Paste one link", "Paste one link…"), ("ask", 8, "then just ask", "then just ask…")]
+             ("mail", 7, "Sign up", "Sign up for The Daily…"), ("paste", 8, "Paste one link", "Paste one link…"), ("ask", 8, "then just ask", "then just ask…")]
 
 LINES = [l for l, _ in SCRIPT]
 # 0.9s between lines; a longer rest after the AI line so the on-screen answer can be read.
