@@ -13,8 +13,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
  */
 
 /** Where each line starts in tour.mp3 (s), from ElevenLabs word timestamps. Re-measure if the audio changes. */
-const LINE_AT = [0.07, 5.07, 20.56, 35.22, 41.24, 46.5, 51.4, 57.2, 62.38, 68.66];
-const AUDIO_END = 76.21;
+const LINE_AT = [0.07, 4.92, 20.45, 34.97, 40.97, 47.17, 52.02, 58.36, 63.55, 73.38];
+const AUDIO_END = 81.04;
 /** Chapters open a beat before their line, so the picture lands as she starts speaking. */
 const LEAD = 250;
 const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - LEAD));
@@ -22,10 +22,10 @@ const TOTAL = Math.round(AUDIO_END * 1000) + 1500;
 const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
 /** In-chapter beats tied to words (s after the line starts). */
 const BEATS = {
-  pay: 5.23, // "A winning share pays one dollar"
-  pct: 9.74, // "So forty-three cents means…"
-  us: 6.84, // "plus one thirty-three"
-  note: 8.8, // "Your sportsbook's line…"
+  pay: 5.7, // "A winning share pays one dollar"
+  pct: 10.35, // "So forty-three cents means…"
+  us: 7.18, // "plus one thirty-three"
+  note: 9.31, // "Your sportsbook's line…"
 };
 const beat = (k: keyof typeof BEATS) => Math.round(BEATS[k] * 1000) + LEAD;
 
@@ -35,11 +35,11 @@ const CHAPTERS: { tab: string; caption: string; Scene: (p: SceneProps) => ReactN
   { tab: "Prices", caption: "Quick refresher if you're new: every market is a yes-or-no question. A winning share pays $1, a losing one pays nothing. So 43¢ means about a 43% chance.", Scene: Prices },
   { tab: "Odds", caption: "Used to sportsbook odds? Flip the switch to see American odds: 43¢ becomes +133. Your sportsbook's line may differ a little, so treat it as a guide.", Scene: Odds },
   { tab: "The board", caption: "HedgePredict reads every market on the board and checks whether the price looks too cheap.", Scene: Board },
-  { tab: "Calls", caption: "Every market gets one of three calls. The color tells you what to do.", Scene: Calls },
+  { tab: "Calls", caption: "Every market gets one of three calls. The color shows HedgePredict's recommendation.", Scene: Calls },
   { tab: "How sure", caption: "Each call says how sure it is, so you know how hard to lean on it.", Scene: Sure },
   { tab: "Hedge Lab", caption: "Already holding a bet? Hedge Lab shows how to lock in a result either way.", Scene: Hedge },
   { tab: "The Daily", caption: "The Daily sends the day's best pick to your inbox, weekday mornings.", Scene: Daily },
-  { tab: "Your AI", caption: "Use HedgePredict inside Claude or ChatGPT. Just ask in plain English.", Scene: Ai },
+  { tab: "Your AI", caption: "Use HedgePredict inside Claude, ChatGPT, or any AI of your choice through our MCP server. Just ask in plain English.", Scene: Ai },
   { tab: "That's it", caption: "And that's HedgePredict! You make the call, and we'll help you see what the prices are really saying. Play smart, and go get 'em.", Scene: End },
 ];
 const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
@@ -200,12 +200,6 @@ export function TourPlayer() {
         <button className="tp-play" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
           {playing ? "❚❚" : done ? "↺" : "▶"}
         </button>
-        <button className="tp-skip" onClick={() => seek(t - 10_000)} aria-label="Back 10 seconds">
-          −10s
-        </button>
-        <button className="tp-skip" onClick={() => seek(t + 10_000)} aria-label="Forward 10 seconds">
-          +10s
-        </button>
         <nav className="tp-tabs" aria-label="Tour chapters">
           {CHAPTERS.map((c, i) => (
             <button key={c.tab} onClick={() => jump(i)} aria-current={started && i === ch ? "step" : undefined}>
@@ -322,9 +316,9 @@ function Board({ lt }: { lt: number }) {
 
 function Calls({ lt }: { lt: number }) {
   const calls = [
-    { w: "Wager", m: "We like Kentucky at this price.", c: "wager" },
-    { w: "Lean", m: "Bitcoin looks a little cheap. Not a strong play.", c: "lean" },
-    { w: "Skip", m: "Priced fair. Sit this one out.", c: "skip" },
+    { w: "Wager", m: "HedgePredict likes Kentucky at this price.", c: "wager" },
+    { w: "Lean", m: "Bitcoin looks a little cheap. A softer recommendation.", c: "lean" },
+    { w: "Skip", m: "Priced about right. No recommendation.", c: "skip" },
   ];
   return (
     <div className="ts-calls">
@@ -398,7 +392,7 @@ function Daily({ lt }: { lt: number }) {
           <small>to me · 8:00 AM</small>
         </div>
       </div>
-      <b className="ts-mail-subj">Today&apos;s pick: Back Kentucky at 43¢</b>
+      <b className="ts-mail-subj">Today&apos;s pick: Kentucky at 43¢</b>
       <div className={`ts-mail-pick${on(lt, 1600)}`}>
         <span className="ts-call is-wager on">Wager</span>
         <span>Kentucky vs. South Carolina · 66% sure it&apos;s too cheap</span>
@@ -413,10 +407,10 @@ function Ai({ lt }: { lt: number }) {
   const typed = ask.slice(0, Math.max(0, Math.floor((lt - 300) / 45)));
   return (
     <div className="ts-card ts-chat">
-      <span className="ts-k">Claude · HedgePredict connected</span>
+      <span className="ts-k">Claude, ChatGPT or any AI · HedgePredict via MCP</span>
       <p className="ts-bub is-you">{typed || " "}</p>
       <p className={`ts-bub is-ai${on(lt, 2400)}`}>
-        <b className="is-wager">Back Kentucky at 43¢.</b> HedgePredict is 66% sure it&apos;s too cheap. Everything else on tonight&apos;s board looks priced about
+        HedgePredict&apos;s recommendation: <b className="is-wager">Kentucky at 43¢ (Wager).</b> It&apos;s 66% sure that price is too cheap. Everything else on tonight&apos;s board looks priced about
         right.
       </p>
     </div>
