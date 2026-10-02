@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * Odometer text: each digit rolls to its new value, and the whole value flashes
- * lime (up) or coral (down) when `flash` changes. Non-digits render as-is.
+ * green (up) or coral (down) when `flash` changes. Non-digits render as-is.
  */
 export function Odo({ value, flash }: { value: string; flash?: { dir: 1 | -1; at: number } }) {
   const [cls, setCls] = useState("");

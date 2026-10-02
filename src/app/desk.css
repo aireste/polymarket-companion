@@ -110,7 +110,7 @@
   .hp-dd-big em.dn { color: var(--neg-ink); }
   .hp-btn {
     height: 40px; padding: 0 18px; border-radius: var(--r-desk); display: inline-flex; align-items: center;
-    background: var(--accent); color: oklch(0.2 0.04 118); font: 700 14px var(--font-sans); white-space: nowrap;
+    background: var(--accent); color: oklch(0.2 0.02 245); font: 700 14px var(--font-sans); white-space: nowrap;
     transition: filter 0.2s var(--ease), background 0.2s var(--ease);
   }
   .hp-btn:hover { filter: brightness(1.06); }

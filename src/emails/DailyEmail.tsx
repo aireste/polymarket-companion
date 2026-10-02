@@ -33,7 +33,7 @@ const C = {
   dark2: "#26282c",
   onDark: "#f4f4f1",
   onDarkSoft: "#a9adb4",
-  lime: "#d6ef3e",
+  ice: "#c9e2f2",
   // call colors, same meaning as the site: green = Wager, amber = Lean, gray = Skip
   wager: "#2e8f55",
   wagerOnDark: "#5fd38a",
@@ -99,7 +99,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
                 {pick.call.confidence != null ? ` · ${pct(pick.call.confidence)} confidence` : ""} · resolves {pick.when}
               </Text>
               <Section style={{ marginTop: 18 }}>
-                <Button href={pick.href} style={{ background: C.lime, color: C.dark, fontWeight: 700, fontSize: 14, borderRadius: 3, padding: "12px 18px" }}>
+                <Button href={pick.href} style={{ background: C.ice, color: C.dark, fontWeight: 700, fontSize: 14, borderRadius: 3, padding: "12px 18px" }}>
                   Open in HedgePredict
                 </Button>
                 <Link href={polymarketUs(pick.question)} style={{ marginLeft: 18, color: C.onDark, fontSize: 14, fontWeight: 700, textDecoration: "underline" }}>

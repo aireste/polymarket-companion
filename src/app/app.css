@@ -263,7 +263,7 @@
   .hp-table tbody tr:last-child td { border-bottom: 0; }
   .hp-table tbody tr { cursor: pointer; transition: background 0.12s var(--ease); }
   .hp-table tbody tr:hover { background: var(--paper-3); }
-  .hp-table tbody tr.is-sel { background: oklch(0.975 0.045 118); }
+  .hp-table tbody tr.is-sel { background: oklch(0.965 0.015 235); }
   .hp-rk { font: 500 12px var(--font-mono); color: var(--ink-faint); width: 34px; }
   .hp-q {
     font-size: 14px; font-weight: 500; line-height: 1.3; max-width: 440px;
@@ -406,7 +406,7 @@
 .hp-odo-d i { font-style: normal; height: 1em; line-height: 1em; text-align: center; }
 .hp-flash-up { animation: hp-fu 1.4s var(--ease); }
 .hp-flash-dn { animation: hp-fd 1.4s var(--ease); }
-@keyframes hp-fu { 0% { background: color-mix(in srgb, var(--accent) 60%, transparent); } 100% { background: transparent; } }
+@keyframes hp-fu { 0% { background: color-mix(in srgb, var(--pos-ink) 22%, transparent); } 100% { background: transparent; } }
 @keyframes hp-fd { 0% { background: color-mix(in srgb, var(--neg-ink) 22%, transparent); } 100% { background: transparent; } }
 .hp-delta { display: block; font: 500 11px var(--font-mono); margin-top: 3px; }
 .hp-delta.up { color: var(--pos-ink); }
@@ -501,7 +501,7 @@
 /* ═══════════════════════ Dark mode (token remap, same design) ═══════════════════════
    Follows the OS by default; the toggle pins light or dark via html[data-theme]. */
 :root {
-  --row-sel: oklch(0.975 0.045 118);
+  --row-sel: oklch(0.965 0.015 235);
   --chip-bg: oklch(0.93 0.004 255);
   --scrim: oklch(0.2 0.01 260 / 0.3);
 }
@@ -520,8 +520,8 @@
     --ink-faint: oklch(0.6 0.008 260);
     --rule: oklch(0.28 0.01 260);
     --rule-strong: oklch(0.35 0.012 260);
-    --accent-soft: oklch(0.33 0.07 118);
-    --accent-ink: oklch(0.86 0.17 118);
+    --accent-soft: oklch(0.3 0.02 235);
+    --accent-ink: oklch(0.9 0.035 235);
   --lab-soft: oklch(0.3 0.05 215);
   --lab-ink: oklch(0.83 0.11 205);
     --dark: oklch(0.13 0.007 260);
@@ -531,7 +531,7 @@
     --neg-ink: oklch(0.74 0.15 30);
     --amber-soft: oklch(0.32 0.06 80);
     --amber-ink: oklch(0.85 0.13 80);
-    --row-sel: oklch(0.26 0.04 118);
+    --row-sel: oklch(0.26 0.015 235);
     --chip-bg: oklch(0.28 0.01 260);
     --chart-line: var(--accent);
     --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 30px -16px oklch(0 0 0 / 0.6);
@@ -548,8 +548,8 @@
   --ink-faint: oklch(0.6 0.008 260);
   --rule: oklch(0.28 0.01 260);
   --rule-strong: oklch(0.35 0.012 260);
-  --accent-soft: oklch(0.33 0.07 118);
-  --accent-ink: oklch(0.86 0.17 118);
+  --accent-soft: oklch(0.3 0.02 235);
+  --accent-ink: oklch(0.9 0.035 235);
   --lab-soft: oklch(0.3 0.05 215);
   --lab-ink: oklch(0.83 0.11 205);
   --dark: oklch(0.13 0.007 260);
@@ -559,7 +559,7 @@
   --neg-ink: oklch(0.74 0.15 30);
   --amber-soft: oklch(0.32 0.06 80);
   --amber-ink: oklch(0.85 0.13 80);
-  --row-sel: oklch(0.26 0.04 118);
+  --row-sel: oklch(0.26 0.015 235);
   --chip-bg: oklch(0.28 0.01 260);
   --chart-line: var(--accent);
   --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 30px -16px oklch(0 0 0 / 0.6);
