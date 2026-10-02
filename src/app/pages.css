@@ -16,14 +16,14 @@
 }
 
 /* shared: text tabs with an underline (replaces pill segmented controls) */
-.hp-app :is(.connect-tabs, .hp-ep-toggle):not(#_) {
+.hp-app :is(.connect-tabs):not(#_) {
   display: inline-flex; gap: 22px; padding: 0; background: none; border: 0; border-bottom: 1px solid var(--rule); box-shadow: none;
 }
-.hp-app :is(.connect-tab, .hp-ep-toggle button):not(#_) {
+.hp-app :is(.connect-tab):not(#_) {
   height: auto; padding: 0 0 10px; margin-bottom: -1px; background: none; box-shadow: none; border: 0;
   border-bottom: 2px solid transparent; font: 700 14px var(--font-sans); color: var(--ink-faint);
 }
-.hp-app :is(.connect-tab.active, .hp-ep-toggle button[aria-selected="true"]):not(#_) { color: var(--ink); border-bottom-color: var(--ink); background: none; }
+.hp-app :is(.connect-tab.active):not(#_) { color: var(--ink); border-bottom-color: var(--ink); background: none; }
 
 /* ─────────────────────────────── Ask ─────────────────────────────── */
 .hp-app .ask-panel:not(.is-compact):not(#_) { background: none; border: 0; box-shadow: none; padding: 0; max-width: 880px; }
@@ -46,7 +46,7 @@
 /* ───────────────────────────── The Daily ───────────────────────────── */
 .hp-app .hp-dl-copy .hp-sub:not(#_) { background: var(--paper-2); }
 .hp-app .hp-dl-inside :is(b, strong, h3):not(#_) { font-weight: 900; letter-spacing: -0.02em; }
-.hp-app .hp-ep-phone, .hp-app .hp-ep-window { box-shadow: 0 30px 60px -30px oklch(0 0 0 / 0.6); }
+.hp-app .hp-ep-window { box-shadow: 0 30px 60px -30px oklch(0 0 0 / 0.6); }
 
 /* ─────────────────────────── How it works ───────────────────────────
    Short and structured: hero, the three calls (+ how to read the bar), three

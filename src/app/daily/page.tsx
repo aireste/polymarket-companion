@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { connection } from "next/server";
+import { unstable_cache } from "next/cache";
 import { renderIssueHtml, todaysIssue } from "@/lib/newsletter";
 import { SubscribeBox } from "@/components/SubscribeBox";
-import { EmailPreview } from "@/components/EmailPreview";
+import { EmailPreview, EmailPreviewSkeleton } from "@/components/EmailPreview";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -17,12 +19,32 @@ const INSIDE = [
   { n: "04", k: "Movers", p: "The biggest price swings of the last day." },
 ];
 
-/** The Daily's landing page: the pitch + signup, and today's real email in a device frame. */
-export default async function Page() {
-  await connection();
-  const issue = await todaysIssue().catch(() => null);
-  const html = issue ? await renderIssueHtml(issue).catch(() => null) : null;
+/**
+ * Today's rendered issue, shared across server instances for 10 minutes so most
+ * visits skip the build (board reads + intro + news), which takes seconds cold.
+ */
+const cachedPreview = unstable_cache(
+  async () => {
+    const issue = await todaysIssue();
+    return { subject: issue.subject, html: await renderIssueHtml(issue) };
+  },
+  ["daily-preview"],
+  { revalidate: 600 }
+);
 
+/** Streams in after the page: the pitch and signup never wait on the issue. */
+async function Preview() {
+  await connection();
+  const p = await cachedPreview().catch(() => null);
+  return p ? (
+    <EmailPreview html={p.html} subject={p.subject} from="HedgePredict Daily" />
+  ) : (
+    <p className="hp-empty">Today&apos;s issue isn&apos;t available right now. Try again in a minute.</p>
+  );
+}
+
+/** The Daily's landing page: the pitch + signup, and today's real email in a mail window. */
+export default function Page() {
   return (
     <div className="hp-dl">
       <div className="hp-dl-copy">
@@ -47,11 +69,9 @@ export default async function Page() {
       </div>
 
       <div className="hp-dl-preview">
-        {issue && html ? (
-          <EmailPreview html={html} subject={issue.subject} from="HedgePredict Daily" />
-        ) : (
-          <p className="hp-empty">Today&apos;s issue isn&apos;t available right now. Try again in a minute.</p>
-        )}
+        <Suspense fallback={<EmailPreviewSkeleton />}>
+          <Preview />
+        </Suspense>
       </div>
     </div>
   );
