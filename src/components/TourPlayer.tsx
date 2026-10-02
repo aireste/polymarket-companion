@@ -13,8 +13,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
  */
 
 /** Where each line starts in tour.mp3 (s), from ElevenLabs word timestamps. Re-measure if the audio changes. */
-const LINE_AT = [1.28, 6.01, 14.79, 20.74, 26.98, 31.71, 38.31, 43.62, 50.06];
-const AUDIO_END = 54.99;
+const LINE_AT = [0.95, 5.9, 14.36, 32.05, 38.39, 43.28, 48.2, 55.2, 60.19, 66.8];
+const AUDIO_END = 75.37;
 /** Chapters open a beat before their line, so the picture lands as she starts speaking. */
 const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - 250));
 const TOTAL = Math.round(AUDIO_END * 1000) + 1500;
@@ -23,13 +23,14 @@ const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
 const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => ReactNode }[] = [
   { tab: "Hi", caption: "Hi! Welcome to HedgePredict. Here's how it works.", Scene: Hello },
   { tab: "Prices", caption: "A price is the crowd's odds. 43¢ means about a 43% chance, and a winning share pays $1.", Scene: Prices },
+  { tab: "Odds", caption: "Used to sportsbook odds? Flip the switch to see American odds: 43¢ becomes +133. Your sportsbook's line may differ a little, so treat it as a guide.", Scene: Odds },
   { tab: "The board", caption: "HedgePredict reads every market on the board and checks whether the price looks too cheap.", Scene: Board },
   { tab: "Calls", caption: "Every market gets one of three calls. The color tells you what to do.", Scene: Calls },
   { tab: "How sure", caption: "Each call says how sure it is, so you know how hard to lean on it.", Scene: Sure },
   { tab: "Hedge Lab", caption: "Already holding a bet? Hedge Lab shows how to lock in a result either way.", Scene: Hedge },
   { tab: "The Daily", caption: "The Daily sends the day's best pick to your inbox, weekday mornings.", Scene: Daily },
   { tab: "Your AI", caption: "Use HedgePredict inside Claude or ChatGPT. Just ask in plain English.", Scene: Ai },
-  { tab: "That's it", caption: "You make the call. HedgePredict helps you see what the prices say.", Scene: End },
+  { tab: "That's it", caption: "And that's HedgePredict! You make the call, and we'll help you see what the prices are really saying. Play smart, and go get 'em.", Scene: End },
 ];
 const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
 const mmss = (ms: number) => {
@@ -203,6 +204,38 @@ function Prices({ lt }: { lt: number }) {
       <p className={`ts-pay${on(lt, 3000)}`}>
         Buy a Kentucky share for 43¢ <span>→</span> it pays <b>$1.00</b> if Kentucky wins.
       </p>
+    </div>
+  );
+}
+
+/** Beats follow the voice: the switch flips on "plus one thirty-three", the note on "your sportsbook". */
+function Odds({ lt }: { lt: number }) {
+  const us = lt >= 7600;
+  const sides = [
+    { k: "Kentucky", c: "43¢", a: "+133" },
+    { k: "South Carolina", c: "58¢", a: "-138" },
+  ];
+  return (
+    <div className="ts-card ts-odds">
+      <div className="ts-odds-top">
+        <span className="ts-k">Kentucky vs. South Carolina</span>
+        <span className="ts-switch" aria-hidden>
+          <i className={us ? "" : "is-on"}>¢</i>
+          <i className={us ? "is-on" : ""}>US</i>
+        </span>
+      </div>
+      <div className="ts-prices">
+        {sides.map((x, i) => (
+          <div key={x.k} className={`ts-price${i ? " is-dim" : ""}`}>
+            <small>{x.k}</small>
+            <strong className="ts-flip">
+              <span className={us ? "is-out" : ""}>{x.c}</span>
+              <span className={us ? "" : "is-out"}>{x.a}</span>
+            </strong>
+          </div>
+        ))}
+      </div>
+      <p className={`ts-pay${on(lt, 10200)}`}>Sportsbook lines can differ a little. Use it as a guide.</p>
     </div>
   );
 }
