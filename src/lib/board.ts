@@ -22,7 +22,10 @@ const NO_SIGNALS: Signals = {
 export async function fetchBoard(category: CategoryId = "all"): Promise<ScoredMarket[]> {
   const { tagId } = categoryById(category);
   const markets = await fetchMarkets({ limit: tagId == null ? 150 : 100, orderBy: "volume24hr", tagId });
-  return rankMarkets(markets, { limit: 18, minLiquidity: 1000 });
+  // Category boards skip markets that are already settled in all but name (one side at 97%+,
+  // same line as Jev's "Decided"), e.g. today's Bitcoin price brackets. The main board is unchanged.
+  const pool = tagId == null ? markets : markets.filter((m) => m.outcomes.every((o) => o.price < 0.97));
+  return rankMarkets(pool, { limit: 18, minLiquidity: 1000 });
 }
 
 /**

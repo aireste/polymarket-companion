@@ -177,16 +177,31 @@ function DeskBoard({ category }: { category: CategoryId }) {
   const list = useMemo(() => plays ?? [], [plays]);
   const focused = useFocusedPlay(list, true);
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
+  // Peek at the soonest DESK_PEEK so the Polymarket link and the Daily signup stay close.
+  const [expanded, setExpanded] = useState<CategoryId | null>(null);
+  const showAll = expanded === category;
 
   // Flighty order: grouped by when it resolves.
-  const sections = useMemo(() => {
+  const allSections = useMemo(() => {
     return TIME_GROUPS.map((g) => ({
       id: g.id as string,
       label: g.label as string,
       rows: list.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
     })).filter((g) => g.rows.length > 0);
   }, [list, now]);
-  const order = useMemo(() => sections.flatMap((g) => g.rows), [sections]);
+  const fullOrder = useMemo(() => allSections.flatMap((g) => g.rows), [allSections]);
+  // A market opened past the peek (shared link, search, keys) shows the whole list.
+  // The default (today's pick, nothing in the URL) doesn't count.
+  const selId = useSelectedId();
+  const focusIdx = selId ? fullOrder.findIndex((p) => p.id === selId) : -1;
+  const limit = showAll || focusIdx >= DESK_PEEK ? Infinity : DESK_PEEK;
+  const sections = useMemo(() => {
+    const starts = allSections.map((_, i) => allSections.slice(0, i).reduce((n, g) => n + g.rows.length, 0));
+    return allSections
+      .map((g, i) => ({ ...g, rows: g.rows.slice(0, Math.max(0, limit - starts[i])) }))
+      .filter((g) => g.rows.length > 0);
+  }, [allSections, limit]);
+  const order = fullOrder;
 
   const move = useCallback(
     (step: number) => {
@@ -255,6 +270,12 @@ function DeskBoard({ category }: { category: CategoryId }) {
           </section>
         ))}
 
+        {list.length > DESK_PEEK && focusIdx < DESK_PEEK && (
+          <button className="hp-showall hp-dshowall" onClick={() => setExpanded(showAll ? null : category)} aria-expanded={showAll}>
+            {showAll ? "Show fewer ▴" : `Show all ${list.length} markets ▾`}
+          </button>
+        )}
+
         <div className="hp-dlist-foot">
           <SubscribeBox compact source="board-desktop" />
           <div className="hp-keys">
@@ -289,6 +310,8 @@ function Credit() {
 
 /** How many markets the phone board shows before "Show all". Soonest first, live on top. */
 const PHONE_PEEK = 6;
+/** Same idea on the desktop list: enough to cover what's live and the next day. */
+const DESK_PEEK = 8;
 
 function PhoneBoard({ category }: { category: CategoryId }) {
   const fmt = useOddsFormat();
