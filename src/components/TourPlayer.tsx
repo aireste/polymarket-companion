@@ -12,15 +12,30 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
  * and flip classes at beats; CSS transitions do the motion.
  */
 
-/** Where each line starts in tour.mp3 (s), from ElevenLabs word timestamps. Re-measure if the audio changes. */
-const LINE_AT = [0.95, 5.9, 14.36, 32.05, 38.39, 43.28, 48.2, 55.2, 60.19, 66.8];
-const AUDIO_END = 75.37;
-/** Chapters open a beat before their line, so the picture lands as she starts speaking. */
-const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - 250));
-const TOTAL = Math.round(AUDIO_END * 1000) + 1500;
-const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
+/**
+ * Voiceover takes (one continuous take each), with where each line starts (s)
+ * from ElevenLabs word timestamps, and the odds chapter's beats ("plus one
+ * thirty-three", "your sportsbook") in s from that line. Re-measure if audio changes.
+ * Pick one locally with ?voice=liberty|sarah while auditioning.
+ */
+const VOICES = {
+  guide: { src: "/tour/tour.mp3", at: [0.95, 5.9, 14.36, 32.05, 38.39, 43.28, 48.2, 55.2, 60.19, 66.8], end: 75.37, odds: { us: 7.6, note: 10.2 } },
+  liberty: { src: "/tour/tour-liberty.mp3", at: [0.08, 4.89, 13.99, 29.33, 35.62, 40.65, 45.55, 51.65, 56.76, 63.58], end: 71.61, odds: {us: 7.59, note: 9.59} },
+  sarah: { src: "/tour/tour-sarah.mp3", at: [0.06, 4.98, 14.7, 30.44, 37.31, 42.84, 48.03, 54.96, 60.37, 67.21], end: 75.47, odds: {us: 8.09, note: 10.17} },
+};
+type VoiceKey = keyof typeof VOICES;
 
-const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => ReactNode }[] = [
+function timing(k: VoiceKey) {
+  const v = VOICES[k];
+  /** Chapters open a beat before their line, so the picture lands as she starts speaking. */
+  const START = v.at.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - 250));
+  const TOTAL = Math.round(v.end * 1000) + 1500;
+  const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
+  return { src: v.src, END: v.end, START, TOTAL, DUR, odds: { us: v.odds.us * 1000, note: v.odds.note * 1000 } };
+}
+
+type SceneProps = { lt: number; odds: { us: number; note: number } };
+const CHAPTERS: { tab: string; caption: string; Scene: (p: SceneProps) => ReactNode }[] = [
   { tab: "Hi", caption: "Hi! Welcome to HedgePredict. Here's how it works.", Scene: Hello },
   { tab: "Prices", caption: "A price is the crowd's odds. 43¢ means about a 43% chance, and a winning share pays $1.", Scene: Prices },
   { tab: "Odds", caption: "Used to sportsbook odds? Flip the switch to see American odds: 43¢ becomes +133. Your sportsbook's line may differ a little, so treat it as a guide.", Scene: Odds },
@@ -32,7 +47,7 @@ const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => Re
   { tab: "Your AI", caption: "Use HedgePredict inside Claude or ChatGPT. Just ask in plain English.", Scene: Ai },
   { tab: "That's it", caption: "And that's HedgePredict! You make the call, and we'll help you see what the prices are really saying. Play smart, and go get 'em.", Scene: End },
 ];
-const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
+const chapterAt = (START: number[], t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
 const mmss = (ms: number) => {
   const s = Math.round(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -47,7 +62,15 @@ export function TourPlayer() {
   const last = useRef<number | null>(null);
   const tRef = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
-  const voice = () => (audio.current ??= new Audio("/tour/tour.mp3"));
+  const [vk, setVk] = useState<VoiceKey>("guide");
+  const { src, END, START, TOTAL, DUR, odds } = timing(vk);
+  // Audition helper: ?voice=liberty|sarah swaps the take.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("voice");
+    if (!q || !(q in VOICES)) return;
+    const id = setTimeout(() => setVk(q as VoiceKey), 0);
+    return () => clearTimeout(id);
+  }, []);
 
   // The clock: advance only while playing; stop on the last frame.
   useEffect(() => {
@@ -71,7 +94,7 @@ export function TourPlayer() {
       cancelAnimationFrame(raf);
       last.current = null;
     };
-  }, [playing]);
+  }, [playing, TOTAL]);
 
   // Scrolled out of view: pause (it never plays unseen).
   useEffect(() => {
@@ -89,7 +112,7 @@ export function TourPlayer() {
       if (audio.current) audio.current.currentTime = 0;
     }
     setPlaying((p) => !p || t >= TOTAL);
-  }, [t]);
+  }, [t, TOTAL]);
   const start = (withSound: boolean) => {
     setSound(withSound);
     toggle();
@@ -103,7 +126,7 @@ export function TourPlayer() {
 
   const done = t >= TOTAL;
   // Before the first play, show chapter 1 fully drawn as the poster.
-  const ch = started ? Math.min(CHAPTERS.length - 1, chapterAt(t)) : 0;
+  const ch = started ? Math.min(CHAPTERS.length - 1, chapterAt(START, t)) : 0;
   const lt = started ? (done ? DUR[ch] : t - START[ch]) : DUR[0];
   useEffect(() => {
     tRef.current = t;
@@ -116,20 +139,21 @@ export function TourPlayer() {
       audio.current?.pause();
       return;
     }
-    const a = voice();
+    if (audio.current && !audio.current.src.endsWith(src)) audio.current = null;
+    const a = (audio.current ??= new Audio(src));
     const at = tRef.current / 1000;
-    if (at >= AUDIO_END) return;
+    if (at >= END) return;
     if (Math.abs(a.currentTime - at) > 0.3) a.currentTime = at;
     a.play().catch(() => setSound(false));
     return () => a.pause();
-  }, [playing, sound, started]);
+  }, [playing, sound, started, src, END]);
   const { Scene, caption } = CHAPTERS[ch];
 
   return (
     <div className={`tp${playing ? " is-playing" : ""}`} ref={box}>
       <div className="tp-stage">
         <div className="tp-scene" key={ch}>
-          <Scene lt={lt} />
+          <Scene lt={lt} odds={odds} />
         </div>
         <p className="tp-cap" key={`c${ch}`}>{caption}</p>
         {!playing && (
@@ -209,8 +233,8 @@ function Prices({ lt }: { lt: number }) {
 }
 
 /** Beats follow the voice: the switch flips on "plus one thirty-three", the note on "your sportsbook". */
-function Odds({ lt }: { lt: number }) {
-  const us = lt >= 7600;
+function Odds({ lt, odds }: SceneProps) {
+  const us = lt >= odds.us;
   const sides = [
     { k: "Kentucky", c: "43¢", a: "+133" },
     { k: "South Carolina", c: "58¢", a: "-138" },
@@ -235,7 +259,7 @@ function Odds({ lt }: { lt: number }) {
           </div>
         ))}
       </div>
-      <p className={`ts-pay${on(lt, 10200)}`}>Sportsbook lines can differ a little. Use it as a guide.</p>
+      <p className={`ts-pay${on(lt, odds.note)}`}>Sportsbook lines can differ a little. Use it as a guide.</p>
     </div>
   );
 }
