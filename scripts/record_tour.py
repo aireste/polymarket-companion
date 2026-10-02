@@ -1,4 +1,4 @@
-"""Record the tour as one Liberty take and regenerate TourPlayer's timing block
+"""Record the tour as one Helen take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
 import json, os, re, ssl, sys, base64, urllib.request
 
@@ -7,19 +7,16 @@ key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("E
 
 # Each line: (spoken text, [(spoken anchor, caption text), ...])
 SCRIPT = [
- ("Hi! Welcome to HedgePredict. Here's how it works.",
-  [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("Here's how", "Here's how it works.")]),
- ("Quick refresher if you're new: every market is a simple yes-or-no question. Each share pays one dollar if you're right, and nothing if you're not. So if you buy at forty-three cents and win, that share pays you one dollar: your forty-three cents back, plus fifty-seven cents profit. And that price means the crowd sees about a forty-three percent chance.",
-  [("Quick refresher", "Quick refresher if you're new:"), ("every market", "every market is a simple yes-or-no question."),
-   ("Each share pays", "Each share pays $1 if you're right, and nothing if you're not."),
-   ("So if you buy", "So if you buy at 43¢ and win, that share pays you $1:"), ("your forty-three", "your 43¢ back, plus 57¢ profit."),
-   ("And that price", "And that price means the crowd sees about a 43% chance.")]),
- ("Used to sportsbook odds? Flip the switch at the top to see American odds instead, so forty-three cents becomes plus one hundred thirty-three. Your sportsbook's line might be a little different, so treat it as a guide.",
-  [("Used to", "Used to sportsbook odds?"), ("Flip the switch", "Flip the switch at the top to see American odds instead,"),
-   ("so forty-three cents becomes", "so 43¢ becomes +133."), ("Your sportsbook", "Your sportsbook's line might be a little different,"),
-   ("so treat it", "so treat it as a guide.")]),
- ("HedgePredict reads every market on the board, and checks whether the price looks too cheap.",
-  [("HedgePredict reads", "HedgePredict reads every market on the board,"), ("and checks", "and checks whether the price looks too cheap.")]),
+ ("Hi! Welcome to HedgePredict. We read every market on Polymarket and flag the prices that look too cheap.",
+  [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("We read", "We read every market on Polymarket"), ("and flag", "and flag the prices that look too cheap.")]),
+ ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
+  [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
+   ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
+ ("Used to sportsbook odds? Flip the switch at the top, and forty-three cents becomes plus one hundred thirty-three.",
+  [("Used to", "Used to sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
+   ("and forty-three cents becomes", "and 43¢ becomes +133.")]),
+ ("Here's the board: every market, its price, and HedgePredict's call.",
+  [("Here's the board", "Here's the board:"), ("every market", "every market, its price, and HedgePredict's call.")]),
  ("Every market gets one of three calls. The color shows HedgePredict's recommendation.",
   [("Every market gets", "Every market gets one of three calls."), ("The color", "The color shows HedgePredict's recommendation.")]),
  ("Each call says how sure it is, so you know how hard to lean on it.",
@@ -40,9 +37,8 @@ SCRIPT = [
    ("We'll help", "We'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em!")]),
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
-BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays one dollar"), ("profit", 1, "So if you buy", "So if you buy at forty-three cents"),
-             ("pct", 1, "And that price", "And that price means…"), ("us", 2, "plus one", "plus one hundred thirty-three"),
-             ("note", 2, "Your sportsbook", "Your sportsbook's line…"),
+BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays a dollar"), ("profit", 1, "Buy at", "Buy at forty-three cents"),
+             ("pct", 1, "The price is", "The price is also the crowd's odds"), ("us", 2, "plus one", "plus one hundred thirty-three"),
              ("mail", 7, "Sign up", "Sign up for The Daily…"), ("srch", 8, "Search all", "Search all of Polymarket…"), ("askhp", 8, "or ask", "or ask HedgePredict…"),
              ("conn", 9, "connect HedgePredict", "connect HedgePredict…"), ("apps", 9, "or any AI tool", "or any AI tool…"),
              ("paste", 9, "Paste one link", "Paste one link…"), ("ask", 9, "then just ask", "then just ask…")]
@@ -52,8 +48,8 @@ LINES = [l for l, _ in SCRIPT]
 # lines reuses them (no new recording), so beats and captions can be retimed for free.
 # Pass --record to force a new take.
 CACHE = "scripts/tour_alignment.json"
-# Liberty X - Transatlantic Global Narration (ElevenLabs). Changing it needs --record.
-VOICE = "iBo5PWT1qLiEyqhM7TrG"
+# Helen - Warm, Balanced and Articulate (ElevenLabs). Changing it needs --record.
+VOICE = "ImnfuV8oxhB7ya99oJfc"
 # 0.9s between lines; a longer rest after the AI line so the on-screen answer can be read.
 LONG_AFTER = {8: "2.2s", 9: "2.5s"}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
