@@ -9,12 +9,12 @@ key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("E
 SCRIPT = [
  ("Hi! Welcome to HedgePredict. Here's how it works.",
   [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("Here's how", "Here's how it works.")]),
- ("Quick refresher if you're new: every market is a simple yes-or-no question. Each share pays one dollar if you're right, and nothing if you're not. So if you buy at forty-three cents and win, you make fifty-seven cents per share. And that price means the crowd sees about a forty-three percent chance.",
+ ("Quick refresher if you're new: every market is a simple yes-or-no question. Each share pays one dollar if you're right, and nothing if you're not. So if you buy at forty-three cents and win, that share pays you one dollar: your forty-three cents back, plus fifty-seven cents profit. And that price means the crowd sees about a forty-three percent chance.",
   [("Quick refresher", "Quick refresher if you're new:"), ("every market", "every market is a simple yes-or-no question."),
    ("Each share pays", "Each share pays $1 if you're right, and nothing if you're not."),
-   ("So if you buy", "So if you buy at 43¢ and win, you make 57¢ per share."),
+   ("So if you buy", "So if you buy at 43¢ and win, that share pays you $1:"), ("your forty-three", "your 43¢ back, plus 57¢ profit."),
    ("And that price", "And that price means the crowd sees about a 43% chance.")]),
- ("Used to sportsbook odds? Flip the switch at the top to see American odds instead, so forty-three cents becomes plus one thirty-three. Your sportsbook's line might be a little different, so treat it as a guide.",
+ ("Used to sportsbook odds? Flip the switch at the top to see American odds instead, so forty-three cents becomes plus one hundred thirty-three. Your sportsbook's line might be a little different, so treat it as a guide.",
   [("Used to", "Used to sportsbook odds?"), ("Flip the switch", "Flip the switch at the top to see American odds instead,"),
    ("so forty-three cents becomes", "so 43¢ becomes +133."), ("Your sportsbook", "Your sportsbook's line might be a little different,"),
    ("so treat it", "so treat it as a guide.")]),
@@ -28,20 +28,23 @@ SCRIPT = [
   [("Already holding", "Already holding a bet?"), ("Hedge Lab shows", "Hedge Lab shows how to lock in a result, either way.")]),
  ("The Daily sends the day's best pick to your inbox, weekday mornings.",
   [("The Daily sends", "The Daily sends the day's best pick to your inbox,"), ("weekday mornings", "weekday mornings.")]),
- ("Use HedgePredict inside Claude, ChatGPT, or any AI of your choice through our M C P server. Just ask in plain English.",
-  [("Use HedgePredict", "Use HedgePredict inside Claude, ChatGPT,"), ("or any AI", "or any AI of your choice through our MCP server."),
-   ("Just ask", "Just ask in plain English.")]),
+ ("Connect your own AI, like Claude, ChatGPT, or any other. Paste one link into its connector settings, then just ask in plain English.",
+  [("Connect your own", "Connect your own AI,"), ("like Claude", "like Claude, ChatGPT, or any other."),
+   ("Paste one link", "Paste one link into its connector settings,"), ("then just ask", "then just ask in plain English.")]),
  ("And that's HedgePredict! You make the call, and we'll help you see what the prices are really saying. Play smart, and go get 'em.",
   [("And that's", "And that's HedgePredict!"), ("You make the call", "You make the call, and we'll help you see what the prices are really saying."),
    ("Play smart", "Play smart, and go get 'em.")]),
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
 BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays one dollar"), ("profit", 1, "So if you buy", "So if you buy at forty-three cents"),
-             ("pct", 1, "And that price", "And that price means…"), ("us", 2, "plus one", "plus one thirty-three"),
-             ("note", 2, "Your sportsbook", "Your sportsbook's line…")]
+             ("pct", 1, "And that price", "And that price means…"), ("us", 2, "plus one", "plus one hundred thirty-three"),
+             ("note", 2, "Your sportsbook", "Your sportsbook's line…"),
+             ("paste", 8, "Paste one link", "Paste one link…"), ("ask", 8, "then just ask", "then just ask…")]
 
 LINES = [l for l, _ in SCRIPT]
-text = ' <break time="0.9s" /> '.join(LINES)
+# 0.9s between lines; a longer rest after the AI line so the on-screen answer can be read.
+LONG_AFTER = {8: "2.5s"}
+text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
 body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
     "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True}}).encode()
 req = urllib.request.Request("https://api.elevenlabs.io/v1/text-to-speech/iBo5PWT1qLiEyqhM7TrG/with-timestamps?output_format=mp3_44100_128",
