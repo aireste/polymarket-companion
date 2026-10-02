@@ -179,6 +179,7 @@
 .hp-app .connect-tabs:not(#_) { margin-top: 26px; }
 .hp-app .connect-panel:not(#_), .hp-app .connect-panel *:not(#_) { color: inherit; }
 .hp-app .connect-panel:not(#_) { color: var(--ink-soft); }
+.hp-app .connect-panel .connect-copy:not(#_) { color: var(--dark); }
 .hp-app .connect-n:not(#_) { background: none; color: var(--ink-faint); font: 900 15px var(--font-sans); width: 22px; }
 .hp-app .connect-steps li:not(#_) { font-weight: 700; color: var(--ink); }
 .hp-app .connect-note:not(#_), .hp-app .connect-foot:not(#_) { color: var(--ink-faint); }

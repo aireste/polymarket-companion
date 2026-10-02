@@ -1199,3 +1199,8 @@ body { font-variant-numeric: tabular-nums; }
 .hl-title .hl-mark svg { width: 0.62em; height: 0.62em; }
 .hl { --accent: var(--lab); --accent-soft: var(--lab-soft); --accent-ink: var(--lab-ink); --chart-line: var(--lab); --row-sel: var(--lab-soft); }
 .hp-dh-link[href="/hedge"][aria-current="page"] { color: var(--lab-ink); }
+
+/* Connect: multi-line snippets (config JSON, curl) keep their line breaks. */
+.connect-snippet { align-items: flex-start; }
+.connect-snippet pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; scrollbar-width: none; }
+.connect-snippet pre code { white-space: pre; display: block; line-height: 1.6; flex: none; overflow: visible; }

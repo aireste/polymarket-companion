@@ -12,15 +12,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * featured-market and recommendation cards already in the system.
  */
 
-const MCP_URL = "https://hedgepredict.co/api/mcp";
+const SITE = "https://hedgepredict.co";
+const MCP_URL = `${SITE}/api/mcp`;
 
-type ClientId = "claude" | "claudecode" | "chatgpt";
+type ClientId = "claude" | "claudecode" | "chatgpt" | "any" | "code";
 
 interface ClientTab {
   id: ClientId;
   label: string;
   /** A shell command to copy (Claude Code), instead of URL steps. */
   command?: string;
+  /** A multi-line snippet to copy (a config file, a curl call). */
+  snippet?: string;
   steps: string[];
   note?: string;
 }
@@ -55,6 +58,27 @@ const CLIENTS: ClientTab[] = [
       'Ask: "Use the HedgePredict connector for today’s best coinflip markets."',
     ],
     note: "Custom MCP connectors require a plan and setting that supports them; availability varies.",
+  },
+  {
+    id: "any",
+    label: "Any AI app",
+    snippet: JSON.stringify({ mcpServers: { hedgepredict: { url: MCP_URL } } }, null, 2),
+    steps: [
+      "HedgePredict speaks MCP, the open standard most AI apps and agent tools now support: Gemini CLI, Cursor, VS Code, Windsurf, n8n, LM Studio, the OpenAI Agents SDK and more.",
+      "Find your app's MCP or connector settings and add a server with the URL above. If it takes a config file, paste the snippet.",
+      "Some apps name the field differently (VS Code uses \"servers\", Gemini CLI uses \"httpUrl\"). Same URL either way.",
+    ],
+    note: "App only runs local servers? Use the bridge: npx mcp-remote " + MCP_URL,
+  },
+  {
+    id: "code",
+    label: "Bots & code",
+    snippet: `curl ${SITE}/api/plays\ncurl ${SITE}/api/jev/board`,
+    steps: [
+      "No MCP? Every read is plain JSON over HTTPS. No key, no sign-up.",
+      "/api/plays is today's board. /api/jev/board is HedgePredict's call on each market (Wager, Lean or Skip).",
+      "Full reference for your bot or agent: /openapi.json (OpenAPI spec) and /llms.txt (plain-English guide for AI models).",
+    ],
   },
 ];
 
@@ -99,7 +123,7 @@ export function ConnectAI() {
         <span className="collapse-titles">
           <span className="collapse-title">Bring HedgePredict into your own AI</span>
           <span className="collapse-sub">
-            Connect the same engine to Claude, Claude Code, or ChatGPT and let your assistant call it.
+            Works with any AI that supports MCP, the universal connector: Claude, ChatGPT, Gemini, Cursor and more. Bots can call the plain JSON API.
           </span>
         </span>
       </div>
@@ -140,6 +164,19 @@ export function ConnectAI() {
         id={`connect-panel-${tab.id}`}
         aria-labelledby={`connect-tab-${tab.id}`}
       >
+        {tab.snippet && (
+          <div className="connect-cmd connect-snippet">
+            <pre><code>{tab.snippet}</code></pre>
+            <button
+              className="connect-copy"
+              onClick={() => copy("snippet", tab.snippet!)}
+              aria-label="Copy this snippet"
+            >
+              {copied === "snippet" ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
+        )}
+
         {tab.command && (
           <div className="connect-cmd">
             <code>{tab.command}</code>
