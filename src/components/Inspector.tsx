@@ -12,7 +12,7 @@ import { JEV_ACTION_COPY, confidenceLabel, leanSide, shortSide } from "@/lib/jev
 import { clockLabel, countdownShort, isLive, price, resolveAt, usd, whenMs } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
-import { EdgePanel } from "./EdgePanel";
+import { HedgeLabLink } from "./HedgeLabMark";
 import { JevPill } from "./JevPill";
 import { Status } from "./Status";
 import { Icon } from "./icons";
@@ -71,15 +71,8 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
           <span className="hp-ico-sm">{Icon.ask}</span>
           Ask about this
         </Link>
-        <Link className="pill" href="/hedge">
-          <span className="hp-ico-sm">{Icon.hedge}</span>
-          Hedge Lab
-        </Link>
+        <HedgeLabLink />
       </div>
-      <details className="manual">
-        <summary>Run your own numbers</summary>
-        <EdgePanel play={play} />
-      </details>
       <p className="hp-disc">
         Decision support, not financial advice. HedgePredict never places trades.
       </p>
@@ -214,9 +207,8 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
           {others.length > 0 && (
             <span className="num">{others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}</span>
           )}
-          <a className="hp-dd-pm" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
+          <a className="hp-dd-pm" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer" aria-label="Open on Polymarket" title="Open on Polymarket">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
-            Polymarket ↗
           </a>
         </div>
       </div>
@@ -244,11 +236,7 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
       </dl>
 
       <div className="hp-dd-more">
-        <Link href="/hedge">Hedge Lab →</Link>
-        <details className="manual">
-          <summary>Run your own numbers</summary>
-          <EdgePanel play={play} />
-        </details>
+        <HedgeLabLink />
       </div>
       <p className="hp-disc">Decision support, not financial advice. HedgePredict never places trades.</p>
     </div>

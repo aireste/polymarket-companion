@@ -522,6 +522,8 @@
     --rule-strong: oklch(0.35 0.012 260);
     --accent-soft: oklch(0.33 0.07 118);
     --accent-ink: oklch(0.86 0.17 118);
+  --lab-soft: oklch(0.3 0.05 215);
+  --lab-ink: oklch(0.83 0.11 205);
     --dark: oklch(0.13 0.007 260);
     --dark-2: oklch(0.25 0.01 260);
     --dark-3: oklch(0.19 0.008 260);
@@ -548,6 +550,8 @@
   --rule-strong: oklch(0.35 0.012 260);
   --accent-soft: oklch(0.33 0.07 118);
   --accent-ink: oklch(0.86 0.17 118);
+  --lab-soft: oklch(0.3 0.05 215);
+  --lab-ink: oklch(0.83 0.11 205);
   --dark: oklch(0.13 0.007 260);
   --dark-2: oklch(0.25 0.01 260);
   --dark-3: oklch(0.19 0.008 260);
@@ -1184,3 +1188,14 @@ body { font-variant-numeric: tabular-nums; }
 
 /* Polymarket links carry Polymarket's blue tile so people recognize where they're going. */
 .hp-pm-link, .rec-cta { display: inline-flex; align-items: center; gap: 7px; }
+
+/* Hedge Lab brand: cyan tile + its own accent, so the calculator reads as a tool, not an AI call. */
+.hl-mark { width: 22px; height: 22px; border-radius: 6px; flex: none; display: inline-grid; place-items: center; background: var(--lab); color: var(--dark); }
+.hl-mark svg { width: 14px; height: 14px; stroke-width: 2; }
+.hl-link { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; color: var(--ink); }
+.hl-link:hover { color: var(--lab-ink); }
+.hl-title { display: flex; align-items: center; gap: 14px; }
+.hl-title .hl-mark { width: 1em; height: 1em; border-radius: 0.26em; }
+.hl-title .hl-mark svg { width: 0.62em; height: 0.62em; }
+.hl { --accent: var(--lab); --accent-soft: var(--lab-soft); --accent-ink: var(--lab-ink); --chart-line: var(--lab); --row-sel: var(--lab-soft); }
+.hp-dh-link[href="/hedge"][aria-current="page"] { color: var(--lab-ink); }

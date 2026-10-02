@@ -5,6 +5,7 @@ import type { PlayDTO } from "@/lib/dto";
 import { analyzeHedge } from "@/lib/scoring";
 import { useBoard } from "@/lib/boardStore";
 import { Odo } from "./Odo";
+import { HedgeLabMark } from "./HedgeLabMark";
 
 const STAKES = [25, 50, 100, 250];
 const money = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
@@ -55,7 +56,10 @@ export function HedgeCalc() {
     <section className="hl" aria-label="Hedge Lab">
       <header className="hl-head">
         <div>
-          <h1>Hedge Lab</h1>
+          <h1 className="hl-title">
+            <HedgeLabMark />
+            Hedge Lab
+          </h1>
           <p>Lock in a result on a bet you already hold. Drag the hedge and watch both outcomes settle.</p>
         </div>
         <span className="hl-badge">Pure math · no AI</span>

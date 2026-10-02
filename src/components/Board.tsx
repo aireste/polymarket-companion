@@ -236,9 +236,8 @@ function DeskBoard({ filter }: { filter: FilterId }) {
         <div className="hp-dlist-foot">
           <SubscribeBox compact source="board-desktop" />
           <div className="hp-keys">
-            <a className="hp-pm-link" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
+            <a className="hp-pm-link" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">
               <span className="hp-pm-tile">{Icon.polymarket}</span>
-              Polymarket ↗
             </a>
           </div>
           <Credit />
@@ -412,9 +411,8 @@ function PhoneBoard({ filter }: { filter: FilterId }) {
         </section>
 
         <nav className="hp-phone-links" aria-label="More">
-          <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer">
+          <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
-            Polymarket ↗
           </a>
         </nav>
         <p className="hp-disc hp-phone-disc">

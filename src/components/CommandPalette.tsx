@@ -19,7 +19,7 @@ const GO: { label: string; href: string }[] = [
   ...FILTERS.map((f) => ({ label: f.id === "all" ? "Board" : f.label, href: f.href })),
   { label: "Ask", href: "/ask" },
   { label: "Hedge Lab", href: "/hedge" },
-  { label: "Use in your AI", href: "/connect" },
+  { label: "Connect your AI", href: "/connect" },
 ];
 
 /**
