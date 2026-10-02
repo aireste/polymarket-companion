@@ -4,18 +4,21 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 
 /**
  * The How it works tour: a ~1 min "video" drawn in code (real type, real colors,
- * light/dark aware) with an optional voiceover (Lily, ElevenLabs, /public/tour).
+ * light/dark aware) with an optional voiceover: one continuous take in the
+ * "HedgePredict Guide" voice (ElevenLabs custom design), public/tour/tour.mp3.
  * Nothing moves until someone presses play, and sound only plays if they choose
  * it. It pauses when scrolled away and rests on the last frame when done. Each
- * chapter is one idea and one caption, timed to its voice line. Scenes read `lt`
- * (ms into the chapter) and flip classes at beats; CSS transitions do the motion.
+ * chapter is one idea and one caption. Scenes read `lt` (ms into the chapter)
+ * and flip classes at beats; CSS transitions do the motion.
  */
 
-/** Voice line lengths in seconds (public/tour/tour-N.mp3). Re-measure if the clips change. */
-const CLIP_S = [3.9, 8.5, 5.8, 4.5, 4.2, 4.5, 4.2, 5.7, 4.1];
-/** Each chapter = its line plus a breath, never shorter than the scene's beats need. */
-const DUR = CLIP_S.map((s) => Math.max(5600, Math.round(s * 1000) + 1300));
-const START = DUR.map((_, i) => DUR.slice(0, i).reduce((a, b) => a + b, 0));
+/** Where each line starts in tour.mp3 (s), from ElevenLabs word timestamps. Re-measure if the audio changes. */
+const LINE_AT = [1.28, 6.01, 14.79, 20.74, 26.98, 31.71, 38.31, 43.62, 50.06];
+const AUDIO_END = 54.99;
+/** Chapters open a beat before their line, so the picture lands as she starts speaking. */
+const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - 250));
+const TOTAL = Math.round(AUDIO_END * 1000) + 1500;
+const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);
 
 const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => ReactNode }[] = [
   { tab: "Hi", caption: "Hi! Welcome to HedgePredict. Here's how it works.", Scene: Hello },
@@ -28,7 +31,6 @@ const CHAPTERS: { tab: string; caption: string; Scene: (p: { lt: number }) => Re
   { tab: "Your AI", caption: "Use HedgePredict inside Claude or ChatGPT. Just ask in plain English.", Scene: Ai },
   { tab: "That's it", caption: "You make the call. HedgePredict helps you see what the prices say.", Scene: End },
 ];
-const TOTAL = DUR.reduce((a, b) => a + b, 0);
 const chapterAt = (t: number) => Math.max(0, START.findLastIndex((s) => t >= s));
 const mmss = (ms: number) => {
   const s = Math.round(ms / 1000);
@@ -43,7 +45,8 @@ export function TourPlayer() {
   const box = useRef<HTMLDivElement>(null);
   const last = useRef<number | null>(null);
   const tRef = useRef(0);
-  const clips = useRef<HTMLAudioElement[]>([]);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const voice = () => (audio.current ??= new Audio("/tour/tour.mp3"));
 
   // The clock: advance only while playing; stop on the last frame.
   useEffect(() => {
@@ -52,8 +55,11 @@ export function TourPlayer() {
     const tick = (now: number) => {
       const dt = last.current == null ? 0 : now - last.current;
       last.current = now;
+      // With the voice playing, its clock is the clock (no drift); otherwise count frames.
+      const a = audio.current;
+      const heard = a && !a.paused && !a.ended ? a.currentTime * 1000 : null;
       setT((cur) => {
-        const next = Math.min(TOTAL, cur + dt);
+        const next = Math.min(TOTAL, heard ?? cur + dt);
         if (next >= TOTAL) setPlaying(false);
         return next;
       });
@@ -77,7 +83,10 @@ export function TourPlayer() {
 
   const toggle = useCallback(() => {
     setStarted(true);
-    if (t >= TOTAL) setT(0);
+    if (t >= TOTAL) {
+      setT(0);
+      if (audio.current) audio.current.currentTime = 0;
+    }
     setPlaying((p) => !p || t >= TOTAL);
   }, [t]);
   const start = (withSound: boolean) => {
@@ -87,6 +96,7 @@ export function TourPlayer() {
   const jump = (i: number) => {
     setStarted(true);
     setT(START[i]);
+    if (audio.current) audio.current.currentTime = START[i] / 1000;
     setPlaying(true);
   };
 
@@ -98,20 +108,20 @@ export function TourPlayer() {
     tRef.current = t;
   }, [t]);
 
-  // Voice: play this chapter's line from wherever the chapter clock is. Clips
-  // load only once sound is turned on.
+  // Voice: one continuous take. Start it from wherever the clock is; it only
+  // loads once someone turns sound on.
   useEffect(() => {
-    const all = clips.current;
-    all.forEach((a) => a?.pause());
-    if (!playing || !sound || !started) return;
-    const a = (all[ch] ??= new Audio(`/tour/tour-${ch + 1}.mp3`));
-    const at = (tRef.current - START[ch]) / 1000;
-    if (at < CLIP_S[ch]) {
-      a.currentTime = Math.max(0, at);
-      a.play().catch(() => setSound(false));
+    if (!playing || !sound || !started) {
+      audio.current?.pause();
+      return;
     }
+    const a = voice();
+    const at = tRef.current / 1000;
+    if (at >= AUDIO_END) return;
+    if (Math.abs(a.currentTime - at) > 0.3) a.currentTime = at;
+    a.play().catch(() => setSound(false));
     return () => a.pause();
-  }, [ch, playing, sound, started]);
+  }, [playing, sound, started]);
   const { Scene, caption } = CHAPTERS[ch];
 
   return (
