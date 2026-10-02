@@ -210,14 +210,6 @@ export function HowItWorks() {
           HedgePredict watches the markets, points out the plays worth a closer look, and tells you why in plain English. Whether you
           bet on DraftKings and FanDuel or already trade on Polymarket.
         </p>
-        <div className="hw-cta">
-          <Link className="hw-btn" href="/">
-            Open the board
-          </Link>
-          <Link className="hw-btn ghost" href="/ask">
-            Ask a question
-          </Link>
-        </div>
       </header>
 
       <section className="hw-sec" aria-labelledby="hw-calls">
