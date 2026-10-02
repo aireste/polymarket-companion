@@ -106,7 +106,7 @@
   /* both big numbers share one line; captions hang below */
   .hp-dd-big b { display: block; font-weight: 900; font-size: clamp(56px, 5.6vw, 80px); letter-spacing: -0.055em; line-height: 1.02; white-space: nowrap; }
   .hp-dd-big small { display: block; margin-top: 6px; font-weight: 700; font-size: 14px; color: var(--ink-faint); white-space: nowrap; }
-  .hp-dd-big em { font-style: normal; color: var(--accent-ink); }
+  .hp-dd-big em { font-style: normal; color: var(--pos-ink); }
   .hp-dd-big em.dn { color: var(--neg-ink); }
   .hp-btn {
     height: 40px; padding: 0 18px; border-radius: var(--r-desk); display: inline-flex; align-items: center;

@@ -1206,7 +1206,13 @@ body { font-variant-numeric: tabular-nums; }
   .hp-dlist-top h1, .hp-phone-title, .hw-hero h1, .hw-sec h2, .hp-dl-copy h1, .ask-head h2,
   .connect .collapse-title, .hp-askdrop-head b
 ):not(#_) { color: var(--accent-ink); }
-.hp-app :is(.hp-verdict-k, .ts-k:not(.ts-lab), .hp-sub-copy b):not(#_) { color: var(--accent-ink); }
+.hp-app :is(.hp-verdict-k, .ts-k:not(.ts-lab), .hp-sub-copy b, .hp-dpick-k, .hp-dgrp:not(.is-live), .hp-group,
+  .hw-tour b, .hp-dl-inside b):not(#_) { color: var(--accent-ink); }
 .hp-app .hp-dh-link[aria-current="page"]:not(#_) { color: var(--accent-ink); }
 .hp-app .hp-dh-ind:not(#_) { background: var(--accent-ink); }
 .hp-app .hp-sub-field button:not(#_) { background: var(--accent); color: var(--dark); }
+
+
+/* Ice sits on heavy type only: the small labels that wear it are bold, never thin. */
+.hp-app :is(.hp-verdict-k, .ts-k:not(.ts-lab), .hp-dpick-k, .hp-dgrp, .hp-group):not(#_) { font-family: var(--font-sans); font-weight: 800; font-size: 11.5px; letter-spacing: 0.07em; }
+.hp-app :is(.hp-sub-copy b, .hp-dh-link[aria-current="page"]):not(#_) { font-weight: 800; }
