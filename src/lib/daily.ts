@@ -13,7 +13,7 @@ import { CLAUDE_FAST, REFUSAL_FALLBACK } from "./claude";
 import type { JevReadDTO, PlayDTO } from "./dto";
 import { buildBackground, type Background } from "./background";
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://polymarket-companion-nu.vercel.app";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hedgepredict.co";
 
 export interface IssueMarket {
   id: string;

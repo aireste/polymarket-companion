@@ -7,8 +7,8 @@ It surfaces live prediction markets worth a look, and — when asked — turns a
 probability read (yours, or Claude's) into a measured edge, a fractional-Kelly
 stake suggestion, and a hedge that caps your downside.
 
-**▶ Live demo: [polymarket-companion-nu.vercel.app](https://polymarket-companion-nu.vercel.app/)**
-&nbsp;·&nbsp; Live MCP endpoint: `https://polymarket-companion-nu.vercel.app/api/mcp`
+**▶ Live demo: [hedgepredict.co](https://hedgepredict.co/)**
+&nbsp;·&nbsp; Live MCP endpoint: `https://hedgepredict.co/api/mcp`
 
 > It is decision support, not a tipster and not a trade-executor. It never
 > fabricates "guaranteed value": when a market looks efficient, it says so.
@@ -122,13 +122,13 @@ Open http://localhost:3000 for the dashboard.
 ### Trying the MCP server
 
 The MCP server is live at
-`https://polymarket-companion-nu.vercel.app/api/mcp`, and locally at
+`https://hedgepredict.co/api/mcp`, and locally at
 `http://localhost:3000/api/mcp` while `npm run dev` is running. Point any
 Streamable-HTTP MCP client at either URL. For example, in Claude Code:
 
 ```bash
 # hosted
-claude mcp add --transport http hedgepredict https://polymarket-companion-nu.vercel.app/api/mcp
+claude mcp add --transport http hedgepredict https://hedgepredict.co/api/mcp
 # or local
 claude mcp add --transport http hedgepredict http://localhost:3000/api/mcp
 ```

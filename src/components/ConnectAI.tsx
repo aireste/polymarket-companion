@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * featured-market and recommendation cards already in the system.
  */
 
-const MCP_URL = "https://polymarket-companion-nu.vercel.app/api/mcp";
+const MCP_URL = "https://hedgepredict.co/api/mcp";
 
 type ClientId = "claude" | "claudecode" | "chatgpt";
 
