@@ -12,10 +12,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import type { HistoryPoint, JevBoardResponse, JevReadDTO, PlayDTO } from "./dto";
+import { isLive } from "./format";
 
 /** Same line as the server (lib/jev.ts): one side at 97%+ means the market is effectively decided. */
 const DECIDED_AT = 0.97;
@@ -58,6 +60,8 @@ export interface PriceMove {
 
 const PRICE_POLL_MS = 20_000;
 const JEV_REFRESH_MS = 10 * 60_000;
+/** While any game is live, pull fresh calls every 2 minutes (the server caches live games for 2 too). */
+const JEV_LIVE_REFRESH_MS = 2 * 60_000;
 
 const Ctx = createContext<BoardState | null>(null);
 
@@ -81,6 +85,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const [moves, setMoves] = useState<Record<string, PriceMove>>({});
   const [jevReadAt, setJevReadAt] = useState<number | null>(null);
 
+  const lastJev = useRef(0);
+  const playsRef = useRef<PlayDTO[] | null>(null);
   const loadJev = useCallback(async () => {
     setJevStatus("loading");
     try {
@@ -89,6 +95,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
         setReads((cur) => ({ ...cur, ...data.reads }));
         setJevStatus("ready");
         setJevReadAt(Date.now());
+        lastJev.current = Date.now();
       } else {
         setJevStatus("available" in data ? "offline" : "error");
       }
@@ -198,7 +205,12 @@ export function BoardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const prices = setInterval(pollPrices, PRICE_POLL_MS);
-    const jev = setInterval(loadJev, JEV_REFRESH_MS);
+    // Check every 30s: refresh calls after 10 minutes, or after 2 while a game is live.
+    const jev = setInterval(() => {
+      const age = Date.now() - lastJev.current;
+      const live = playsRef.current?.some((p) => isLive(p.gameStartTime)) ?? false;
+      if (age >= JEV_REFRESH_MS || (live && age >= JEV_LIVE_REFRESH_MS)) loadJev();
+    }, 30_000);
     return () => {
       clearInterval(prices);
       clearInterval(jev);
@@ -241,6 +253,10 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     }
     return out;
   }, [reads, plays, extras]);
+
+  useEffect(() => {
+    playsRef.current = plays;
+  }, [plays]);
 
   const value = useMemo<BoardState>(
     () => ({
