@@ -205,7 +205,6 @@ export function HowItWorks() {
   return (
     <article className="hw">
       <header className="hw-hero">
-        <span className="hw-k">How it works</span>
         <h1>Your prediction market assistant.</h1>
         <p>
           HedgePredict watches the markets, points out the plays worth a closer look, and tells you why in plain English. Whether you

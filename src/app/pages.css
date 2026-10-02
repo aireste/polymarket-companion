@@ -52,9 +52,8 @@
    Short and structured: hero, the three calls (+ how to read the bar), three
    steps, two numbers, questions. Hairlines between sections, no boxes. */
 .hw { max-width: 1040px; }
-.hw-k { font: 700 12px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
 .hw-hero { padding: 8px 0 40px; }
-.hw-hero h1 { margin-top: 8px; font-weight: 900; font-size: clamp(36px, 4.6vw, 56px); letter-spacing: -0.05em; line-height: 1.02; }
+.hw-hero h1 { font-weight: 900; font-size: clamp(36px, 4.6vw, 56px); letter-spacing: -0.05em; line-height: 1.02; }
 .hw-hero p { margin-top: 12px; max-width: 56ch; font-size: 17px; line-height: 1.55; color: var(--ink-soft); }
 
 .hw-sec { padding: 34px 0 40px; border-top: 1px solid var(--rule); }
