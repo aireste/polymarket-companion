@@ -90,7 +90,7 @@ const sinceMin = (ms: number) => {
  * The call as the second big number: Wager (green), Lean (amber) or Skip
  * (gray), with the side and how sure underneath. What to do, at a glance.
  */
-function CallBig({ play }: { play: PlayDTO }) {
+export function CallBig({ play }: { play: PlayDTO }) {
   const { reads, jevStatus } = useBoard();
   const r = reads[play.id];
   if (!r) {
@@ -472,7 +472,7 @@ function freqSentence(order: { key: string; label: string; p: number }[]) {
   return `If HedgePredict read this market 100 times, it would call ${list}.`;
 }
 
-function LeanBar({ read, shown, compact = false }: { read: JevReadDTO; shown: boolean; compact?: boolean }) {
+export function LeanBar({ read, shown, compact = false }: { read: JevReadDTO; shown: boolean; compact?: boolean }) {
   const fmt = useOddsFormat();
   const pct = (x: number) => `${Math.round(x * 100)}%`;
   // Three colors, always: the side we'd back (green), the other side (amber: how

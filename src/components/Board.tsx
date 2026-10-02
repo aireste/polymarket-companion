@@ -149,7 +149,7 @@ function sinceStart(p: PlayDTO, now: number) {
 }
 
 /** The time column: live time in, a countdown inside a day, else the date. */
-function DeskWhen({ p, now }: { p: PlayDTO; now: number }) {
+export function DeskWhen({ p, now }: { p: PlayDTO; now: number }) {
   if (isLive(p.gameStartTime, now)) {
     return (
       <span className="hp-dr-t is-live">

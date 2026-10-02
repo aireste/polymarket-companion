@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { unstable_cache } from "next/cache";
-import { renderIssueHtml, todaysIssue } from "@/lib/newsletter";
+import { cachedPreview } from "@/lib/dailyPreview";
 import { SubscribeBox } from "@/components/SubscribeBox";
 import { EmailPreview, EmailPreviewSkeleton } from "@/components/EmailPreview";
 import Link from "next/link";
@@ -18,19 +17,6 @@ const INSIDE = [
   { n: "03", k: "On the clock", p: "What resolves in the next 24 hours, with times in ET." },
   { n: "04", k: "Movers", p: "The biggest price swings of the last day." },
 ];
-
-/**
- * Today's rendered issue, shared across server instances for 10 minutes so most
- * visits skip the build (board reads + intro + news), which takes seconds cold.
- */
-const cachedPreview = unstable_cache(
-  async () => {
-    const issue = await todaysIssue();
-    return { subject: issue.subject, html: await renderIssueHtml(issue) };
-  },
-  ["daily-preview"],
-  { revalidate: 600 }
-);
 
 /** Streams in after the page: the pitch and signup never wait on the issue. */
 async function Preview() {

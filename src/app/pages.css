@@ -338,3 +338,38 @@
   .hw-tour li { grid-template-columns: minmax(0, 1fr) auto; }
   .hw-tour p { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ── Tour, live scenes: the real app pieces on today's data (desktop) ── */
+.ts-live { width: min(880px, 100%); }
+.ts-live-win { overflow: hidden; }
+.ts-live-row { opacity: 0; transform: translateY(6px); transition: opacity 0.35s var(--ease), transform 0.35s var(--ease); }
+.ts-live-row.on { opacity: 1; transform: none; }
+/* Board: the real list rows in a framed window that scrolls on its own. */
+.ts-live-board { width: min(560px, 100%); }
+.ts-live-board .hp-dlist { height: 320px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--rule); background: var(--paper); }
+.ts-live-board .hp-dlist-top { position: static; padding: 16px 22px 8px; border-bottom: 1px solid var(--rule); }
+.ts-live-board .hp-dlist-top h1 { font-size: 24px; }
+.ts-live-board .ts-live-win { flex: 1; min-height: 0; }
+.ts-live-board .hp-dr { cursor: default; }
+/* Calls: three real markets, each with the market page's big call. */
+.ts-live-calls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; align-items: start; }
+.ts-live-call { min-width: 0; display: grid; gap: 10px; opacity: 0; transform: translateY(8px); transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
+.ts-live-call.on { opacity: 1; transform: none; }
+.ts-live-call .ts-k { text-transform: none; letter-spacing: 0; font-size: 13px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; }
+.ts-live .hp-dd-big b { font-size: clamp(40px, 3.6vw, 54px); }
+.ts-live .hp-dd-big { min-width: 0; }
+.ts-live .hp-dd-mean, .ts-live .hp-dd-big small { white-space: normal; }
+/* How sure: today's pick, its call and the real split bar. */
+.ts-live-sure { width: min(640px, 100%); display: grid; gap: 12px; }
+.ts-live-sure-q { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; line-height: 1.25; }
+.ts-live-sure .hp-jev { font-size: 15px; font-weight: 700; }
+.ts-live-sure .hp-lean { margin-top: 6px; }
+/* The Daily: today's actual email in the inbox window, scrolling down. */
+.ts-live-mail { width: min(640px, 100%); opacity: 0; transform: translateY(10px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); }
+.ts-live-mail.on { opacity: 1; transform: none; }
+.ts-live-mail .hp-ep-window { height: 300px; }
+.ts-live-mail .ts-live-win { flex: 1; min-height: 0; background: #eef0f3; }
+.ts-live-mail iframe { display: block; width: 100%; height: 2400px; border: 0; pointer-events: none; }
+/* Search: the real search palette. */
+.ts-live-pal .hp-pal { width: min(620px, 100%); margin: 0 auto; max-height: none; animation: none; }
+.ts-live-q { font: 500 16px var(--font-sans); color: var(--ink); min-height: 1.3em; }
