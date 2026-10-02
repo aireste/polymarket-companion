@@ -195,14 +195,6 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
           </small>
         </div>
         <CallBig play={play} />
-        <div className="hp-dd-acts">
-          <a className="hp-btn" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
-            Open on Polymarket
-          </a>
-          <Link className="hp-btn ghost" href={`/ask?q=${encodeURIComponent(`What's the call on "${play.question}"?`)}`}>
-            Ask about this
-          </Link>
-        </div>
       </div>
 
       <div className="hp-dd-chart">

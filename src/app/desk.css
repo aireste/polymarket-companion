@@ -107,14 +107,12 @@
   .hp-dd { max-width: 1120px; padding: 34px clamp(28px, 4vw, 64px) 60px; animation: hp-in 0.22s var(--ease); }
   .hp-dd-q { margin-top: 8px; font-weight: 900; font-size: 28px; letter-spacing: -0.035em; line-height: 1.15; text-wrap: balance; max-width: 34ch; }
 
-  .hp-dd-twin { margin-top: 24px; display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); align-items: start; }
-  /* both big numbers share one line; captions hang below; buttons sit level with the numbers */
-  .hp-dd-acts { align-self: start; margin-top: clamp(14px, 1.6vw, 22px); }
+  .hp-dd-twin { margin-top: 24px; display: grid; grid-template-columns: auto auto; justify-content: start; gap: clamp(28px, 4vw, 56px); align-items: start; }
+  /* both big numbers share one line; captions hang below */
   .hp-dd-big b { display: block; font-weight: 900; font-size: clamp(56px, 5.6vw, 80px); letter-spacing: -0.055em; line-height: 1.02; white-space: nowrap; }
   .hp-dd-big small { display: block; margin-top: 6px; font-weight: 700; font-size: 14px; color: var(--ink-faint); white-space: nowrap; }
   .hp-dd-big em { font-style: normal; color: var(--accent-ink); }
   .hp-dd-big em.dn { color: var(--neg-ink); }
-  .hp-dd-acts { justify-self: end; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .hp-btn {
     height: 40px; padding: 0 18px; border-radius: var(--r-desk); display: inline-flex; align-items: center;
     background: var(--accent); color: oklch(0.2 0.04 118); font: 700 14px var(--font-sans); white-space: nowrap;
@@ -196,8 +194,6 @@
   .hp-dh { gap: 20px; }
   .hp-dh-nav { gap: 16px; }
   .hp-dh .hp-clock { display: none; }
-  .hp-dd-twin { grid-template-columns: auto auto; }
-  .hp-dd-acts { grid-column: 1 / -1; justify-self: start; justify-content: flex-start; margin-top: 4px; }
 }
 @media (min-width: 900px) and (max-width: 1080px) {
   .hp-dh .hp-search { max-width: 44px; font-size: 0; gap: 0; padding: 0; justify-content: center; }
