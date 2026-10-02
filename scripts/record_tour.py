@@ -12,8 +12,8 @@ SCRIPT = [
  ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
   [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
    ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
- ("Used to sportsbook odds? Flip the switch at the top, and forty-three cents becomes plus one hundred thirty-three.",
-  [("Used to", "Used to sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
+ ("More familiar with sportsbook odds? Flip the switch at the top, and forty-three cents becomes plus one hundred thirty-three.",
+  [("More familiar", "More familiar with sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
    ("and forty-three cents becomes", "and 43¢ becomes +133.")]),
  ("Here's the board: every market, its price, and HedgePredict's call.",
   [("Here's the board", "Here's the board:"), ("every market", "every market, its price, and HedgePredict's call.")]),
@@ -32,9 +32,9 @@ SCRIPT = [
  ("You can also connect HedgePredict to Claude, ChatGPT, or any AI tool through our M C P. Paste one link, then just ask.",
   [("You can also", "You can also connect HedgePredict to Claude, ChatGPT,"), ("or any AI tool", "or any AI tool through our MCP."),
    ("Paste one link", "Paste one link,"), ("then just ask", "then just ask.")]),
- ("And that's HedgePredict! You bring the plan. We'll help you spot the value the market might be missing. Play smart, and go get 'em!",
-  [("And that's", "And that's HedgePredict!"), ("You bring", "You bring the plan."),
-   ("We'll help", "We'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em!")]),
+ ("So that's HedgePredict: you bring the plan, and we'll help you spot the value the market might be missing. Play smart, and go get 'em!",
+  [("So that's", "So that's HedgePredict:"), ("you bring", "you bring the plan,"),
+   ("and we'll help", "and we'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em!")]),
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
 BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays a dollar"), ("profit", 1, "Buy at", "Buy at forty-three cents"),
@@ -51,7 +51,7 @@ CACHE = "scripts/tour_alignment.json"
 # Helen - Warm, Balanced and Articulate (ElevenLabs). Changing it needs --record.
 VOICE = "ImnfuV8oxhB7ya99oJfc"
 # 0.9s between lines, a touch more after the two chat demos so their answers can be read.
-LONG_AFTER = {8: "1.3s", 9: "1.3s"}
+LONG_AFTER = {8: "1.3s", 9: "1.0s"}
 # The closing chapter opens on "HedgePredict!" rather than "And that's", so the AI answer stays up a beat longer.
 HOLD = {10: 1000}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.9s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
