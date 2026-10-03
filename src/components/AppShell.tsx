@@ -96,7 +96,6 @@ function DeskHeader() {
         {ind && <span className="hp-dh-ind" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} aria-hidden />}
         {DESK_NAV.map((n) => (
           <Link key={n.href} href={n.href} className="hp-dh-link" aria-current={on(n.href) ? "page" : undefined}>
-            {n.href === "/hedge" && <span className="hp-dh-flask" aria-hidden>{Icon.hedge}</span>}
             {n.label}
           </Link>
         ))}

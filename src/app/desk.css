@@ -231,7 +231,3 @@
 .hp-app .hp-dh-link[href="/hedge"]:not(#_):not(#_) { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; color: var(--lab-ink); }
 .hp-app .hp-dh-link[href="/hedge"]:hover:not(#_):not(#_) { filter: brightness(1.12); }
 .hp-app .hp-dh-nav:has(.hp-dh-link[href="/hedge"][aria-current="page"]) .hp-dh-ind:not(#_):not(#_) { background: var(--lab); }
-/* Last in the nav, led by the lemon flask. */
-.hp-dh-link[href="/hedge"] { gap: 7px; }
-.hp-dh-flask { display: grid; }
-.hp-dh-flask svg { width: 16px; height: 16px; }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Icon } from "./icons";
 
 /**
- * Hedge Lab's own mark: a lemon tile with a flask (HedgePredict's spark bubbling inside). Lemon is the Lab's color
+ * Hedge Lab's own mark: a lemon outline flask, no tile (HedgePredict's spark bubbling inside). Lemon is the Lab's color
  * (pure math, no AI) so it never reads as part of HedgePredict's own calls.
  */
 export function HedgeLabMark() {

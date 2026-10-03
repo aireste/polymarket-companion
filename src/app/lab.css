@@ -22,8 +22,8 @@
 /* Head */
 .lab-head { display: grid; gap: 10px; }
 .lab-title { display: flex; align-items: center; gap: 14px; }
-.lab-title .hl-mark { width: 42px; height: 42px; border-radius: 10px; }
-.lab-title .hl-mark svg { width: 24px; height: 24px; }
+/* On its own page the flask stands alone: lemon outline, no tile. */
+.lab-title .hl-mark { width: 52px; height: 52px; }
 .lab-title h1 { font-size: clamp(30px, 3.4vw, 44px); font-weight: 700; letter-spacing: -0.04em; color: var(--lab-ink); }
 .lab-head p { max-width: 64ch; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
 

@@ -1178,13 +1178,12 @@ body { font-variant-numeric: tabular-nums; }
 .hp-pm-link, .rec-cta { display: inline-flex; align-items: center; gap: 7px; }
 
 /* Hedge Lab brand: lemon tile + its own accent, so the Lab reads as its own room, not an AI call. */
-.hl-mark { width: 22px; height: 22px; border-radius: 6px; flex: none; display: inline-grid; place-items: center; background: var(--lab); color: var(--dark); }
-.hl-mark svg { width: 14px; height: 14px; stroke-width: 2; }
+.hl-mark { width: 22px; height: 22px; flex: none; display: inline-grid; place-items: center; color: var(--lab-ink); }
+.hl-mark svg { width: 100%; height: 100%; stroke-width: 1.6; }
 .hl-link { display: inline-flex; align-items: center; gap: 9px; font-weight: 700; color: var(--ink); }
 .hl-link:hover { color: var(--lab-ink); }
 .hl-title { display: flex; align-items: center; gap: 14px; }
-.hl-title .hl-mark { width: 1em; height: 1em; border-radius: 0.26em; }
-.hl-title .hl-mark svg { width: 0.62em; height: 0.62em; }
+.hl-title .hl-mark { width: 0.9em; height: 0.9em; }
 .hl { --accent: var(--lab); --accent-soft: var(--lab-soft); --accent-ink: var(--lab-ink); --chart-line: var(--lab); --row-sel: var(--lab-soft); }
 .hp-dh-link[href="/hedge"][aria-current="page"] { color: var(--lab-ink); }
 
