@@ -68,9 +68,10 @@ function PaletteHotkey() {
 const DESK_NAV = [
   { href: "/", label: "Board" },
   { href: "/how-it-works", label: "How it works" },
-  { href: "/hedge", label: "Hedge Lab" },
   { href: "/daily", label: "The Daily" },
   { href: "/connect", label: "Connect your AI" },
+  // Last and set apart: the extra room you go to after the board.
+  { href: "/hedge", label: "Hedge Lab" },
 ];
 
 /**
@@ -95,6 +96,7 @@ function DeskHeader() {
         {ind && <span className="hp-dh-ind" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} aria-hidden />}
         {DESK_NAV.map((n) => (
           <Link key={n.href} href={n.href} className="hp-dh-link" aria-current={on(n.href) ? "page" : undefined}>
+            {n.href === "/hedge" && <span className="hp-dh-flask" aria-hidden>{Icon.hedge}</span>}
             {n.label}
           </Link>
         ))}
