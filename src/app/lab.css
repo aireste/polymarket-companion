@@ -198,7 +198,8 @@
   animation: le-drop 0.34s cubic-bezier(0.7, 0, 0.3, 1) both, le-lift 0.6s cubic-bezier(0.83, 0, 0.17, 1) 2.95s forwards;
 }
 .le-id { display: grid; justify-items: center; gap: clamp(14px, 2vw, 22px); padding: 0 20px; text-align: center; animation: le-shake 0.2s linear 0.32s both; }
-.le-word { display: flex; overflow: hidden; padding: 0.08em 0 0.16em; font-family: var(--font-lab), var(--font-sans); font-weight: 800; font-size: clamp(40px, 8.4vw, 112px); letter-spacing: -0.05em; line-height: 0.95; }
+/* Side padding: the tight letter-spacing makes the box narrower than the last letter, which clipped the "b". */
+.le-word { display: flex; overflow: hidden; padding: 0.08em 0.08em 0.16em; font-family: var(--font-lab), var(--font-sans); font-weight: 800; font-size: clamp(40px, 8.4vw, 112px); letter-spacing: -0.05em; line-height: 0.95; }
 .le-word span { display: block; animation: le-letter 0.5s var(--le-ease) calc(0.45s + var(--i) * 0.045s) both; }
 /* The motto waits for the name to finish, then holds about a second before the shutter lifts. */
 .le-motto { font-size: clamp(16px, 1.9vw, 24px); font-weight: 700; letter-spacing: -0.005em; animation: le-rise 0.55s var(--le-ease) 1.4s both; }
