@@ -511,12 +511,13 @@ function LeanLabels({ order, pct }: { order: { key: string; label: string; p: nu
         i === 0 ? 0 : i === order.length - 1 ? W - w[i] : (sg.start + sg.end) / 2 - w[i] / 2
       );
       // Fit left to right: each label stays as close to its spot as it can, sliding within its own
-      // segment (or the bar's edge) to clear its neighbors. Only if that's impossible does the
-      // smallest label drop to a second line.
+      // segment (or the bar's edge) to clear its neighbors. If that's not enough, labels may slide
+      // past their segment (order kept); only if even that fails does the smallest drop a line.
       const n = order.length;
       const lo = seg.map((sg, i) => Math.max(0, Math.min(sg.start, W - w[i])));
       const hi = seg.map((sg, i) => Math.max(lo[i], Math.min(sg.end - w[i], W - w[i])));
-      const fit = (idx: number[]) => {
+      const barLo = w.map(() => 0), barHi = w.map((wi) => Math.max(0, W - wi));
+      const fit = (idx: number[], lo: number[], hi: number[]) => {
         const x = idx.map((i) => Math.min(hi[i], Math.max(lo[i], want[i])));
         for (let k = 1; k < idx.length; k++) x[k] = Math.min(hi[idx[k]], Math.max(x[k], x[k - 1] + w[idx[k - 1]] + PAD));
         for (let k = idx.length - 2; k >= 0; k--) x[k] = Math.max(lo[idx[k]], Math.min(x[k], x[k + 1] - w[idx[k]] - PAD));
@@ -525,12 +526,13 @@ function LeanLabels({ order, pct }: { order: { key: string; label: string; p: nu
       };
       const all = [...Array(n).keys()];
       let main = all, below: number[] = [];
-      let f = fit(main);
+      let f = fit(main, lo, hi);
+      if (!f.ok) f = fit(main, barLo, barHi);
       if (!f.ok) {
         const smallest = all.reduce((m, i) => (grow[i] < grow[m] ? i : m), 0);
         main = all.filter((i) => i !== smallest);
         below = [smallest];
-        f = fit(main);
+        f = fit(main, lo, hi);
       }
       const pos: { x: number; r: number }[] = [];
       main.forEach((i, k) => (pos[i] = { x: f.x[k], r: 0 }));

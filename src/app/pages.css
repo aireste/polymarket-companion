@@ -364,6 +364,8 @@
 .ts-live-sure-q { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; line-height: 1.25; }
 .ts-live-sure .hp-jev { font-size: 15px; font-weight: 700; }
 .ts-live-sure .hp-lean { margin-top: 6px; }
+/* The tour panel is wide enough to keep each label on one line. */
+.ts-live-sure .hp-lean-lbls em { max-width: none; white-space: nowrap; }
 /* The Daily: today's actual email in the inbox window, scrolling down. */
 .ts-live-mail { width: min(640px, 100%); opacity: 0; transform: translateY(10px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); }
 .ts-live-mail.on { opacity: 1; transform: none; }
@@ -429,6 +431,4 @@
 .ts-lab-title.is-big.on { opacity: 1; transform: none; }
 .ts-lab-title.is-big .hl-mark { width: 60px; height: 60px; }
 .ts-lab-title.is-big b { font-size: clamp(42px, 5.6vw, 66px); }
-.ts-lab-motto { font-weight: 700; font-size: clamp(16px, 1.6vw, 20px); color: var(--ink-soft); opacity: 0; transform: translateY(6px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); }
-.ts-lab-motto.on { opacity: 1; transform: none; }
 .ts-lab-demo { animation: tp-in 0.45s var(--ease) both; }

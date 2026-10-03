@@ -424,7 +424,7 @@ const MONTAGE_ROWS = [
 function HedgeMontage({ lt }: { lt: number }) {
   const t = (k: Parameters<typeof beat>[0]) => lt - beat(k);
   const usd = (v: number) => `${v < 0 ? "−" : "+"}$${Math.abs(v).toFixed(2)}`;
-  // First the logo and its line fill the screen; on "Drop in the bets" it opens into the Lab panel.
+  // First the logo fills the screen; on "Drop in the bets" it opens into the Lab panel.
   if (t("drop") < -250) {
     return (
       <div className="ts-lab-hero">
@@ -432,7 +432,6 @@ function HedgeMontage({ lt }: { lt: number }) {
           <HedgeLabMark />
           <b>Hedge Lab</b>
         </div>
-        <p className={`ts-lab-motto${on(lt, beat("lab"))}`}>Your personal betting sandbox</p>
       </div>
     );
   }
