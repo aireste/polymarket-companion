@@ -1,0 +1,196 @@
+{
+ "audio": "/tour/tour-brielle.m4a",
+ "lineAt": [
+  0.07,
+  8.07,
+  20.5,
+  28.15,
+  33.03,
+  46.08,
+  59.93,
+  67.48,
+  75.33,
+  84.54
+ ],
+ "end": 93.2,
+ "beats": {
+  "pct": 3.55,
+  "pct2": 8.08,
+  "us": 3.98,
+  "cw": 1.85,
+  "cl": 3.83,
+  "cs": 5.82,
+  "sure": 8.32,
+  "lab": 2.06,
+  "drop": 4.04,
+  "map": 5.16,
+  "lock": 6.98,
+  "size": 8.42,
+  "sim": 9.86,
+  "mail": 1.05,
+  "srch": 2.33,
+  "askhp": 3.62,
+  "conn": 1.78,
+  "apps": 4.94,
+  "paste": 5.94,
+  "ask": 7.02
+ },
+ "caps": [
+  [
+   0.07,
+   "Hi! Welcome to HedgePredict."
+  ],
+  [
+   2.28,
+   "We check the top markets on Polymarket"
+  ],
+  [
+   4.08,
+   "and point out where there could be true value."
+  ],
+  [
+   8.07,
+   "New to prediction markets?"
+  ],
+  [
+   9.8,
+   "Just read the price as the odds."
+  ],
+  [
+   11.62,
+   "Kentucky at 43¢ means the crowd gives them about a 43% chance."
+  ],
+  [
+   16.15,
+   "South Carolina at 58¢, about 58%."
+  ],
+  [
+   20.5,
+   "Prefer sportsbook odds?"
+  ],
+  [
+   22.92,
+   "Flip the switch at the top,"
+  ],
+  [
+   24.28,
+   "and every price turns into the odds you're familiar with."
+  ],
+  [
+   28.15,
+   "Every market lands on the board with its price and HedgePredict's call."
+  ],
+  [
+   33.03,
+   "Every call is one of three."
+  ],
+  [
+   34.88,
+   "Wager, when a side looks too cheap."
+  ],
+  [
+   36.86,
+   "Lean, when it's a mild tilt."
+  ],
+  [
+   38.85,
+   "Or Skip, when the price looks about right."
+  ],
+  [
+   41.35,
+   "And each one shows how confident HedgePredict is."
+  ],
+  [
+   46.08,
+   "Want to dig deeper?"
+  ],
+  [
+   47.17,
+   "Meet Hedge Lab,"
+  ],
+  [
+   48.14,
+   "your personal betting sandbox."
+  ],
+  [
+   50.12,
+   "Drop in your bets,"
+  ],
+  [
+   51.24,
+   "see every way your slip can land,"
+  ],
+  [
+   53.06,
+   "lock in what you can,"
+  ],
+  [
+   54.5,
+   "size it to your bankroll,"
+  ],
+  [
+   55.94,
+   "or play it out a thousand times"
+  ],
+  [
+   57.68,
+   "before you risk a dollar."
+  ],
+  [
+   59.93,
+   "And to stay a step ahead,"
+  ],
+  [
+   60.98,
+   "The Daily sends the day's top pick to your inbox"
+  ],
+  [
+   63.73,
+   "every weekday morning. It's free."
+  ],
+  [
+   67.48,
+   "Looking for something that isn't on the board?"
+  ],
+  [
+   69.81,
+   "Search all of Polymarket,"
+  ],
+  [
+   71.1,
+   "or just ask HedgePredict about any market."
+  ],
+  [
+   75.33,
+   "And if you'd rather stay in your own AI,"
+  ],
+  [
+   77.11,
+   "connect HedgePredict to Claude, ChatGPT"
+  ],
+  [
+   80.27,
+   "or any AI tool with one link,"
+  ],
+  [
+   82.35,
+   "then just ask."
+  ],
+  [
+   84.54,
+   "So that's HedgePredict:"
+  ],
+  [
+   87.04,
+   "you bring the plan,"
+  ],
+  [
+   88.29,
+   "and we'll help you spot the value the market might be missing."
+  ],
+  [
+   91.42,
+   "Play smart, and go get 'em!"
+  ]
+ ]
+}

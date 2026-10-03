@@ -114,7 +114,7 @@ export function HedgeLab() {
           <HedgeLabMark />
           <h1>Hedge Lab</h1>
         </div>
-        <p>Your betting sandbox. Build a slip, see every way it can land, lock in what you can, and play it out a thousand times before you risk a dollar.</p>
+        <p>Your personal betting sandbox. Build a slip, see every way it can land, lock in what you can, and play it out a thousand times before you risk a dollar.</p>
       </header>
 
       <Readout s={s} empty={!slip.length} />

@@ -96,7 +96,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
               <Text style={{ margin: "6px 0 0", fontSize: 15, lineHeight: "21px", fontWeight: 700, color: C.onDarkSoft }}>{pick.question}</Text>
               <Text style={{ margin: "12px 0 0", fontSize: 13, lineHeight: "19px", fontWeight: 700, color: C.onDarkSoft }}>
                 {pct(pick.call.strength)} sure it&apos;s too cheap
-                {pick.call.confidence != null ? ` · ${pct(pick.call.confidence)} confidence` : ""} · resolves {pick.when}
+                {" "}· resolves {pick.when}
               </Text>
               <Section style={{ marginTop: 18 }}>
                 <Button href={pick.href} style={{ background: C.ice, color: C.dark, fontWeight: 700, fontSize: 14, borderRadius: 3, padding: "12px 18px" }}>

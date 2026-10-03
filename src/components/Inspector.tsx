@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { JevReadDTO, PlayDTO } from "@/lib/dto";
 import { useBoard, useNow } from "@/lib/boardStore";
@@ -8,7 +8,7 @@ import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
-import { JEV_ACTION_COPY, confidenceLabel, leanSide, shortSide } from "@/lib/jevDisplay";
+import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
 import { clockLabel, countdownShort, isLive, price, resolveAt, usd, whenMs } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
@@ -111,7 +111,6 @@ function CallBig({ play }: { play: PlayDTO }) {
   }
   const a = JEV_ACTION_COPY[r.action];
   const side = leanSide(r);
-  const conf = confidenceLabel(r.confidence);
   const sure = Math.round(r.strength * 100);
   // One plain sentence on what to do, in the same words How it works uses.
   const meaning =
@@ -132,7 +131,6 @@ function CallBig({ play }: { play: PlayDTO }) {
       <span className="hp-dd-mean">{meaning}</span>
       <small>
         {sure}% sure{side ? " it's too cheap" : " both prices are fair"}
-        {conf && <> · {conf} confidence</>}
       </small>
     </div>
   );
@@ -341,7 +339,6 @@ function JevVerdict({ play }: { play: PlayDTO }) {
       </section>
     );
   }
-  const conf = confidenceLabel(read.confidence);
   const side = leanSide(read);
   const pct = (x: number) => `${Math.round(x * 100)}%`;
   const headline =
@@ -354,19 +351,18 @@ function JevVerdict({ play }: { play: PlayDTO }) {
         <span className="hp-verdict-k">HedgePredict&apos;s call</span>
       </div>
       <div className="hp-verdict-call">{headline}</div>
-      {conf && <div className="hp-verdict-conf">{conf[0].toUpperCase() + conf.slice(1)} confidence</div>}
       <div className="hp-verdict-sub">
         {!side
           ? `${pct(read.strength)} sure both prices are fair.`
-          : read.action === "wager"
-            ? `${pct(read.strength)} sure ${side.label} is too cheap at ${price(side.price, fmt)}.`
-            : `${side.label} looks a bit cheap at ${price(side.price, fmt)}, but only ${pct(read.strength)} sure.`}
+          : `${pct(read.strength)} sure ${side.label} is too cheap at ${price(side.price, fmt)}.`}
       </div>
-      <LeanBar read={read} shown={shown} />
-      <p className="hp-verdict-src">
-        These show how sure HedgePredict is of each answer, not chances of winning. One side being a bargain means the other is overpriced.
-        The call comes from price moves, volume and timing; Deep read adds the news.
+      {/* The one thing people misread: the % is HedgePredict's confidence, not a chance of winning (that's the price). */}
+      <p className="hp-verdict-note">
+        {side
+          ? `That's HedgePredict's confidence, not the chance ${side.label} wins (the market says ${pct(side.price)}).`
+          : "That's HedgePredict's confidence, not a chance to win."}
       </p>
+      <LeanBar read={read} shown={shown} />
 
       {!explain.explanation && explain.error !== "no-key" && (
         <button className="hp-link" onClick={explain.run} disabled={explain.loading}>
@@ -459,24 +455,13 @@ function useMounted() {
  * percentages: "If Jev read this market 100 times, it would call Yes a
  * bargain 45 times, the price fair 53 times, and No a bargain 2 times."
  */
-function freqSentence(order: { key: string; label: string; p: number }[]) {
-  const parts = order.map((g) => {
-    const n = Math.round(g.p * 100);
-    const what = g.key === "n" ? "the price fair" : `${g.label.replace(/ is a bargain$/, "")} a bargain`;
-    return `${what} ${n} ${n === 1 ? "time" : "times"}`;
-  });
-  const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}` : parts[0];
-  return `If HedgePredict read this market 100 times, it would call ${list}.`;
-}
-
 export function LeanBar({ read, shown, compact = false }: { read: JevReadDTO; shown: boolean; compact?: boolean }) {
-  const fmt = useOddsFormat();
   const pct = (x: number) => `${Math.round(x * 100)}%`;
   // Three colors, always: the side we'd back (green), the other side (amber: how
   // torn the read is), fair price (gray). On a skip, "the side we'd back" is the bigger share.
   const top = read.lean ?? read.distribution.sides.reduce((best, p, i, all) => (p > all[best] ? i : best), 0);
-  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, sub: `trades at ${price(s.price, fmt)}`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i, kind: i === top ? "is-top" : "is-alt" }));
-  const neither = { key: "n", label: "Fair price", sub: "", p: read.distribution.neither, lean: read.lean == null, kind: "is-n" };
+  const segs = read.sides.map((s, i) => ({ key: `s${i}`, label: `${s.label} is a bargain`, p: read.distribution.sides[i] ?? 0, lean: read.lean === i, kind: i === top ? "is-top" : "is-alt" }));
+  const neither = { key: "n", label: "Fair price", p: read.distribution.neither, lean: read.lean == null, kind: "is-n" };
   // Two-sided markets read left side / neither / right side; others put neither last.
   const order = segs.length === 2 ? [segs[0], neither, segs[1]] : [...segs, neither];
   const tone = read.action === "wager" ? "wager" : read.action === "hold" ? "hold" : "skip";
@@ -492,15 +477,89 @@ export function LeanBar({ read, shown, compact = false }: { read: JevReadDTO; sh
           />
         ))}
       </div>
-      <div className="hp-lean-lbls">
-        {order.map((g) => (
-          <span key={g.key} className={`${g.kind}${g.lean ? " is-lean" : ""}`}>
-            <b>{pct(g.p)}</b> {g.label}
-            {g.sub && <small>{g.sub}</small>}
-          </span>
-        ))}
-      </div>
-      {!compact && <p className="hp-lean-freq">{freqSentence(order)}</p>}
+      <LeanLabels order={order} pct={pct} />
+    </div>
+  );
+}
+
+/**
+ * Each label sits under its own color: the first at the bar's left edge, the last at its right edge, the
+ * middle centered under its segment. Long labels wrap to two short lines, and a label slides within its own
+ * segment to make room; only when there's no room at all does it drop to a second line.
+ */
+function LeanLabels({ order, pct }: { order: { key: string; label: string; p: number; lean: boolean; kind: string }[]; pct: (x: number) => string }) {
+  const box = useRef<HTMLDivElement>(null);
+  const sig = order.map((g) => `${g.key}:${g.p}:${g.label}`).join("|");
+  const [lefts, setLefts] = useState<number[] | null>(null);
+  const [tops, setTops] = useState<number[]>([]);
+  const [h, setH] = useState(0);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const place = () => {
+      const W = el.clientWidth;
+      const spans = [...el.children] as HTMLElement[];
+      const w = spans.map((x) => x.offsetWidth);
+      const lh = Math.max(...spans.map((x) => x.offsetHeight));
+      const grow = order.map((g) => Math.max(g.p, 0.015));
+      const total = grow.reduce((a, b) => a + b, 0);
+      const GAP = 3, PAD = 14, room = W - GAP * (order.length - 1);
+      let acc = 0;
+      // Each segment's span, and where its label wants to be: the first at the bar's left edge,
+      // the last at its right edge, the middle centered under its segment.
+      const seg = grow.map((g) => {
+        const start = (acc / total) * room;
+        acc += g;
+        return { start, end: (acc / total) * room };
+      }).map((sg, i) => ({ start: sg.start + i * GAP, end: sg.end + i * GAP }));
+      const want = seg.map((sg, i) =>
+        i === 0 ? 0 : i === order.length - 1 ? W - w[i] : (sg.start + sg.end) / 2 - w[i] / 2
+      );
+      // Fit left to right: each label stays as close to its spot as it can, sliding within its own
+      // segment (or the bar's edge) to clear its neighbors. Only if that's impossible does the
+      // smallest label drop to a second line.
+      const n = order.length;
+      const lo = seg.map((sg, i) => Math.max(0, Math.min(sg.start, W - w[i])));
+      const hi = seg.map((sg, i) => Math.max(lo[i], Math.min(sg.end - w[i], W - w[i])));
+      const fit = (idx: number[]) => {
+        const x = idx.map((i) => Math.min(hi[i], Math.max(lo[i], want[i])));
+        for (let k = 1; k < idx.length; k++) x[k] = Math.min(hi[idx[k]], Math.max(x[k], x[k - 1] + w[idx[k - 1]] + PAD));
+        for (let k = idx.length - 2; k >= 0; k--) x[k] = Math.max(lo[idx[k]], Math.min(x[k], x[k + 1] - w[idx[k]] - PAD));
+        const ok = x.every((v, k) => k === 0 || v >= x[k - 1] + w[idx[k - 1]] + PAD - 0.5);
+        return { x, ok };
+      };
+      const all = [...Array(n).keys()];
+      let main = all, below: number[] = [];
+      let f = fit(main);
+      if (!f.ok) {
+        const smallest = all.reduce((m, i) => (grow[i] < grow[m] ? i : m), 0);
+        main = all.filter((i) => i !== smallest);
+        below = [smallest];
+        f = fit(main);
+      }
+      const pos: { x: number; r: number }[] = [];
+      main.forEach((i, k) => (pos[i] = { x: f.x[k], r: 0 }));
+      below.forEach((i) => (pos[i] = { x: Math.min(hi[i], Math.max(lo[i], want[i])), r: 1 }));
+      const rows = below.length ? [0, 1] : [0];
+      setLefts(pos.map((p) => p.x));
+      setTops(pos.map((p) => p.r * (lh + 6)));
+      setH(rows.length * lh + (rows.length - 1) * 6);
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // `order` is rebuilt every render; re-place only when its numbers or labels actually change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
+  return (
+    <div className="hp-lean-lbls" ref={box} style={{ height: h || undefined }}>
+      {order.map((g, i) => (
+        <span key={g.key} className={`${g.kind}${g.lean ? " is-lean" : ""}`} style={{ left: lefts?.[i] ?? 0, top: tops[i] ?? 0, visibility: lefts ? "visible" : "hidden" }}>
+          <b>{pct(g.p)}</b>
+          <em>{g.label}</em>
+        </span>
+      ))}
     </div>
   );
 }

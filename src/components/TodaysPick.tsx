@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useBoard } from "@/lib/boardStore";
 import { todaysPick } from "@/lib/pick";
-import { JEV_ACTION_COPY, confidenceLabel } from "@/lib/jevDisplay";
+import { JEV_ACTION_COPY } from "@/lib/jevDisplay";
 import { selectMarket } from "@/lib/useSelection";
 import { pct, price } from "@/lib/format";
 import { Sparkline } from "./Sparkline";
@@ -64,7 +64,6 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
   const side = read.sides[read.lean!];
   const a = JEV_ACTION_COPY[read.action];
   const verb = read.action === "wager" ? "Back" : "Lean";
-  const conf = confidenceLabel(read.confidence);
   // Chart the side being recommended: for the second side of a binary market,
   // its price is 1 minus the first side's.
   const base = sparks[play.outcomes[0]?.tokenId ?? ""];
@@ -104,7 +103,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
         </h2>
         <p className="hp-pick-q">{play.question}</p>
         <p className="hp-pick-meta">
-          {pct(read.strength, 0)} sure it&apos;s too cheap{conf ? ` · ${conf} confidence` : ""} ·{" "}
+          {pct(read.strength, 0)} sure it&apos;s too cheap ·{" "}
           <Countdown play={play} />
         </p>
       </div>

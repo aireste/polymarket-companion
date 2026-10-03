@@ -10,7 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_FAST, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import { MissingCredentialsError } from "./read";
 import type { JevReadDTO } from "./dto";
-import { JEV_ACTION_COPY, confidenceLabel } from "./jevDisplay";
+import { JEV_ACTION_COPY } from "./jevDisplay";
 
 // Sonnet keeps this cheap; it's a short interpretation of Jev's numbers, not
 // deep reasoning, so it runs at low effort to stay fast.
@@ -29,7 +29,6 @@ export async function explainJev(read: JevReadDTO): Promise<JevExplanation> {
   if (!process.env.ANTHROPIC_API_KEY) throw new MissingCredentialsError();
 
   const client = new Anthropic();
-  const conf = confidenceLabel(read.confidence);
 
   const pct = (x: number) => `${(x * 100).toFixed(0)}%`;
   const side = read.lean == null ? null : read.sides[read.lean];
@@ -43,7 +42,7 @@ export async function explainJev(read: JevReadDTO): Promise<JevExplanation> {
 Market: "${read.marketName}"
 Prices: ${read.sides.map((s) => `${s.label} ${pct(s.price)}`).join(", ")}
 Jev's answer (how sure Jev is of each answer; NOT chances of winning): ${dist}
-Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${side ? ` ${side.label}` : ""}${conf ? ` (${conf} confidence)` : ""}
+Jev's call: ${JEV_ACTION_COPY[read.action].label.toUpperCase()}${side ? ` ${side.label}` : ""}
 
 The reader knows this model as "HedgePredict", so refer to it as HedgePredict (e.g. "HedgePredict is 74% sure..."), never by the name Jev.
 

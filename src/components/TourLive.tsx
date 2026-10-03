@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { useBoard } from "@/lib/boardStore";
 import { useOddsFormat } from "@/lib/oddsFormat";
 import { price } from "@/lib/format";
-import { todaysPick } from "@/lib/pick";
 import type { PlayDTO } from "@/lib/dto";
 import { LeanBar } from "./Inspector";
 import { Icon } from "./icons";
@@ -143,25 +141,6 @@ export function LiveSearch({ lt, fallback, at }: LiveProps & { at: number }) {
   );
 }
 
-/** Today's real pick, in words the chat demos can say. Null until the board's calls are in. */
-export function useLivePick() {
-  const fmt = useOddsFormat();
-  const { plays, reads } = useBoard();
-  const pick = todaysPick(plays, reads);
-  const read = pick ? reads[pick.play.id] : null;
-  if (!pick || !read || read.lean == null) return null;
-  const side = read.sides[read.lean];
-  const short = pick.play.question.length > 48 ? `${pick.play.question.slice(0, 46)}…` : pick.play.question;
-  return {
-    question: short,
-    side: side.label,
-    at: price(side.price, fmt),
-    label: read.action === "wager" ? "Wager" : "Lean",
-    cls: read.action === "wager" ? "is-wager" : "is-lean",
-    sure: Math.round(read.strength * 100),
-  };
-}
-
 /* ── Fixed examples in the real board's style: the same every time, so the format never shifts ── */
 
 const EX_BOARD: { group: string; live?: boolean; t: string; sub: string; q: string; call: "wager" | "hold" | "skip"; side?: string; px: string }[] = [
@@ -219,18 +198,19 @@ export function ExampleBoard({ lt, dur, fallback }: LiveProps) {
 
 /** The three calls, one fixed example each, same format and length so nothing jumps. */
 const EX_CALLS = [
-  { q: "Kentucky vs. South Carolina", call: "wager", mean: <><em>Kentucky</em> looks too cheap.</>, sure: "72% sure · medium confidence" },
-  { q: "Bitcoin above $90k on Friday?", call: "hold", mean: <><em>Yes</em> looks a bit cheap.</>, sure: "41% sure · medium confidence" },
-  { q: "Fed cuts rates in December?", call: "skip", mean: <>Both prices look fair.</>, sure: "61% sure · low confidence" },
+  { q: "Kentucky vs. South Carolina", call: "wager", mean: <><em>Kentucky</em> looks too cheap.</>, sure: "72% sure it's too cheap" },
+  { q: "Bitcoin above $90k on Friday?", call: "hold", mean: <><em>Yes</em> looks a bit cheap.</>, sure: "41% sure it's too cheap" },
+  { q: "Fed cuts rates in December?", call: "skip", mean: <>Both prices look fair.</>, sure: "61% sure both are fair" },
 ] as const;
 
-export function ExampleCalls({ lt, fallback }: Omit<LiveProps, "dur">) {
+/** Each call lands as she names it (`at`: ms into the chapter, one per card). */
+export function ExampleCalls({ lt, at, fallback }: Omit<LiveProps, "dur"> & { at: number[] }) {
   const desk = useDesk();
   if (!desk) return fallback;
   return (
     <div className="ts-live ts-live-calls">
       {EX_CALLS.map((c, i) => (
-        <div key={c.q} className={`ts-live-call${shown(lt, 300 + i * 900)}`}>
+        <div key={c.q} className={`ts-live-call${shown(lt, at[i] - 150)}`}>
           <span className="ts-k">{c.q}</span>
           <div className={`hp-dd-big hp-dd-call is-${c.call}`}>
             <b>{CALL_WORD[c.call]}</b>

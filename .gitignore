@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Raw ElevenLabs parts kept locally so takes can be rebuilt without credits
+scripts/takes/
+# Local-only review page
+src/app/tour-compare/

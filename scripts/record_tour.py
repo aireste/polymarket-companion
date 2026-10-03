@@ -1,6 +1,6 @@
 """Record the tour as one Brielle take and regenerate TourPlayer's timing block
 (line starts, word-tied beats, and YouTube-style caption cues)."""
-import json, os, re, ssl, sys, base64, urllib.request
+import json, os, re, ssl, sys, base64, urllib.request, urllib.error
 
 ctx = ssl.create_default_context(cafile="/etc/ssl/cert.pem")
 key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("ELEVENLABS_API_KEY=")][0]
@@ -9,60 +9,66 @@ key = [l.split("=", 1)[1].strip() for l in open(".env.local") if l.startswith("E
 SCRIPT = [
  ("Hi! Welcome to HedgePredict. We check the top markets on Polymarket and point out where there could be true value.",
   [("Hi! Welcome", "Hi! Welcome to HedgePredict."), ("We check", "We check the top markets on Polymarket"), ("and point", "and point out where there could be true value.")]),
- ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
-  [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
-   ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
- ("More familiar with sportsbook odds? Flip the switch at the top, and every price turns into the odds you're familiar with.",
-  [("More familiar", "More familiar with sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
+ ("New to prediction markets? Just read the price as the odds. Kentucky at forty-three cents means the crowd gives them about a forty-three percent chance. South Carolina at fifty-eight cents, about fifty-eight percent.",
+  [("New to", "New to prediction markets?"), ("Just read", "Just read the price as the odds."),
+   ("Kentucky at forty-three", "Kentucky at 43¢ means the crowd gives them about a 43% chance."),
+   ("South Carolina at fifty-eight", "South Carolina at 58¢, about 58%.")]),
+ ("Prefer sportsbook odds? Flip the switch at the top, and every price turns into the odds you're familiar with.",
+  [("Prefer", "Prefer sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
    ("and every price", "and every price turns into the odds you're familiar with.")]),
- ("Here's the board: every market, its price, and HedgePredict's call.",
-  [("Here's the board", "Here's the board:"), ("every market", "every market, its price, and HedgePredict's call.")]),
- ("Every market gets one of three calls: Wager, Lean or Skip. Each one shows you how confident HedgePredict is.",
-  [("Every market gets", "Every market gets one of three calls:"), ("Wager, Lean", "Wager, Lean or Skip."),
-   ("Each one shows", "Each one shows you how confident HedgePredict is.")]),
- ("Then there's Hedge Lab, your own betting sandbox. Drop in the bets you're holding, and see every way your slip can land. Lock in what you can, size a bet to your bankroll, or play it all out a thousand times before you risk a dollar.",
-  [("Then there's", "Then there's Hedge Lab,"), ("your own", "your own betting sandbox."),
-   ("Drop in", "Drop in the bets you're holding,"), ("and see every", "and see every way your slip can land."),
-   ("Lock in what", "Lock in what you can,"), ("size a bet", "size a bet to your bankroll,"),
-   ("or play it all", "or play it all out a thousand times"), ("before you risk", "before you risk a dollar.")]),
- ("Want the best pick without checking the board? Sign up for The Daily, our free newsletter. It sends the day's top pick to your inbox, weekday mornings.",
-  [("Want the best", "Want the best pick without checking the board?"), ("Sign up", "Sign up for The Daily, our free newsletter."),
-   ("It sends", "It sends the day's top pick to your inbox,"), ("weekday mornings", "weekday mornings.")]),
- ("Don't see your pick on the board? Search all of Polymarket from the search bar, or ask HedgePredict anything about any market.",
-  [("Don't see", "Don't see your pick on the board?"), ("Search all", "Search all of Polymarket from the search bar,"),
-   ("or ask", "or ask HedgePredict anything about any market.")]),
- ("You can also connect HedgePredict to Claude, ChatGPT, or any AI tool through our M C P. Paste one link, then just ask.",
-  [("You can also", "You can also connect HedgePredict to Claude, ChatGPT,"), ("or any AI tool", "or any AI tool through our MCP."),
-   ("Paste one link", "Paste one link,"), ("then just ask", "then just ask.")]),
+ ("Every market lands on the board with its price and HedgePredict's call.",
+  [("Every market lands", "Every market lands on the board with its price and HedgePredict's call.")]),
+ ("Every call is one of three. Wager, when a side looks too cheap. Lean, when it's a mild tilt. Or Skip, when the price looks about right. And each one shows how confident HedgePredict is.",
+  [("Every call is", "Every call is one of three."), ("Wager, when", "Wager, when a side looks too cheap."),
+   ("Lean, when", "Lean, when it's a mild tilt."), ("Or Skip", "Or Skip, when the price looks about right."),
+   ("And each one", "And each one shows how confident HedgePredict is.")]),
+ ("Want to dig deeper? Meet Hedge Lab, your personal betting sandbox. Drop in your bets, see every way your slip can land, lock in what you can, size it to your bankroll, or play it out a thousand times before you risk a dollar.",
+  [("Want to dig", "Want to dig deeper?"), ("Meet Hedge Lab", "Meet Hedge Lab,"), ("your personal", "your personal betting sandbox."),
+   ("Drop in", "Drop in your bets,"), ("see every way", "see every way your slip can land,"),
+   ("lock in what", "lock in what you can,"), ("size it to", "size it to your bankroll,"),
+   ("or play it out", "or play it out a thousand times"), ("before you risk", "before you risk a dollar.")]),
+ ("And to stay a step ahead, The Daily sends the day's top pick to your inbox every weekday morning. It's free.",
+  [("And to stay", "And to stay a step ahead,"), ("The Daily sends", "The Daily sends the day's top pick to your inbox"),
+   ("every weekday", "every weekday morning. It's free.")]),
+ ("Looking for something that isn't on the board? Search all of Polymarket, or just ask HedgePredict about any market.",
+  [("Looking for", "Looking for something that isn't on the board?"), ("Search all", "Search all of Polymarket,"),
+   ("or just ask", "or just ask HedgePredict about any market.")]),
+ ("And if you'd rather stay in your own AI, connect HedgePredict to Claude, ChatGPT or any AI tool with one link, then just ask.",
+  [("And if you'd", "And if you'd rather stay in your own AI,"), ("connect HedgePredict", "connect HedgePredict to Claude, ChatGPT"),
+   ("or any AI tool", "or any AI tool with one link,"), ("then just ask", "then just ask.")]),
  ("So that's HedgePredict: you bring the plan, and we'll help you spot the value the market might be missing. Play smart, and go get 'em!",
   [("So that's", "So that's HedgePredict:"), ("you bring", "you bring the plan,"),
    ("and we'll help", "and we'll help you spot the value the market might be missing."), ("Play smart", "Play smart, and go get 'em!")]),
 ]
 # Word-tied beats: (name, line index, spoken anchor, comment)
-BEAT_DEFS = [("pay", 1, "Each share pays", "Each share pays a dollar"), ("profit", 1, "Buy at", "Buy at forty-three cents"),
-             ("pct", 1, "The price is", "The price is also the crowd's odds"), ("us", 2, "every price", "every price turns into…"),
-             ("sure", 4, "Each one shows", "Each one shows you how confident…"),
-             ("lab", 5, "your own", "your own betting sandbox…"), ("drop", 5, "Drop in", "Drop in the bets…"),
-             ("map", 5, "and see every", "and see every way…"), ("lock", 5, "Lock in what", "Lock in what you can…"),
-             ("size", 5, "size a bet", "size a bet to your bankroll…"), ("sim", 5, "or play it all", "or play it all out…"),
-             ("mail", 6, "Sign up", "Sign up for The Daily…"), ("srch", 7, "Search all", "Search all of Polymarket…"), ("askhp", 7, "or ask", "or ask HedgePredict…"),
+BEAT_DEFS = [("pct", 1, "Kentucky at forty-three", "Kentucky at forty-three cents…"), ("pct2", 1, "South Carolina at fifty-eight", "South Carolina at fifty-eight…"),
+             ("us", 2, "every price", "every price turns into…"),
+             ("cw", 4, "Wager, when", "Wager, when…"), ("cl", 4, "Lean, when", "Lean, when…"), ("cs", 4, "Or Skip", "Or Skip, when…"),
+             ("sure", 4, "And each one", "And each one shows how confident…"),
+             ("lab", 5, "your personal", "your personal betting sandbox…"), ("drop", 5, "Drop in", "Drop in your bets…"),
+             ("map", 5, "see every way", "see every way…"), ("lock", 5, "lock in what", "lock in what you can…"),
+             ("size", 5, "size it to", "size it to your bankroll…"), ("sim", 5, "or play it out", "or play it out…"),
+             ("mail", 6, "The Daily sends", "The Daily sends…"), ("srch", 7, "Search all", "Search all of Polymarket…"), ("askhp", 7, "or just ask", "or just ask HedgePredict…"),
              ("conn", 8, "connect HedgePredict", "connect HedgePredict…"), ("apps", 8, "or any AI tool", "or any AI tool…"),
-             ("paste", 8, "Paste one link", "Paste one link…"), ("ask", 8, "then just ask", "then just ask…")]
+             ("paste", 8, "with one link", "with one link…"), ("ask", 8, "then just ask", "then just ask…")]
 
 LINES = [l for l, _ in SCRIPT]
 # The take's word timings are saved next to this script. Re-running with the same
 # lines reuses them (no new recording), so beats and captions can be retimed for free.
 # Pass --record to force a new take.
-CACHE = "scripts/tour_alignment.json"
-# Brielle - Podcast girl, extremely natural (ElevenLabs). Changing it needs --record.
-VOICE = "6u6JbqKdaQy89ENzLSju"
-# Delivery settings shared by full takes and single-line re-records. Brielle: steadier and no style exaggeration
-# (looser settings add laughs and breaths), a touch faster than her natural pace.
-VOICE_SETTINGS = {"stability": 0.6, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True, "speed": 1.03}
+# Voices the tour can be recorded in (ElevenLabs). The player picks one with ?voice=NAME; the first is the default.
+VOICES = {
+    # Brielle: steadier, no style exaggeration (looser settings add laughs and breaths), a touch faster.
+    "brielle": ("6u6JbqKdaQy89ENzLSju", {"stability": 0.6, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True, "speed": 1.03}),
+    "helen": ("ImnfuV8oxhB7ya99oJfc", {"stability": 0.5, "similarity_boost": 0.8, "style": 0.1, "use_speaker_boost": True}),
+    "liberty": ("iBo5PWT1qLiEyqhM7TrG", {"stability": 0.5, "similarity_boost": 0.8, "style": 0.1, "use_speaker_boost": True}),
+}
+NAME = sys.argv[sys.argv.index("--voice") + 1] if "--voice" in sys.argv else next(iter(VOICES))
+VOICE, VOICE_SETTINGS = VOICES[NAME]
+CACHE = f"scripts/tour_alignment-{NAME}.json"
+AUDIO = f"public/tour/tour-{NAME}.m4a"
 # 0.85s between lines, a touch more after the two chat demos so their answers can be read.
 LONG_AFTER = {7: "1.3s", 8: "1.0s"}
-# The closing chapter opens on "HedgePredict!" rather than "And that's", so the AI answer stays up a beat longer.
-HOLD = {9: 1000}
 text = "".join(ln + (f' <break time="{LONG_AFTER.get(i, "0.85s")}" /> ' if i < len(LINES) - 1 else "") for i, ln in enumerate(LINES))
 cached = json.load(open(CACHE)) if os.path.exists(CACHE) else None
 if cached and cached["text"] == text and "--record" not in sys.argv:
@@ -81,7 +87,10 @@ else:
         if prev_ids: body["previous_request_ids"] = prev_ids[-3:]
         req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}/with-timestamps?output_format=mp3_44100_128",
             data=json.dumps(body).encode(), headers={"xi-api-key": key, "Content-Type": "application/json"})
-        res = urllib.request.urlopen(req, timeout=300, context=ctx)
+        try:
+            res = urllib.request.urlopen(req, timeout=300, context=ctx)
+        except urllib.error.HTTPError as e:
+            raise SystemExit(f"ElevenLabs {e.code}: {e.read()[:400]!r}")
         d = json.loads(res.read())
         return base64.b64decode(d["audio_base64"]), (d.get("normalized_alignment") or d["alignment"]), res.headers.get("request-id")
 
@@ -103,6 +112,10 @@ else:
     for ci, chunk in enumerate(CHUNKS):
         ctext = "".join(LINES[i] + (brk(i) if i != chunk[-1] else "") for i in chunk)
         mp3, a, rid = synth(ctext, ids)
+        # Keep each raw part and its timestamps, so the take can be rebuilt later without new credits.
+        os.makedirs(f"scripts/takes/{NAME}", exist_ok=True)
+        open(f"scripts/takes/{NAME}/part{ci}.mp3", "wb").write(mp3)
+        json.dump(a, open(f"scripts/takes/{NAME}/part{ci}.json", "w"))
         if rid: ids.append(rid)
         x = pcm(mp3)
         ast, aen = a["character_start_times_seconds"], a["character_end_times_seconds"]
@@ -117,10 +130,17 @@ else:
                 out.extend(fade(x[int(seg_start * SR):int((mid - drop / 2) * SR)]))
                 seg_start = mid + drop / 2; removed += drop
             starts.append(round(base + ast[i] - cut0 - removed, 3)); ends.append(round(base + aen[i] - cut0 - removed, 3))
-        out.extend(fade(x[int(seg_start * SR):int(min(len(x) / SR, aen[-1] + 0.15) * SR)]))
+        # End the part where the audio really goes quiet: the last timestamp can run early and clip the word.
+        stop, k, win = int(aen[-1] * SR), int(aen[-1] * SR), int(0.02 * SR)
+        while k + win < len(x):
+            seg = x[k:k + win]
+            if (sum(v * v for v in seg[::4]) / len(seg[::4])) ** 0.5 > 300: stop = k + win
+            elif k - stop > int(0.2 * SR): break
+            k += win
+        out.extend(fade(x[int(seg_start * SR):min(len(x), stop + int(0.08 * SR))]))
         chars += a["characters"]
     w = wave.open(f"{tmp}/tour.wav", "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(out.tobytes()); w.close()
-    subprocess.run(["afconvert", "-f", "m4af", "-d", "aac", "-b", "128000", f"{tmp}/tour.wav", "public/tour/tour.m4a"], check=True)
+    subprocess.run(["afconvert", "-f", "m4af", "-d", "aac", "-b", "128000", f"{tmp}/tour.wav", AUDIO], check=True)
     al = {"characters": chars, "character_start_times_seconds": starts, "character_end_times_seconds": ends}
     json.dump({"text": text, "alignment": al}, open(CACHE, "w"))
 s = "".join(al["characters"]); st = al["character_start_times_seconds"]
@@ -147,23 +167,8 @@ beats = []
 for name, li, anchor, note in BEAT_DEFS:
     i = find(anchor, line_idx[li]); beats.append((name, round(st[i] - line_at[li], 2), note))
 
-block = ("/** Where each line starts in tour.mp3 (s), from ElevenLabs word timestamps. Generated by record_tour.py. */\n"
- f"const LINE_AT = [{', '.join(map(str, line_at))}];\n"
- f"const AUDIO_END = {end};\n"
- "/** Chapters open a beat before their line, so the picture lands as she starts speaking. */\n"
- "const LEAD = 250;\n"
- "/** Chapters held a little past their line, so the previous scene can be read (ms). */\n"
- f"const HOLD: Record<number, number> = {json.dumps({str(k): v for k, v in HOLD.items()})};\n"
- "const START = LINE_AT.map((s, i) => (i === 0 ? 0 : Math.round(s * 1000) - LEAD + (HOLD[i] ?? 0)));\n"
- "/** The closing card holds until 1:30 if the voice finishes early. */\n"
- f"const TOTAL = {max(round(end * 1000) + 500, 90000)};\n"
- "const DUR = START.map((s, i) => (START[i + 1] ?? TOTAL) - s);\n"
- "/** In-chapter beats tied to words (s after the line starts). */\n"
- "const BEATS = {\n" + "".join(f"  {n}: {v}, // \"{c}\"\n" for n, v, c in beats) + "};\n"
- "const beat = (k: keyof typeof BEATS) => Math.round(BEATS[k] * 1000) + LEAD;\n"
- "/** Captions, YouTube-style: one short phrase at a time, each shown from when she starts saying it (s). */\n"
- "const CAPS: [number, string][] = [\n" + "".join(f"  [{t}, {json.dumps(c, ensure_ascii=False)}],\n" for t, c in caps) + "];\n")
-p = "src/components/TourPlayer.tsx"; src = open(p).read()
-a = src.index("/** Where each line starts in tour.mp3"); b = src.index("type SceneProps")
-open(p, "w").write(src[:a] + block + "\n" + src[b:])
+# Timing for the player: line starts, word-tied beats and captions, all in seconds.
+os.makedirs("src/lib/tour", exist_ok=True)
+json.dump({"audio": "/" + AUDIO.split("public/", 1)[1], "lineAt": line_at, "end": end,
+           "beats": {n: v for n, v, _ in beats}, "caps": caps}, open(f"src/lib/tour/{NAME}.json", "w"), ensure_ascii=False, indent=1)
 print("LINE_AT", line_at, "END", end); print("BEATS", beats); print(len(caps), "caption cues")
