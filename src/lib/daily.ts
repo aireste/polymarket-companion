@@ -78,7 +78,7 @@ function toItem(p: PlayDTO, read?: JevReadDTO, move24h?: number): IssueMarket {
   };
 }
 
-/** 24h change of the leading outcome, from the CLOB 1-day series (best effort). */
+/** 24h change of the leading outcome, from the 1-day price series (best effort). */
 async function move24h(p: PlayDTO): Promise<number | undefined> {
   const token = p.outcomes[0]?.tokenId;
   if (!token) return undefined;

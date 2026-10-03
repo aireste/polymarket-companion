@@ -9,7 +9,9 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { calls } from "@/db/schema";
 import { getBoardReads } from "./jevBoard";
+import { fetchSettlement, parseMarketId } from "./polymarket";
 
+/** Calls logged before the switch to Polymarket US have numeric international ids; they're graded there. */
 const GAMMA = "https://gamma-api.polymarket.com";
 const CALL = { wager: "Wager", hold: "Lean" } as const;
 
@@ -27,6 +29,7 @@ export async function logNewCalls() {
       question: r.marketName || m.question,
       call: CALL[r.action as keyof typeof CALL],
       side: side.label,
+      sideIndex: r.lean,
       sidePrice: side.price,
       howSure: r.strength,
       confidence: r.confidence,
@@ -47,11 +50,35 @@ interface GammaMarket {
   outcomePrices?: string;
 }
 
+async function settle(id: number, sidePrice: number, won: boolean | null) {
+  await db
+    .update(calls)
+    .set({
+      result: won == null ? "void" : won ? "won" : "lost",
+      // $1 buys 1/price shares that pay $1 each if the side wins.
+      profit: won == null ? 0 : won ? 1 / sidePrice - 1 : -1,
+      resolvedAt: new Date(),
+    })
+    .where(and(eq(calls.id, id), eq(calls.result, "open")));
+}
+
 export async function gradeOpenCalls() {
   const open = await db.select().from(calls).where(eq(calls.result, "open"));
   let graded = 0;
-  // One Gamma lookup per market, even if it has several open calls.
+  // One lookup per market, even if it has several open calls.
   for (const marketId of new Set(open.map((c) => c.marketId))) {
+    const us = parseMarketId(marketId);
+    if (us) {
+      // Settlement is 1 when the long side (outcome 0) won, 0 when the short side did; anything
+      // in between is a refund-style settlement, graded void.
+      const s = await fetchSettlement(us.market);
+      if (s == null) continue;
+      for (const c of open.filter((x) => x.marketId === marketId)) {
+        await settle(c.id, c.sidePrice, s === 1 || s === 0 ? (c.sideIndex === 0) === (s === 1) : null);
+        graded++;
+      }
+      continue;
+    }
     let m: GammaMarket;
     try {
       const res = await fetch(`${GAMMA}/markets/${encodeURIComponent(marketId)}`, { cache: "no-store" });
@@ -67,16 +94,7 @@ export async function gradeOpenCalls() {
     const top = Math.max(...prices);
     const winner = top >= 0.99 ? outcomes[prices.indexOf(top)] : null; // null: no clear winner (refund / 50-50)
     for (const c of open.filter((x) => x.marketId === marketId)) {
-      const won = winner === c.side;
-      await db
-        .update(calls)
-        .set({
-          result: winner == null ? "void" : won ? "won" : "lost",
-          // $1 buys 1/price shares that pay $1 each if the side wins.
-          profit: winner == null ? 0 : won ? 1 / c.sidePrice - 1 : -1,
-          resolvedAt: new Date(),
-        })
-        .where(and(eq(calls.id, c.id), eq(calls.result, "open")));
+      await settle(c.id, c.sidePrice, winner == null ? null : winner === c.side);
       graded++;
     }
   }

@@ -22,9 +22,9 @@ import type { Market, Outcome } from "./polymarket";
 /* ------------------------------------------------------------------ */
 
 export interface Signals {
-  /** Trailing 24h volume, normalized 0..1 across the set. Heat. */
+  /** How much it trades, normalized 0..1 across the set (Polymarket US's volume order). Heat. */
   momentum: number;
-  /** Order-book liquidity, normalized 0..1. Can you actually get filled? */
+  /** How tight the bid/ask spread is, normalized 0..1. Can you actually get a fair fill? */
   liquidity: number;
   /** Normalized entropy of outcome prices 0..1. 1 = maximally uncertain. */
   uncertainty: number;
@@ -87,7 +87,7 @@ function normalizeSet(values: number[]): number[] {
 
 export interface RankOptions {
   weights?: Partial<RankWeights>;
-  /** Drop markets thinner than this (USD liquidity). Default 500. */
+  /** Drop markets thinner than this (USD liquidity), where liquidity is known. Default 500. */
   minLiquidity?: number;
   /** Return at most this many. Default 20. */
   limit?: number;
@@ -108,12 +108,13 @@ export function rankMarkets(
   const limit = opts.limit ?? 20;
   const now = opts.now ?? new Date();
 
-  const pool = markets.filter((m) => m.liquidity >= minLiquidity);
+  const pool = markets.filter((m) => m.liquidity == null || m.liquidity >= minLiquidity);
   if (pool.length === 0) return [];
 
-  // Log-scale the heavy-tailed dollar figures before normalizing.
-  const momentumRaw = normalizeSet(pool.map((m) => Math.log1p(m.volume24hr)));
-  const liquidityRaw = normalizeSet(pool.map((m) => Math.log1p(m.liquidity)));
+  // Polymarket US gives popularity as an order (heat) and liquidity as a spread, not dollars;
+  // dollar figures (log-scaled, they're heavy-tailed) are the fallback.
+  const momentumRaw = normalizeSet(pool.map((m) => m.heat ?? Math.log1p(m.volume24hr ?? m.volume ?? 0)));
+  const liquidityRaw = normalizeSet(pool.map((m) => (m.spread != null ? -m.spread : Math.log1p(m.liquidity ?? 0))));
   const uncertaintyRaw = pool.map((m) => priceEntropy(m.outcomes));
   // Timeliness: invert days-to-resolution (sooner = higher) then normalize.
   const timelinessRaw = normalizeSet(

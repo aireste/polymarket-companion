@@ -24,9 +24,14 @@ export interface PlayDTO {
   url: string;
   imageUrl: string | null;
   outcomes: OutcomeDTO[];
-  volume: number;
-  volume24hr: number;
-  liquidity: number;
+  /** Lifetime $ traded; null when not looked up (Polymarket US only shows it per market). */
+  volume: number | null;
+  /** Always null on Polymarket US (it doesn't publish 24h volume). */
+  volume24hr: number | null;
+  /** $ order-book depth near the price; null when not looked up. */
+  liquidity: number | null;
+  /** Bid/ask spread on the first outcome, 0..1; null if unknown. */
+  spread: number | null;
   endDate: string | null;
   /** ISO game start time for scheduled markets; null otherwise. */
   gameStartTime: string | null;

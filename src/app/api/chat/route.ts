@@ -17,6 +17,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { fetchMarkets, fetchMarketById, searchMarkets } from "@/lib/polymarket";
+import { fetchHistory } from "@/lib/history";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { jevRead, describeRead, MissingJevKeyError } from "@/lib/jev";
 import { JEV_ACTION_COPY } from "@/lib/jevDisplay";
@@ -30,7 +31,6 @@ export const dynamic = "force-dynamic";
 // Sonnet for the on-site chat: fast and cheap. Jev (the calibrated engine) makes
 // the actual verdicts via get_jev_verdict; Claude is just the conversational wrapper.
 const MODEL = CLAUDE_FAST;
-const CLOB_HISTORY = "https://clob.polymarket.com/prices-history";
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
 const SYSTEM = `You are HedgePredict, a prediction-market analyst assistant for Polymarket, talking to a visitor trying the tool on the web.
@@ -58,8 +58,7 @@ function pickPlays(ranked: ScoredMarket[], filter: string, limit: number) {
     question: m.question,
     url: m.url,
     outcomes: m.outcomes.map((o) => ({ label: o.label, price: o.price })),
-    volume24hr: Math.round(m.volume24hr),
-    liquidity: Math.round(m.liquidity),
+    spread: m.spread,
     resolvesAt: m.endDate ? m.endDate.toISOString().slice(0, 10) : null,
     gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
     score: Number(m.score.toFixed(2)),
@@ -75,7 +74,7 @@ const getBestPlays = betaZodTool({
     limit: z.number().int().min(1).max(20).default(8),
   }),
   run: async ({ filter, limit }) => {
-    const markets = await fetchMarkets({ limit: 150, orderBy: "volume24hr" });
+    const markets = await fetchMarkets();
     const ranked = rankMarkets(markets, { limit: 60, minLiquidity: 1000 });
     const plays = pickPlays(ranked, filter, limit);
     if (plays.length === 0) return "No markets cleared the liquidity threshold right now.";
@@ -105,7 +104,7 @@ const analyzeEdge = betaZodTool({
 const getMarketHistory = betaZodTool({
   name: "get_market_history",
   description:
-    "Fetch the price (implied-probability) history for one outcome of a market from Polymarket's order book. Use a marketId from get_best_plays. outcomeIndex 0 is the first/leading outcome.",
+    "Fetch the price (implied-probability) history for one outcome of a market from Polymarket US. Use a marketId from get_best_plays. outcomeIndex 0 is the first/leading outcome.",
   inputSchema: z.object({
     marketId: z.string().min(1),
     outcomeIndex: z.number().int().min(0).default(0),
@@ -116,13 +115,8 @@ const getMarketHistory = betaZodTool({
     if (!market) return `Market ${marketId} not found.`;
     const outcome = market.outcomes[outcomeIndex];
     if (!outcome?.tokenId) return `No price history available for that outcome.`;
-    const fidelity = range === "1d" ? 15 : range === "1w" ? 180 : 720;
-    const params = new URLSearchParams({ market: outcome.tokenId, interval: range, fidelity: String(fidelity) });
     try {
-      const res = await fetch(`${CLOB_HISTORY}?${params}`, { headers: { Accept: "application/json" }, cache: "no-store" });
-      if (!res.ok) return `Price history request failed (HTTP ${res.status}).`;
-      const data = (await res.json()) as { history?: { t: number; p: number }[] };
-      const points = Array.isArray(data.history) ? data.history : [];
+      const points = await fetchHistory(outcome.tokenId, range);
       if (points.length === 0) return "No price history returned for that outcome/range.";
       const first = points[0].p;
       const last = points[points.length - 1].p;
@@ -161,7 +155,6 @@ const searchMarketsTool = betaZodTool({
           question: m.question,
           url: m.url,
           outcomes: m.outcomes.map((o) => ({ label: o.label, price: o.price })),
-          volume24hr: Math.round(m.volume24hr),
           resolvesAt: m.endDate ? m.endDate.toISOString().slice(0, 10) : null,
         })),
       });

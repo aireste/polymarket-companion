@@ -20,7 +20,6 @@ import {
   Text,
 } from "@react-email/components";
 import type { DailyIssue, IssueMarket } from "@/lib/daily";
-import { polymarketUs } from "@/lib/links";
 
 const C = {
   canvas: "#eceef1",
@@ -102,7 +101,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
                 <Button href={pick.href} style={{ background: C.ice, color: C.dark, fontWeight: 700, fontSize: 14, borderRadius: 3, padding: "12px 18px" }}>
                   Open in HedgePredict
                 </Button>
-                <Link href={polymarketUs(pick.question)} style={{ marginLeft: 18, color: C.onDark, fontSize: 14, fontWeight: 700, textDecoration: "underline" }}>
+                <Link href={pick.url} style={{ marginLeft: 18, color: C.onDark, fontSize: 14, fontWeight: 700, textDecoration: "underline" }}>
                   Trade on Polymarket ↗
                 </Link>
               </Section>

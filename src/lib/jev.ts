@@ -22,7 +22,7 @@
  */
 
 import { choice, TypeSafeClient } from "@typesafe-ai/sdk";
-import type { Market } from "./polymarket";
+import { activityText, type Market } from "./polymarket";
 import type { JevReadDTO } from "./dto";
 import { fetchHistory } from "./history";
 
@@ -77,7 +77,6 @@ export function callFrom(sideProbs: number[]): { action: JevAction; lean: number
   return { action: "skip", lean: null };
 }
 
-const usd = (x: number) => `$${Math.round(x).toLocaleString()}`;
 const pts = (x: number) => `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1)} pts`;
 
 /** How the first outcome's price moved over 7 days and the last day (best effort). */
@@ -103,7 +102,7 @@ async function buildState(market: Market) {
     market: market.question,
     prices,
     ...(move ? { price_move: move } : {}),
-    activity: `24h volume ${usd(market.volume24hr)}, order-book liquidity ${usd(market.liquidity)}`,
+    activity: activityText(market),
     timing: market.gameStartTime
       ? `game starts ${market.gameStartTime.toISOString()}`
       : market.endDate

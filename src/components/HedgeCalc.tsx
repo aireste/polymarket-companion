@@ -311,7 +311,7 @@ export function MarketSearch({ value, onPick }: { value: PlayDTO | null; onPick:
     }
     // Empty box: a short list, not the whole board.
     const mine = new Set(recent.map((p) => p.id));
-    const popular = [...board].filter((p) => !mine.has(p.id)).sort((a, b) => b.volume24hr - a.volume24hr).slice(0, 3);
+    const popular = [...board].filter((p) => !mine.has(p.id)).sort((a, b) => b.score - a.score).slice(0, 3);
     return [
       ...recent.map((play) => ({ play, group: "Recently viewed" })),
       ...popular.map((play) => ({ play, group: "Popular right now" })),

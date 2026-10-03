@@ -1,0 +1,1 @@
+ALTER TABLE "calls" ADD COLUMN "side_index" integer;

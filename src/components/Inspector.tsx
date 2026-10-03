@@ -18,7 +18,7 @@ import { Icon } from "./icons";
 import { Odo } from "./Odo";
 import { SubscribeBox, useJoinedDaily } from "./SubscribeBox";
 import { useOddsFormat } from "@/lib/oddsFormat";
-import { polymarketUs } from "@/lib/links";
+import { useMarketStats } from "@/lib/useMarketStats";
 
 const RANGES = [
   { id: "1d", label: "1D" },
@@ -43,26 +43,9 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
       <PriceCard play={play} />
       <JevVerdict play={play} />
       <DeepRead play={play} />
-      <dl className="hp-stats">
-        <div>
-          <dt>{play.gameStartTime ? "Starts" : "Resolves"}</dt>
-          <dd>{resolveAt(play.gameStartTime ?? play.endDate)}</dd>
-        </div>
-        <div>
-          <dt>24h volume</dt>
-          <dd>{usd(play.volume24hr)}</dd>
-        </div>
-        <div>
-          <dt>Liquidity</dt>
-          <dd>{usd(play.liquidity)}</dd>
-        </div>
-        <div>
-          <dt>All-time volume</dt>
-          <dd>{usd(play.volume)}</dd>
-        </div>
-      </dl>
+      <MarketStats play={play} className="hp-stats" />
       <div className="hp-insp-actions">
-        <a className="pill pill-dark hp-pm-btn" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
+        <a className="pill pill-dark hp-pm-btn" href={play.url} target="_blank" rel="noopener noreferrer">
           <span className="hp-pm-tile">{Icon.polymarket}</span>
           Open on Polymarket ↗
         </a>
@@ -154,9 +137,7 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
 
   return (
     <div className="hp-dd" key={play.id}>
-      <p className="hp-dk">
-        {usd(play.volume24hr)} traded today · {usd(play.liquidity)} liquidity
-      </p>
+      <TradedLine play={play} />
       <h2 className="hp-dd-q">{play.question}</h2>
       <p className={`hp-dd-when${live ? " is-live" : ""}`}>
         {live
@@ -203,7 +184,7 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
           {others.length > 0 && (
             <span className="num">{others.map((o) => `${o.label} ${price(o.price, fmt, "pct")}`).join(" · ")}</span>
           )}
-          <a className="hp-dd-pm" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer" aria-label="Open on Polymarket" title="Open on Polymarket">
+          <a className="hp-dd-pm" href={play.url} target="_blank" rel="noopener noreferrer" aria-label="Open on Polymarket" title="Open on Polymarket">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
           </a>
         </div>
@@ -212,28 +193,46 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
       <JevVerdict play={play} />
       <DeepRead play={play} />
 
-      <dl className="hp-dd-stats">
-        <div>
-          <dt>{play.gameStartTime ? "Starts" : "Resolves"}</dt>
-          <dd>{resolveAt(at)}</dd>
-        </div>
-        <div>
-          <dt>24h volume</dt>
-          <dd className="num">{usd(play.volume24hr)}</dd>
-        </div>
-        <div>
-          <dt>Liquidity</dt>
-          <dd className="num">{usd(play.liquidity)}</dd>
-        </div>
-        <div>
-          <dt>All-time volume</dt>
-          <dd className="num">{usd(play.volume)}</dd>
-        </div>
-      </dl>
+      <MarketStats play={play} className="hp-dd-stats" />
 
       <p className="hp-disc">Decision support, not financial advice. HedgePredict never places trades.</p>
     </div>
   );
+}
+
+const spreadText = (s: number | null) => (s == null ? "—" : `${(s * 100).toFixed(1)}¢`);
+
+/** When it resolves, plus how it trades: spread from the board, $ figures looked up on open. */
+function MarketStats({ play, className }: { play: PlayDTO; className: string }) {
+  const { volume, liquidity } = useMarketStats(play);
+  return (
+    <dl className={className}>
+      <div>
+        <dt>{play.gameStartTime ? "Starts" : "Resolves"}</dt>
+        <dd>{resolveAt(play.gameStartTime ?? play.endDate)}</dd>
+      </div>
+      <div>
+        <dt>Spread</dt>
+        <dd className="num">{spreadText(play.spread)}</dd>
+      </div>
+      <div>
+        <dt>Liquidity</dt>
+        <dd className="num">{liquidity == null ? "—" : usd(liquidity)}</dd>
+      </div>
+      <div>
+        <dt>All-time volume</dt>
+        <dd className="num">{volume == null ? "—" : usd(volume)}</dd>
+      </div>
+    </dl>
+  );
+}
+
+/** The kicker above the question: money traded once it's known, else the spread. */
+function TradedLine({ play }: { play: PlayDTO }) {
+  const { volume, liquidity } = useMarketStats(play);
+  const text =
+    volume != null ? `${usd(volume)} traded${liquidity != null ? ` · ${usd(liquidity)} liquidity` : ""}` : play.spread != null ? `${spreadText(play.spread)} spread` : "";
+  return <p className="hp-dk">{text || "\u00a0"}</p>;
 }
 
 function PriceCard({ play }: { play: PlayDTO }) {
@@ -402,7 +401,7 @@ function DeepRead({ play }: { play: PlayDTO }) {
     );
   }
   const limited = error?.startsWith("You've used today's") ?? false;
-  if (rec) return <Recommendation rec={rec} url={polymarketUs(play.question)} />;
+  if (rec) return <Recommendation rec={rec} url={play.url} />;
   if (loading) {
     return (
       <div className="rec-loading">

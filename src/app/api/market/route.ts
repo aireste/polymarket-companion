@@ -1,12 +1,15 @@
-import { fetchMarketById } from "@/lib/polymarket";
+import { fetchMarketById, parseMarketId } from "@/lib/polymarket";
 import { toPlayDTO } from "@/lib/board";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/market?id=<marketId> → { play: PlayDTO }. For links to off-board markets. */
+/**
+ * GET /api/market?id=<eventSlug~marketSlug> → { play: PlayDTO }, with lifetime volume and liquidity
+ * from its order book. For links to off-board markets and the detail view's stats.
+ */
 export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get("id");
-  if (!id || !/^\d+$/.test(id)) {
+  if (!id || !parseMarketId(id)) {
     return Response.json({ error: "Missing or invalid id" }, { status: 400 });
   }
   try {

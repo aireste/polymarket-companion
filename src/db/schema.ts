@@ -1,4 +1,4 @@
-import { pgTable, serial, text, doublePrecision, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, doublePrecision, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 /**
  * HedgePredict's track record: every Wager and Lean, logged once per market + call + side the
@@ -14,6 +14,8 @@ export const calls = pgTable(
     /** "Wager" or "Lean". */
     call: text("call").notNull(),
     side: text("side").notNull(),
+    /** Which outcome the call backs: 0 = the long side (Yes / first team), 1 = the short side. */
+    sideIndex: integer("side_index"),
     /** Price of the called side when the call was logged, 0–1. */
     sidePrice: doublePrecision("side_price").notNull(),
     howSure: doublePrecision("how_sure").notNull(),

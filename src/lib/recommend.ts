@@ -9,7 +9,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_DEEP, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
-import type { Market } from "./polymarket";
+import { activityText, type Market } from "./polymarket";
 import { MissingCredentialsError } from "./read";
 
 export type AiAction = "CHASE" | "HOLD" | "SKIP";
@@ -82,7 +82,7 @@ export async function recommend(market: Market): Promise<Recommendation> {
 
 Market: "${market.question}"
 Market-implied odds: ${odds}
-Resolves by: ${endText} · 24h volume $${Math.round(market.volume24hr).toLocaleString()} · liquidity $${Math.round(market.liquidity).toLocaleString()}
+Resolves by: ${endText} · ${activityText(market)}
 
 Do this:
 1. Use web search to check the most recent news and social sentiment relevant to this market. Run two or three focused searches, one or two at a time.

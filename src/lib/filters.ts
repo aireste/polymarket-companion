@@ -1,6 +1,6 @@
 /**
- * Board categories. Each one is a real route backed by a Polymarket category
- * (Gamma tag id), so the tabs, the phone chips and shared links all agree.
+ * Board categories. Each one is a real route backed by Polymarket US categories,
+ * so the tabs, the phone chips and shared links all agree.
  * "All" is the main ranked board the Daily and the track record use.
  */
 import type { PlayDTO } from "./dto";
@@ -8,15 +8,15 @@ import { isLive, whenMs } from "./format";
 
 export type CategoryId = "all" | "sports" | "politics" | "crypto" | "finance" | "tech" | "culture" | "world";
 
-export const CATEGORIES: { id: CategoryId; href: string; label: string; tagId: number | null }[] = [
-  { id: "all", href: "/", label: "All", tagId: null },
-  { id: "sports", href: "/sports", label: "Sports", tagId: 1 },
-  { id: "politics", href: "/politics", label: "Politics", tagId: 2 },
-  { id: "crypto", href: "/crypto", label: "Crypto", tagId: 21 },
-  { id: "finance", href: "/finance", label: "Finance", tagId: 120 },
-  { id: "tech", href: "/tech", label: "Tech", tagId: 1401 },
-  { id: "culture", href: "/culture", label: "Culture", tagId: 596 },
-  { id: "world", href: "/world", label: "World", tagId: 100265 },
+export const CATEGORIES: { id: CategoryId; href: string; label: string; us: string[] | null }[] = [
+  { id: "all", href: "/", label: "All", us: null },
+  { id: "sports", href: "/sports", label: "Sports", us: ["sports"] },
+  { id: "politics", href: "/politics", label: "Politics", us: ["politics"] },
+  { id: "crypto", href: "/crypto", label: "Crypto", us: ["crypto"] },
+  { id: "finance", href: "/finance", label: "Finance", us: ["finance", "macro"] },
+  { id: "tech", href: "/tech", label: "Tech", us: ["technology"] },
+  { id: "culture", href: "/culture", label: "Culture", us: ["culture"] },
+  { id: "world", href: "/world", label: "World", us: ["geopolitics", "climate", "science"] },
 ];
 
 export const categoryById = (id: CategoryId) => CATEGORIES.find((c) => c.id === id)!;

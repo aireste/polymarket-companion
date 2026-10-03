@@ -15,7 +15,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_DEEP, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
-import type { Market } from "./polymarket";
+import { activityText, type Market } from "./polymarket";
 
 /** Thrown when no Anthropic API key / auth is available. Catch to fall back. */
 export class MissingCredentialsError extends Error {
@@ -99,7 +99,7 @@ Outcomes and current market-implied probabilities:
 ${outcomeLines}
 
 Resolves by: ${endText}
-24h volume: $${Math.round(market.volume24hr).toLocaleString()} | liquidity: $${Math.round(market.liquidity).toLocaleString()}
+Trading: ${activityText(market)}
 
 Estimate the probability that "${target.label}" resolves YES. The market implies ${(target.price * 100).toFixed(1)}%. If you have no informational edge, return the market price and mark confidence "low".`;
 

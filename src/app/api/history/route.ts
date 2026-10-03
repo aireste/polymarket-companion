@@ -2,7 +2,7 @@ import { fetchHistory, isTokenId } from "@/lib/history";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/history?token=<clobTokenId>&range=1d|1w|1m */
+/** GET /api/history?token=<marketSlug>:<0|1>&range=1d|1w|1m */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");

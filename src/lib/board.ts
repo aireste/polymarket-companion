@@ -16,16 +16,16 @@ const NO_SIGNALS: Signals = {
 };
 
 /**
- * Today's ranked board: the 18 markets worth a look. A category board ranks the
- * same way inside one Polymarket category (Gamma returns at most 100 per tag).
+ * Today's ranked board: the 18 markets worth a look, from Polymarket US. A category board ranks
+ * the same way inside its Polymarket US categories.
  */
 export async function fetchBoard(category: CategoryId = "all"): Promise<ScoredMarket[]> {
-  const { tagId } = categoryById(category);
-  const markets = await fetchMarkets({ limit: tagId == null ? 150 : 100, orderBy: "volume24hr", tagId });
+  const { us } = categoryById(category);
+  const markets = await fetchMarkets({ categories: us });
   // Category boards skip markets that are already settled in all but name (one side at 97%+,
   // same line as Jev's "Decided"), e.g. today's Bitcoin price brackets. The main board is unchanged.
-  const pool = tagId == null ? markets : markets.filter((m) => m.outcomes.every((o) => o.price < 0.97));
-  return rankMarkets(pool, { limit: 18, minLiquidity: 1000 });
+  const pool = us == null ? markets : markets.filter((m) => m.outcomes.every((o) => o.price < 0.97));
+  return rankMarkets(pool, { limit: 18 });
 }
 
 /**
@@ -47,6 +47,7 @@ export function toPlayDTO(m: Market | ScoredMarket): PlayDTO {
     volume: m.volume,
     volume24hr: m.volume24hr,
     liquidity: m.liquidity,
+    spread: m.spread,
     endDate: m.endDate ? m.endDate.toISOString() : null,
     gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
     score: scored?.score ?? 0,

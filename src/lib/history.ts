@@ -1,54 +1,51 @@
 /**
- * Polymarket CLOB price history, shared by the per-market chart route and the
- * board's sparklines.
+ * Polymarket US price history, shared by the chart route, the board's sparklines, Jev's price-move
+ * line, the newsletter and the AI tools.
+ *
+ * A history key is `<marketSlug>:<side>`: side 0 is the long side (Yes, or the first team), side 1
+ * the short side. The API gives display prices for each side (long from the best ask, short from
+ * one minus the best bid), so we take their midpoint as the long price, the same way the board
+ * prices markets, and the short side as 1 minus that.
  */
 
 import type { HistoryPoint } from "./dto";
 
-const CLOB = "https://clob.polymarket.com/prices-history";
+const GATEWAY = "https://gateway.polymarket.us";
 
-// range -> Polymarket interval + point fidelity (minutes).
+// range -> Polymarket US window + point spacing (minutes).
 export const RANGES: Record<string, { interval: string; fidelity: number }> = {
-  "1d": { interval: "1d", fidelity: 15 },
-  "1w": { interval: "1w", fidelity: 180 },
-  "1m": { interval: "1m", fidelity: 720 },
+  "1d": { interval: "INTERVAL_1D", fidelity: 15 },
+  "1w": { interval: "INTERVAL_1W", fidelity: 60 },
+  "1m": { interval: "INTERVAL_1M", fidelity: 720 },
 };
 
 export const isTokenId = (token: string | null | undefined): token is string =>
-  !!token && /^\d+$/.test(token);
+  !!token && /^[a-z0-9][a-z0-9-]*:[01]$/i.test(token);
 
-/** Fetch one outcome token's price series. Throws on network/HTTP failure. */
-export async function fetchHistory(
-  token: string,
-  range = "1w",
-  timeoutMs = 10_000
-): Promise<HistoryPoint[]> {
+/** Fetch one outcome's price series. Throws on network/HTTP failure. */
+export async function fetchHistory(token: string, range = "1w", timeoutMs = 10_000): Promise<HistoryPoint[]> {
   const cfg = RANGES[range] ?? RANGES["1w"];
-  const params = new URLSearchParams({
-    market: token,
-    interval: cfg.interval,
-    fidelity: String(cfg.fidelity),
-  });
+  const [slug, side] = token.split(":");
+  const params = new URLSearchParams({ symbol: slug, fixedInterval: cfg.interval, fidelity: String(cfg.fidelity) });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${CLOB}?${params}`, {
+    const res = await fetch(`${GATEWAY}/v1/price-history?${params}`, {
       headers: { Accept: "application/json" },
       signal: controller.signal,
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`CLOB returned HTTP ${res.status}`);
-    const data: unknown = await res.json();
-    const raw = (data as { history?: unknown }).history;
-    return Array.isArray(raw)
-      ? raw
-          .map((d) => {
-            const pt = d as { t?: unknown; p?: unknown };
-            return { t: Number(pt.t), p: Number(pt.p) };
-          })
-          .filter((pt) => Number.isFinite(pt.t) && Number.isFinite(pt.p))
-      : [];
+    if (!res.ok) throw new Error(`Polymarket US history returned HTTP ${res.status}`);
+    const data = (await res.json()) as { history?: { timestamp?: unknown; longPrice?: unknown; shortPrice?: unknown }[] };
+    return (data.history ?? [])
+      .map((d) => {
+        const long = Number(d.longPrice);
+        const short = Number(d.shortPrice);
+        const mid = Number.isFinite(short) ? (long + (1 - short)) / 2 : long;
+        return { t: Number(d.timestamp), p: side === "1" ? 1 - mid : mid };
+      })
+      .filter((pt) => Number.isFinite(pt.t) && Number.isFinite(pt.p));
   } finally {
     clearTimeout(timer);
   }

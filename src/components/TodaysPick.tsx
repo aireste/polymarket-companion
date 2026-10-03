@@ -10,7 +10,6 @@ import { Sparkline } from "./Sparkline";
 import { Countdown } from "./Countdown";
 import { Icon } from "./icons";
 import { useOddsFormat } from "@/lib/oddsFormat";
-import { polymarketUs } from "@/lib/links";
 import { pickLabel } from "@/lib/filters";
 
 const KEY = "hp_pick_collapsed";
@@ -132,7 +131,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
           <button className="hp-pick-open" onClick={() => open(play.id)}>
             Open
           </button>
-          <a className="hp-pick-trade" href={polymarketUs(play.question)} target="_blank" rel="noopener noreferrer">
+          <a className="hp-pick-trade" href={play.url} target="_blank" rel="noopener noreferrer">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
             Trade ↗
           </a>

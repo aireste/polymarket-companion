@@ -16,12 +16,13 @@
  *   recommend_market    — Claude's CHASE/HOLD/SKIP read (fetchMarketById + recommend)
  *   get_jev_read        — Jev's calibrated WAGER/HOLD/SKIP (fetchMarketById + jevRead)
  *   analyze_edge        — edge/Kelly/hedge math, no LLM  (analyzePlay)
- *   get_market_history  — price history for one outcome  (Polymarket CLOB)
+ *   get_market_history  — price history for one outcome  (Polymarket US)
  */
 
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 import { fetchMarkets, fetchMarketById } from "@/lib/polymarket";
+import { fetchHistory } from "@/lib/history";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { recommend } from "@/lib/recommend";
 import { MissingCredentialsError } from "@/lib/read";
@@ -34,22 +35,19 @@ export const maxDuration = 60;
 // Live odds move constantly; never cache.
 export const dynamic = "force-dynamic";
 
-const CLOB_HISTORY = "https://clob.polymarket.com/prices-history";
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
-const usd = (x: number) => `$${Math.round(x).toLocaleString()}`;
 
 /** One market rendered for an LLM: readable line + the raw fields it may want. */
 function playSummary(m: ScoredMarket, rank: number) {
   const odds = m.outcomes.map((o) => `${o.label} ${pct(o.price)}`).join(" / ");
   return {
-    line: `${rank}. ${m.question} — ${odds} · 24h ${usd(m.volume24hr)} · liq ${usd(m.liquidity)} · score ${m.score.toFixed(2)}`,
+    line: `${rank}. ${m.question} — ${odds} · ${(m.spread ?? 0) * 100 < 0.05 ? "" : `${((m.spread ?? 0) * 100).toFixed(1)}¢ spread · `}score ${m.score.toFixed(2)}`,
     data: {
       marketId: m.id,
       question: m.question,
       url: m.url,
       outcomes: m.outcomes.map((o) => ({ label: o.label, price: o.price, tokenId: o.tokenId })),
-      volume24hr: m.volume24hr,
-      liquidity: m.liquidity,
+      spread: m.spread,
       resolvesAt: m.endDate ? m.endDate.toISOString() : null,
       gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
       score: m.score,
@@ -98,7 +96,7 @@ const handler = createMcpHandler(
       async ({ filter, limit }) => {
         let ranked: ScoredMarket[];
         try {
-          const markets = await fetchMarkets({ limit: 150, orderBy: "volume24hr" });
+          const markets = await fetchMarkets();
           // Rank a generous pool, then apply the filter as a re-sort over the
           // same honest signals the web app uses, and finally trim to `limit`.
           ranked = rankMarkets(markets, { limit: 60, minLiquidity: 1000 });
@@ -135,7 +133,7 @@ const handler = createMcpHandler(
         description:
           "Ask Claude for an autonomous read on one market: it checks live news/sentiment via web search, estimates the true probability, compares it to the market price, and returns CHASE / HOLD / SKIP with confidence and rationale. Honest by construction — efficient markets get HOLD or SKIP. Takes ~15-30s. Pass a marketId from get_best_plays.",
         inputSchema: z.object({
-          marketId: z.string().min(1).describe("Polymarket (Gamma) market id, e.g. from get_best_plays."),
+          marketId: z.string().min(1).describe("HedgePredict market id (eventSlug~marketSlug), e.g. from get_best_plays."),
         }),
       },
       async ({ marketId }) => {
@@ -181,7 +179,7 @@ const handler = createMcpHandler(
         description:
           "Ask Jev, HedgePredict's calibrated decision model, whether either side of one market is underpriced at current prices. Returns WAGER (picks a side outright), LEAN (leans one side), or SKIP (priced about right), the side it favors, its distribution over the sides and 'neither', and calibrated confidence. Jev reads the market's prices, 7-day and 1-day price move, volume and timing only (no web search), so it is fast. Use recommend_market for a slower, news-grounded read. Pass a marketId from get_best_plays. Decision support, not advice; it does not place trades.",
         inputSchema: z.object({
-          marketId: z.string().min(1).describe("Polymarket (Gamma) market id, e.g. from get_best_plays."),
+          marketId: z.string().min(1).describe("HedgePredict market id (eventSlug~marketSlug), e.g. from get_best_plays."),
         }),
       },
       async ({ marketId }) => {
@@ -254,9 +252,9 @@ const handler = createMcpHandler(
       {
         title: "Get market price history",
         description:
-          "Fetch the price (implied-probability) history for one outcome of a market from Polymarket's CLOB. Pass a marketId and which outcome (by index; 0 is the first/leading outcome) plus a range.",
+          "Fetch the price (implied-probability) history for one outcome of a market on Polymarket US. Pass a marketId and which outcome (by index; 0 is the first/leading outcome) plus a range.",
         inputSchema: z.object({
-          marketId: z.string().min(1).describe("Polymarket (Gamma) market id."),
+          marketId: z.string().min(1).describe("HedgePredict market id (eventSlug~marketSlug)."),
           outcomeIndex: z
             .number()
             .int()
@@ -277,19 +275,11 @@ const handler = createMcpHandler(
 
         const outcome = market.outcomes[outcomeIndex];
         if (!outcome) return errorResult(`Market has no outcome at index ${outcomeIndex}.`);
-        if (!outcome.tokenId) return errorResult(`Outcome "${outcome.label}" has no CLOB token id for history.`);
+        if (!outcome.tokenId) return errorResult(`Outcome "${outcome.label}" has no price history.`);
 
-        const fidelity = range === "1d" ? 15 : range === "1w" ? 180 : 720;
-        const params = new URLSearchParams({ market: outcome.tokenId, interval: range, fidelity: String(fidelity) });
         let points: { t: number; p: number }[];
         try {
-          const res = await fetch(`${CLOB_HISTORY}?${params}`, {
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          });
-          if (!res.ok) return errorResult(`CLOB returned HTTP ${res.status} ${res.statusText}`);
-          const data = (await res.json()) as { history?: { t: number; p: number }[] };
-          points = Array.isArray(data.history) ? data.history : [];
+          points = await fetchHistory(outcome.tokenId, range);
         } catch (err) {
           return errorResult(err instanceof Error ? err.message : "History fetch failed");
         }
