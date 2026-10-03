@@ -4,7 +4,7 @@ import json, subprocess, tempfile, wave, array, os
 c = json.load(open("scripts/tour_alignment.json"))["alignment"]
 ch, st, en = c["characters"], c["character_start_times_seconds"], c["character_end_times_seconds"]
 tmp = os.path.join(tempfile.mkdtemp(), "t.wav")
-subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@16000", "-c", "1", "public/tour/tour.mp3", tmp], check=True)
+subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@16000", "-c", "1", "public/tour/tour.m4a", tmp], check=True)
 w = wave.open(tmp); sr = w.getframerate(); a = array.array("h", w.readframes(w.getnframes()))
 def rms(t0, t1):
     seg = a[int(t0 * sr):int(t1 * sr):3]

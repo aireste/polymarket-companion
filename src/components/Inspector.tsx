@@ -90,7 +90,7 @@ const sinceMin = (ms: number) => {
  * The call as the second big number: Wager (green), Lean (amber) or Skip
  * (gray), with the side and how sure underneath. What to do, at a glance.
  */
-export function CallBig({ play }: { play: PlayDTO }) {
+function CallBig({ play }: { play: PlayDTO }) {
   const { reads, jevStatus } = useBoard();
   const r = reads[play.id];
   if (!r) {

@@ -35,9 +35,11 @@ export const Icon = {
       <path d="M5 6h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-6l-4 3v-3H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" strokeLinejoin="round" />
     </svg>
   ),
+  /** Hedge Lab: a flask with HedgePredict's spark bubbling inside. */
   hedge: (
     <svg viewBox="0 0 24 24" {...s}>
-      <path d="M12 4v16M4 8h16M7 8l-3 6a3 3 0 0 0 6 0L7 8zm10 0l-3 6a3 3 0 0 0 6 0l-3-6z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.5 3h5M10 3v6.2L5.2 17.6A2.2 2.2 0 0 0 7.1 21h9.8a2.2 2.2 0 0 0 1.9-3.4L14 9.2V3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 12.2l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9z" fill="currentColor" stroke="none" />
     </svg>
   ),
   connect: (

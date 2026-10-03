@@ -12,9 +12,9 @@ SCRIPT = [
  ("New to prediction markets? Each share pays a dollar if you're right. Buy at forty-three cents and win, and that's fifty-seven cents profit. The price is also the crowd's odds: about forty-three percent.",
   [("New to", "New to prediction markets?"), ("Each share pays", "Each share pays $1 if you're right."),
    ("Buy at", "Buy at 43¢ and win, and that's 57¢ profit."), ("The price is", "The price is also the crowd's odds: about 43%.")]),
- ("More familiar with sportsbook odds? Flip the switch at the top, and every price turns into the odds you're used to.",
+ ("More familiar with sportsbook odds? Flip the switch at the top, and every price turns into the odds you're familiar with.",
   [("More familiar", "More familiar with sportsbook odds?"), ("Flip the switch", "Flip the switch at the top,"),
-   ("and every price", "and every price turns into the odds you're used to.")]),
+   ("and every price", "and every price turns into the odds you're familiar with.")]),
  ("Here's the board: every market, its price, and HedgePredict's call.",
   [("Here's the board", "Here's the board:"), ("every market", "every market, its price, and HedgePredict's call.")]),
  ("Every market gets one of three calls: Wager, Lean or Skip. Each one shows you how confident HedgePredict is.",
@@ -68,13 +68,60 @@ cached = json.load(open(CACHE)) if os.path.exists(CACHE) else None
 if cached and cached["text"] == text and "--record" not in sys.argv:
     al = cached["alignment"]
 else:
-    body = json.dumps({"text": text, "model_id": "eleven_multilingual_v2",
-        "voice_settings": VOICE_SETTINGS}).encode()
-    req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}/with-timestamps?output_format=mp3_44100_128",
-        data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
-    d = json.loads(urllib.request.urlopen(req, timeout=300, context=ctx).read())
-    open("public/tour/tour.mp3", "wb").write(base64.b64decode(d["audio_base64"]))
-    al = d.get("normalized_alignment") or d["alignment"]
+    # One long request drifts by the end (pitch creep, gibberish), so record in a few parts with
+    # ElevenLabs request stitching: each part is generated conditioned on the audio before it,
+    # so it stays one performance. Parts are joined at a pause, with real silence from the take.
+    CHUNKS = [[0, 1, 2, 3], [4, 5], [6, 7, 8, 9]]
+    SR = 44100
+    MAX_GAP = 1.4  # no pause between words longer than this
+    import array, subprocess, tempfile, wave
+
+    def synth(chunk_text, prev_ids):
+        body = {"text": chunk_text, "model_id": "eleven_multilingual_v2", "voice_settings": VOICE_SETTINGS}
+        if prev_ids: body["previous_request_ids"] = prev_ids[-3:]
+        req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}/with-timestamps?output_format=mp3_44100_128",
+            data=json.dumps(body).encode(), headers={"xi-api-key": key, "Content-Type": "application/json"})
+        res = urllib.request.urlopen(req, timeout=300, context=ctx)
+        d = json.loads(res.read())
+        return base64.b64decode(d["audio_base64"]), (d.get("normalized_alignment") or d["alignment"]), res.headers.get("request-id")
+
+    tmp = tempfile.mkdtemp()
+    def pcm(mp3: bytes):
+        """Decode a whole part (MP3 frames depend on each other, so never cut MP3 itself)."""
+        open(f"{tmp}/p.mp3", "wb").write(mp3)
+        subprocess.run(["afconvert", "-f", "WAVE", "-d", f"LEI16@{SR}", "-c", "1", f"{tmp}/p.mp3", f"{tmp}/p.wav"], check=True)
+        w = wave.open(f"{tmp}/p.wav"); return array.array("h", w.readframes(w.getnframes()))
+
+    def fade(x, n=int(0.012 * SR)):
+        for i in range(min(n, len(x))):
+            x[i] = int(x[i] * i / n); x[-1 - i] = int(x[-1 - i] * i / n)
+        return x
+
+    brk = lambda i: f' <break time="{LONG_AFTER.get(i, "0.85s")}" /> '
+    secs = lambda i: float(LONG_AFTER.get(i, "0.85s").rstrip("s"))
+    out = array.array("h"); chars, starts, ends, ids = [], [], [], []
+    for ci, chunk in enumerate(CHUNKS):
+        ctext = "".join(LINES[i] + (brk(i) if i != chunk[-1] else "") for i in chunk)
+        mp3, a, rid = synth(ctext, ids)
+        if rid: ids.append(rid)
+        x = pcm(mp3)
+        ast, aen = a["character_start_times_seconds"], a["character_end_times_seconds"]
+        if ci: out.extend(array.array("h", bytes(2 * int(secs(CHUNKS[ci - 1][-1]) * SR))))  # clean silence between parts
+        # Walk the part word-gap by word-gap, copying speech and capping long silences.
+        cut0 = max(0.0, ast[0] - 0.03)
+        seg_start, removed = cut0, 0.0
+        base = len(out) / SR
+        for i in range(len(ast)):
+            if i and ast[i] - aen[i - 1] > MAX_GAP:
+                mid = (aen[i - 1] + ast[i]) / 2; drop = ast[i] - aen[i - 1] - MAX_GAP
+                out.extend(fade(x[int(seg_start * SR):int((mid - drop / 2) * SR)]))
+                seg_start = mid + drop / 2; removed += drop
+            starts.append(round(base + ast[i] - cut0 - removed, 3)); ends.append(round(base + aen[i] - cut0 - removed, 3))
+        out.extend(fade(x[int(seg_start * SR):int(min(len(x) / SR, aen[-1] + 0.15) * SR)]))
+        chars += a["characters"]
+    w = wave.open(f"{tmp}/tour.wav", "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(out.tobytes()); w.close()
+    subprocess.run(["afconvert", "-f", "m4af", "-d", "aac", "-b", "128000", f"{tmp}/tour.wav", "public/tour/tour.m4a"], check=True)
+    al = {"characters": chars, "character_start_times_seconds": starts, "character_end_times_seconds": ends}
     json.dump({"text": text, "alignment": al}, open(CACHE, "w"))
 s = "".join(al["characters"]); st = al["character_start_times_seconds"]
 end = round(al["character_end_times_seconds"][-1], 2)

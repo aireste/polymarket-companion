@@ -3,14 +3,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useBoard } from "@/lib/boardStore";
 import { useOddsFormat } from "@/lib/oddsFormat";
-import { MARKET_TZ, price, whenMs } from "@/lib/format";
-import { TIME_GROUPS, timeGroup } from "@/lib/filters";
+import { price } from "@/lib/format";
 import { todaysPick } from "@/lib/pick";
 import type { PlayDTO } from "@/lib/dto";
-import { DeskWhen } from "./Board";
-import { CallBig, LeanBar } from "./Inspector";
-import { JevPill } from "./JevPill";
-import { Odo } from "./Odo";
+import { LeanBar } from "./Inspector";
 import { Icon } from "./icons";
 
 /**
@@ -96,86 +92,6 @@ const getHits = () => searchHits;
 
 /* ── Scenes ── */
 
-/** The real board list, today's markets, scrolling through as she describes it. */
-export function LiveBoard({ lt, dur, fallback }: LiveProps) {
-  const desk = useDesk();
-  const fmt = useOddsFormat();
-  const { plays, now, moves } = useBoard();
-  if (!desk || !plays?.length) return fallback;
-  // Same order and groups as the board: Live now, Next 24 hours, This week, Later.
-  const groups = TIME_GROUPS.map((g) => ({
-    id: g.id as string,
-    label: g.label as string,
-    rows: plays.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
-  })).filter((g) => g.rows.length > 0);
-  let n = 0;
-  return (
-    <div className="ts-live ts-live-board">
-      <div className="hp-dlist">
-        <div className="hp-dlist-top">
-          <p className="hp-dk">{new Date(now).toLocaleDateString("en-US", { timeZone: MARKET_TZ, weekday: "long", month: "short", day: "numeric" })}</p>
-          <h1>What&apos;s resolving</h1>
-        </div>
-        <AutoScroll p={progress(lt, dur, 1000, 600)} maxPx={220}>
-          {groups.map((g) => (
-            <section key={g.id}>
-              {g.label && <h2 className={`hp-dgrp${g.id === "live" ? " is-live" : ""}`}>{g.label}</h2>}
-              {g.rows.map((p) => (
-                <div key={p.id} className={`hp-dr ts-live-row${shown(lt, 120 + n++ * 70)}`}>
-                  <DeskWhen p={p} now={now} />
-                  <span className="hp-dr-mid">
-                    <span className="hp-dr-q">{p.question}</span>
-                    <JevPill id={p.id} />
-                  </span>
-                  <span className="hp-dr-px num">
-                    <Odo value={price(p.outcomes[0]?.price ?? 0, fmt, "pct")} flash={moves[p.id]} />
-                  </span>
-                </div>
-              ))}
-            </section>
-          ))}
-        </AutoScroll>
-      </div>
-    </div>
-  );
-}
-
-/** One real market for each call, shown exactly as the market page shows it. */
-export function LiveCalls({ lt, fallback }: LiveProps) {
-  const desk = useDesk();
-  const { plays, reads } = useBoard();
-  const pickBy = (a: string) => plays?.find((p) => reads[p.id] && !reads[p.id].settled && reads[p.id].action === a);
-  const trio = [pickBy("wager"), pickBy("hold"), pickBy("skip")];
-  if (!desk || trio.some((p) => !p)) return fallback;
-  return (
-    <div className="ts-live ts-live-calls">
-      {(trio as PlayDTO[]).map((p, i) => (
-        <div key={p.id} className={`ts-live-call${shown(lt, 300 + i * 900)}`}>
-          <span className="ts-k">{p.question}</span>
-          <CallBig play={p} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Today's pick with its real "how sure" bar filling in. */
-export function LiveSure({ lt, fallback }: LiveProps) {
-  const desk = useDesk();
-  const { plays, reads } = useBoard();
-  const pick = todaysPick(plays, reads);
-  const read = pick ? reads[pick.play.id] : null;
-  if (!desk || !pick || !read) return fallback;
-  return (
-    <div className="ts-live ts-live-sure hp-dd">
-      <span className="ts-k">Today&apos;s pick</span>
-      <b className="ts-live-sure-q">{pick.play.question}</b>
-      <JevPill id={pick.play.id} long />
-      <LeanBar read={read} shown={lt >= 900} />
-    </div>
-  );
-}
-
 /** Today's actual email, landing on "Sign up" and scrolling through. */
 export function LiveDaily({ lt, dur, fallback, at }: LiveProps & { at: number }) {
   const desk = useDesk();
@@ -244,4 +160,116 @@ export function useLivePick() {
     cls: read.action === "wager" ? "is-wager" : "is-lean",
     sure: Math.round(read.strength * 100),
   };
+}
+
+/* ── Fixed examples in the real board's style: the same every time, so the format never shifts ── */
+
+const EX_BOARD: { group: string; live?: boolean; t: string; sub: string; q: string; call: "wager" | "hold" | "skip"; side?: string; px: string }[] = [
+  { group: "Live now", live: true, t: "Live", sub: "1h 12m in", q: "Yankees vs. Rays", call: "skip", px: "55.0%" },
+  { group: "Next 24 hours", t: "2h 15m", sub: "7:00 PM", q: "Kentucky vs. South Carolina", call: "wager", side: "Kentucky", px: "43.0%" },
+  { group: "Next 24 hours", t: "5h 40m", sub: "10:30 PM", q: "Chiefs vs. Raiders", call: "hold", side: "Chiefs", px: "66.0%" },
+  { group: "Next 24 hours", t: "9h 05m", sub: "1:55 AM", q: "Bitcoin above $90k on Friday?", call: "hold", side: "Yes", px: "31.0%" },
+  { group: "This week", t: "Oct 9", sub: "2:00 PM", q: "Fed cuts rates in December?", call: "skip", px: "62.0%" },
+  { group: "This week", t: "Oct 10", sub: "8:00 PM", q: "Lakers vs. Warriors", call: "wager", side: "Warriors", px: "48.0%" },
+  { group: "This week", t: "Oct 11", sub: "11:59 PM", q: "Will Ethereum close above $4k?", call: "skip", px: "39.0%" },
+];
+const CALL_WORD = { wager: "Wager", hold: "Lean", skip: "Skip" } as const;
+
+/** The board, as a fixed example in the real board's rows. */
+export function ExampleBoard({ lt, dur, fallback }: LiveProps) {
+  const desk = useDesk();
+  if (!desk) return fallback;
+  // Show a group heading on the first row of each group.
+  const heads = EX_BOARD.map((r, i) => i === 0 || EX_BOARD[i - 1].group !== r.group);
+  return (
+    <div className="ts-live ts-live-board">
+      <div className="hp-dlist">
+        <div className="hp-dlist-top">
+          <p className="hp-dk">Today</p>
+          <h1>What&apos;s resolving</h1>
+        </div>
+        <AutoScroll p={progress(lt, dur, 1000, 600)} maxPx={160}>
+          {EX_BOARD.map((r, i) => {
+            const head = heads[i] ? <h2 className={`hp-dgrp${r.live ? " is-live" : ""}`}>{r.group}</h2> : null;
+            return (
+              <div key={r.q}>
+                {head}
+                <div className={`hp-dr ts-live-row${shown(lt, 120 + i * 90)}`}>
+                  <span className={`hp-dr-t num${r.live ? " is-live" : ""}`}>
+                    {r.t}
+                    <small>{r.sub}</small>
+                  </span>
+                  <span className="hp-dr-mid">
+                    <span className="hp-dr-q">{r.q}</span>
+                    <span className={`hp-jev hp-jev-${r.call}`}>
+                      {CALL_WORD[r.call]}
+                      {r.side && <span className="hp-jev-side">{r.side}</span>}
+                    </span>
+                  </span>
+                  <span className="hp-dr-px num">{r.px}</span>
+                </div>
+              </div>
+            );
+          })}
+        </AutoScroll>
+      </div>
+    </div>
+  );
+}
+
+/** The three calls, one fixed example each, same format and length so nothing jumps. */
+const EX_CALLS = [
+  { q: "Kentucky vs. South Carolina", call: "wager", mean: <><em>Kentucky</em> looks too cheap.</>, sure: "72% sure · medium confidence" },
+  { q: "Bitcoin above $90k on Friday?", call: "hold", mean: <><em>Yes</em> looks a bit cheap.</>, sure: "41% sure · medium confidence" },
+  { q: "Fed cuts rates in December?", call: "skip", mean: <>Both prices look fair.</>, sure: "61% sure · low confidence" },
+] as const;
+
+export function ExampleCalls({ lt, fallback }: Omit<LiveProps, "dur">) {
+  const desk = useDesk();
+  if (!desk) return fallback;
+  return (
+    <div className="ts-live ts-live-calls">
+      {EX_CALLS.map((c, i) => (
+        <div key={c.q} className={`ts-live-call${shown(lt, 300 + i * 900)}`}>
+          <span className="ts-k">{c.q}</span>
+          <div className={`hp-dd-big hp-dd-call is-${c.call}`}>
+            <b>{CALL_WORD[c.call]}</b>
+            <span className="hp-dd-mean">{c.mean}</span>
+            <small>{c.sure}</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** How sure: one fixed pick with the real split bar. */
+const EX_READ = {
+  marketId: "tour-example",
+  marketName: "Kentucky vs. South Carolina",
+  sides: [
+    { label: "Kentucky", price: 0.43 },
+    { label: "South Carolina", price: 0.58 },
+  ],
+  lean: 0,
+  strength: 0.72,
+  distribution: { sides: [0.72, 0.03], neither: 0.25 },
+  action: "wager" as const,
+  confidence: 0.6,
+  model: "example",
+};
+
+export function ExampleSure({ lt, fallback }: Omit<LiveProps, "dur">) {
+  const desk = useDesk();
+  if (!desk) return fallback;
+  return (
+    <div className="ts-live ts-live-sure hp-dd">
+      <span className="ts-k">Today&apos;s pick</span>
+      <b className="ts-live-sure-q">Kentucky vs. South Carolina</b>
+      <span className="hp-jev hp-jev-wager">
+        Wager<span className="hp-jev-side">Kentucky</span>
+      </span>
+      <LeanBar read={EX_READ} shown={lt >= 900} />
+    </div>
+  );
 }
