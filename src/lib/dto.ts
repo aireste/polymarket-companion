@@ -32,6 +32,8 @@ export interface PlayDTO {
   liquidity: number | null;
   /** Bid/ask spread on the first outcome, 0..1; null if unknown. */
   spread: number | null;
+  /** Polymarket US category ("sports", "politics", …); null if unknown. */
+  category: string | null;
   endDate: string | null;
   /** ISO game start time for scheduled markets; null otherwise. */
   gameStartTime: string | null;

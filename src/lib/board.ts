@@ -55,6 +55,7 @@ export function toPlayDTO(m: Market | ScoredMarket): PlayDTO {
     volume24hr: m.volume24hr,
     liquidity: m.liquidity,
     spread: m.spread,
+    category: m.category,
     endDate: m.endDate ? m.endDate.toISOString() : null,
     gameStartTime: m.gameStartTime ? m.gameStartTime.toISOString() : null,
     score: scored?.score ?? 0,

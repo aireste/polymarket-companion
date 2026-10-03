@@ -21,7 +21,7 @@ function TOUR_TEXT(fmt: OddsFormat): { tab: string; t: string; d: string }[] {
     { tab: "Calls", t: "Every market gets a call", d: "Wager when a side looks too cheap, Lean when it's a mild tilt, Skip when the price looks about right." },
     { tab: "Calls", t: "How sure we are", d: "\u201c74% sure\u201d is how sure HedgePredict is that a side is priced too cheap. It is not the chance of winning." },
     { tab: "Hedge Lab", t: "Hedge Lab", d: "Your personal betting sandbox: build a slip, see every way it can land, lock in what you can, size it to your bankroll, and run it 1,000 times." },
-    { tab: "The Daily", t: "The Daily", d: "The day's top pick, what resolves soon and the biggest movers, in your inbox weekdays at 8 AM ET." },
+    { tab: "The Daily", t: "The Daily", d: "The day's pick, a few plays worth a look and the week ahead, in your inbox weekdays at 8 AM ET." },
     { tab: "Search & Ask", t: "Search & Ask", d: "Search any market on Polymarket, or ask HedgePredict about one in plain English." },
     { tab: "Connect AI", t: "Connect your AI", d: "Use HedgePredict inside Claude, ChatGPT or any MCP app with one link." },
   ];
@@ -79,7 +79,7 @@ function FAQ(fmt: OddsFormat): { q: string; a: React.ReactNode }[] {
       q: "What is The Daily?",
       a: (
         <>
-          A 2-minute email every weekday at 8 AM ET with the day&apos;s best pick, what&apos;s ending soon, and the biggest movers.{" "}
+          A 2-minute email every weekday at 8 AM ET: the day&apos;s pick and the case for it, a few plays worth a look across sports, politics, crypto and culture, and the week ahead.{" "}
           <Link href="/daily">See today&apos;s issue</Link>.
         </>
       ),

@@ -28,9 +28,11 @@ export interface BoardReads {
 
 /** Throws MissingJevKeyError if TypeSafe isn't configured. */
 /** Category boards share the per-market cache, so a market on two boards is read once. */
-export async function getBoardReads(category: CategoryId = "all"): Promise<BoardReads> {
+/** `limit` reads only the board's top markets (the Daily's beats use 8, to keep TypeSafe use down). */
+export async function getBoardReads(category: CategoryId = "all", limit?: number): Promise<BoardReads> {
   if (!process.env.TYPESAFE_API_KEY) throw new MissingJevKeyError();
-  const markets = await fetchBoard(category);
+  const board = await fetchBoard(category);
+  const markets = limit ? board.slice(0, limit) : board;
 
   const now = Date.now();
   const reads: Record<string, JevReadDTO> = {};

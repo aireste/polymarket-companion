@@ -1,4 +1,4 @@
-import { pgTable, serial, text, doublePrecision, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, doublePrecision, integer, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 /**
  * HedgePredict's track record: every Wager and Lean, logged once per market + call + side the
@@ -34,3 +34,15 @@ export const calls = pgTable(
 );
 
 export type Call = typeof calls.$inferSelect;
+
+/**
+ * HedgePredict Daily: one built issue per day (ET date). Building an issue costs board reads, news
+ * lookups and a writing pass, so it's done once and every reader of that day (the email send, the
+ * Daily page, the tour) gets the same edition.
+ */
+export const issues = pgTable("issues", {
+  /** YYYY-MM-DD in ET. */
+  date: text("date").primaryKey(),
+  issue: jsonb("issue").notNull(),
+  generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
+});

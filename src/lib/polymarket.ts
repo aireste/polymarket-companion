@@ -49,11 +49,13 @@ export interface Market {
   volume24hr: number | null;
   /** Order-book depth within 10¢ of the price, USD; null when not looked up. */
   liquidity: number | null;
+  /** Polymarket US category of its event: "sports", "politics", "crypto", "finance", "macro", "culture"… */
+  category: string | null;
   /** Popularity 0..1 from Polymarket US's volume ordering (1 = most traded); null off the board. */
   heat: number | null;
   /** Best ask minus best bid on the long side, 0..1; null if either is missing. */
   spread: number | null;
-  /** Settlement deadline. */
+  /** When it's decided: the event's end (election day, the final) or, failing that, the settlement deadline. */
   endDate: Date | null;
   /** Kickoff for games; null otherwise. Use this, not endDate, for "starts / live / soon" logic. */
   gameStartTime: Date | null;
@@ -93,6 +95,7 @@ interface RawEvent {
   image?: string;
   category?: string;
   startTime?: string;
+  endDate?: string;
   active?: boolean;
   closed?: boolean;
   hidden?: boolean;
@@ -188,9 +191,12 @@ function normalize(ev: RawEvent, m: RawMarket): Market | null {
     volume: null,
     volume24hr: null,
     liquidity: null,
+    category: ev.category ?? null,
     heat: null,
     spread: q.spread,
-    endDate: date(m.endDate),
+    // The event's own end is the day it's decided (election day); the market's endDate is the
+    // settlement deadline weeks later, which reads as the wrong date.
+    endDate: (isGame ? null : date(ev.endDate)) ?? date(m.endDate),
     gameStartTime: isGame ? date(ev.startTime) : null,
     active: m.active !== false,
     closed: m.closed === true,
@@ -373,6 +379,24 @@ export async function fetchSlate(opts: { prefix: string; from: string; to: strin
   );
   const pinned = (m: Market) => opts.pin?.some((p) => m.question.includes(p)) ?? false;
   return all.filter((m, i) => i < opts.limit || pinned(m));
+}
+
+/**
+ * What's coming up: the biggest events (any category) that kick off or get decided between
+ * `from` and `to`, one market each (a game's winner, or a future's favorite), biggest first.
+ * For the Daily's week ahead. The API's start-time filter lets season-long futures through, so
+ * the window is checked here.
+ */
+export async function fetchUpcoming(opts: { from: string; to: string; limit: number; timeoutMs?: number }): Promise<Market[]> {
+  const events = await fetchEvents({ limit: "100", startTimeMin: opts.from, startTimeMax: opts.to }, opts.timeoutMs ?? 10_000);
+  const from = Date.parse(opts.from);
+  const to = Date.parse(opts.to);
+  return flatten(events, 1, undecided)
+    .filter((m) => {
+      const t = (m.gameStartTime ?? m.endDate)?.getTime();
+      return t != null && t >= from && t <= to;
+    })
+    .slice(0, opts.limit);
 }
 
 /**

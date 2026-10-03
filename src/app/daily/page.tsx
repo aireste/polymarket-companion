@@ -8,14 +8,17 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "HedgePredict Daily",
-  description: "The day's best pick, what resolves next, and the biggest movers. Weekdays at 8 AM ET.",
+  description: "A 2-minute read on prediction markets: the day's pick, a few plays worth a look, and the week ahead. Weekdays at 8 AM ET.",
 };
 
+// The first visit of the day may build the issue (about a minute); later ones read the saved one.
+export const maxDuration = 300;
+
 const INSIDE = [
-  { n: "01", k: "Today's pick", p: "The strongest call on the board, with the price and how sure we are." },
-  { n: "02", k: "The board", p: "Every other market worth a look, in one line each." },
-  { n: "03", k: "On the clock", p: "What resolves in the next 24 hours, with times in ET." },
-  { n: "04", k: "Movers", p: "The biggest price swings of the last day." },
+  { n: "01", k: "The play", p: "Our strongest call of the day, and the case for it in plain words." },
+  { n: "02", k: "Around the markets", p: "A couple of plays each from sports, politics, economy and crypto, and culture, with a short note on why." },
+  { n: "03", k: "What we're passing on", p: "One popular market we think is priced fair, and why we're leaving it alone." },
+  { n: "04", k: "The week ahead", p: "The games, votes and deadlines coming up that will move prices." },
 ];
 
 /** Streams in after the page: the pitch and signup never wait on the issue. */
@@ -39,7 +42,7 @@ export default function Page() {
           <span className="hp-name">HedgePredict</span> Daily
         </h1>
         <p className="hp-dl-lede">
-          The day&apos;s best pick, what&apos;s about to resolve, and the day&apos;s biggest movers. In your inbox every weekday at 8 AM ET. A 2-minute read.
+          What&apos;s worth a look in prediction markets today, written like a friend catching you up: the day&apos;s pick, a few plays across sports, politics, crypto and culture, and the week ahead. In your inbox every weekday at 8 AM ET. A 2-minute read.
         </p>
         <SubscribeBox source="daily-page" />
         <ol className="hp-dl-inside" aria-label="What's inside">
@@ -53,7 +56,7 @@ export default function Page() {
             </li>
           ))}
         </ol>
-        <p className="hp-dl-note">The preview is today&apos;s real issue, rendered exactly as it lands in your inbox.</p>
+        <p className="hp-dl-note">The preview is today&apos;s real issue, exactly as it lands in your inbox. The board has every market, live; the Daily is the read.</p>
       </div>
 
       <div className="hp-dl-preview">

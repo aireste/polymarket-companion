@@ -47,7 +47,7 @@ export function SubscribeBox({
   compact = false,
   source = "site",
   title = "Today's pick in your inbox.",
-  blurb = "The day's best pick, what resolves next, and the biggest movers. Weekdays at 8 AM ET, a 2-minute read.",
+  blurb = "The day's pick, a few plays worth a look, and the week ahead. Weekdays at 8 AM ET, a 2-minute read.",
 }: {
   compact?: boolean;
   source?: string;

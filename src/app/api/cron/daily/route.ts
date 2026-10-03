@@ -2,7 +2,7 @@ import { newsletterConfigured, sendIssue, todaysIssue } from "@/lib/newsletter";
 import { MARKET_TZ } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 /**
  * GET /api/cron/daily: called by Vercel Cron at 12:00 and 13:00 UTC on
@@ -30,7 +30,8 @@ export async function GET(request: Request) {
   if (!newsletterConfigured()) return Response.json({ skipped: "newsletter not configured yet" });
 
   try {
-    const issue = await todaysIssue();
+    // Always a fresh build for the send, so subscribers get this morning's prices.
+    const issue = await todaysIssue({ fresh: true });
     const { id } = await sendIssue(issue);
     return Response.json({ sent: true, broadcast: id, date: issue.date, subject: issue.subject });
   } catch (err) {

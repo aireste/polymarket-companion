@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     volume: play.volume ?? null,
     volume24hr: play.volume24hr ?? null,
     liquidity: play.liquidity ?? null,
+    category: play.category ?? null,
     heat: null,
     spread: play.spread ?? null,
     endDate: play.endDate ? new Date(play.endDate) : null,

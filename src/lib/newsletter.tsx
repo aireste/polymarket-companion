@@ -13,7 +13,7 @@
 import { Resend } from "resend";
 import { render } from "@react-email/components";
 import { DailyEmail } from "@/emails/DailyEmail";
-import { buildDailyIssue, SITE_URL, type DailyIssue } from "./daily";
+import { buildDailyIssue, etDay, ISSUE_VERSION, SITE_URL, type DailyIssue } from "./daily";
 
 export function newsletterConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_SEGMENT_ID && process.env.NEWSLETTER_FROM);
@@ -22,13 +22,66 @@ export function newsletterConfigured(): boolean {
 let resend: Resend | null = null;
 const client = () => (resend ??= new Resend(process.env.RESEND_API_KEY));
 
-/** Building an issue costs a board read + one Sonnet call; reuse it for 10 minutes. */
-let cached: { at: number; issue: DailyIssue } | null = null;
+/**
+ * Today's issue. Building one costs board reads on five boards, a news lookup per play and a
+ * writing pass, so it's built once and saved (the `issues` table, keyed by ET date): the send,
+ * the Daily page and the tour all read the same edition. A saved issue is reused for 6 hours;
+ * `fresh` (the 8 AM send) always rebuilds, so subscribers get that morning's prices.
+ */
+const MAX_AGE_MS = 6 * 3_600_000;
+const usable = (i: DailyIssue | null | undefined, date: string): i is DailyIssue =>
+  !!i && i.v === ISSUE_VERSION && i.date === date && Date.now() - Date.parse(i.generatedAt) < MAX_AGE_MS;
+
+let cached: DailyIssue | null = null;
+let building: Promise<DailyIssue> | null = null;
+
+async function loadIssue(date: string): Promise<DailyIssue | null> {
+  if (!process.env.DATABASE_URL) return null;
+  try {
+    const { db } = await import("@/db");
+    const { issues } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const [row] = await db.select().from(issues).where(eq(issues.date, date));
+    return (row?.issue as DailyIssue | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveIssue(issue: DailyIssue): Promise<void> {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    const { db } = await import("@/db");
+    const { issues } = await import("@/db/schema");
+    await db
+      .insert(issues)
+      .values({ date: issue.date, issue, generatedAt: new Date(issue.generatedAt) })
+      .onConflictDoUpdate({ target: issues.date, set: { issue, generatedAt: new Date(issue.generatedAt) } });
+  } catch {
+    /* the issue still goes out; it just isn't saved */
+  }
+}
+
 export async function todaysIssue({ fresh = false }: { fresh?: boolean } = {}): Promise<DailyIssue> {
-  if (!fresh && cached && Date.now() - cached.at < 10 * 60_000) return cached.issue;
-  const issue = await buildDailyIssue();
-  cached = { at: Date.now(), issue };
-  return issue;
+  const date = etDay().iso;
+  if (!fresh) {
+    if (usable(cached, date)) return cached;
+    const saved = await loadIssue(date);
+    if (usable(saved, date)) return (cached = saved);
+    // Two readers arriving together share one build.
+    if (building) return building;
+  }
+  building = (async () => {
+    try {
+      const issue = await buildDailyIssue();
+      cached = issue;
+      await saveIssue(issue);
+      return issue;
+    } finally {
+      building = null;
+    }
+  })();
+  return building;
 }
 
 export async function renderIssueHtml(issue: DailyIssue): Promise<string> {
