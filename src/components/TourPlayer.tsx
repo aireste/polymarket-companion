@@ -513,7 +513,7 @@ function DailyDrawn({ lt }: { lt: number }) {
         <span className="ts-call is-wager on">Wager</span>
         <span>Kentucky vs. South Carolina · 66% sure it&apos;s too cheap</span>
       </div>
-      <p className={`ts-mail-more${on(lt, m + 2500)}`}>Plus the board, what resolves today, and the biggest movers.</p>
+      <p className={`ts-mail-more${on(lt, m + 2500)}`}>Plus a few plays worth a look, and the week ahead.</p>
     </div>
   );
 }
