@@ -12,7 +12,6 @@ import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
 import { clockLabel, countdownShort, isLive, price, resolveAt, usd, whenMs } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
-import { HedgeLabLink } from "./HedgeLabMark";
 import { JevPill } from "./JevPill";
 import { Status } from "./Status";
 import { Icon } from "./icons";
@@ -71,7 +70,6 @@ export function Inspector({ play, pass = false }: { play: PlayDTO; pass?: boolea
           <span className="hp-ico-sm">{Icon.ask}</span>
           Ask about this
         </Link>
-        <HedgeLabLink />
       </div>
       <p className="hp-disc">
         Decision support, not financial advice. HedgePredict never places trades.
@@ -233,9 +231,6 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
         </div>
       </dl>
 
-      <div className="hp-dd-more">
-        <HedgeLabLink />
-      </div>
       <p className="hp-disc">Decision support, not financial advice. HedgePredict never places trades.</p>
     </div>
   );

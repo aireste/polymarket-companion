@@ -226,3 +226,8 @@
   100% { transform: rotate(90deg) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .hp-dh .hp-ask-btn.is-new .hp-ask-mark svg { animation: none; } }
+
+/* Hedge Lab in the top nav wears the Lab's own type and lemon, so it reads as its own room. */
+.hp-app .hp-dh-link[href="/hedge"]:not(#_):not(#_) { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; color: var(--lab-ink); }
+.hp-app .hp-dh-link[href="/hedge"]:hover:not(#_):not(#_) { filter: brightness(1.12); }
+.hp-app .hp-dh-nav:has(.hp-dh-link[href="/hedge"][aria-current="page"]) .hp-dh-ind:not(#_):not(#_) { background: var(--lab); }
