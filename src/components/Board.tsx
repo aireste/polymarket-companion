@@ -21,6 +21,7 @@ import { todaysPick } from "@/lib/pick";
 import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
 import { Countdown } from "./Countdown";
 import { useOddsFormat } from "@/lib/oddsFormat";
+import { activeFeature, inFeature, type Feature } from "@/lib/featured";
 
 /** The market board for one category route. Desktop: time list + detail. Phone: time board + sheet. */
 export function Board({ category }: { category: CategoryId }) {
@@ -169,6 +170,19 @@ function DeskWhen({ p, now }: { p: PlayDTO; now: number }) {
   );
 }
 
+/** On an event day, the slate (live games first, then by kickoff) and everything else. */
+function useSlate(list: PlayDTO[], category: CategoryId, now: number): { feature: Feature | null; slate: PlayDTO[]; rest: PlayDTO[] } {
+  const feature = activeFeature(category, now);
+  return useMemo(() => {
+    if (!feature) return { feature, slate: [], rest: list };
+    const slate = list
+      .filter((p) => inFeature(feature, p))
+      .sort((a, b) => Number(isLive(b.gameStartTime, now)) - Number(isLive(a.gameStartTime, now)) || whenMs(a) - whenMs(b));
+    const ids = new Set(slate.map((p) => p.id));
+    return { feature, slate, rest: list.filter((p) => !ids.has(p.id)) };
+  }, [feature, list, now]);
+}
+
 function DeskBoard({ category }: { category: CategoryId }) {
   const fmt = useOddsFormat();
   const { plays: all, category: loadedCat, error, now, moves } = useBoard();
@@ -180,20 +194,23 @@ function DeskBoard({ category }: { category: CategoryId }) {
   // Peek at the soonest DESK_PEEK so the Polymarket link and the Daily signup stay close.
   const [expanded, setExpanded] = useState<CategoryId | null>(null);
   const showAll = expanded === category;
+  // An event day's slate sits on top, always in full; the peek applies to the rest.
+  const { feature, slate, rest } = useSlate(list, category, now);
 
   // Flighty order: grouped by when it resolves.
   const allSections = useMemo(() => {
     return TIME_GROUPS.map((g) => ({
       id: g.id as string,
       label: g.label as string,
-      rows: list.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
+      rows: rest.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
     })).filter((g) => g.rows.length > 0);
-  }, [list, now]);
-  const fullOrder = useMemo(() => allSections.flatMap((g) => g.rows), [allSections]);
+  }, [rest, now]);
+  const restOrder = useMemo(() => allSections.flatMap((g) => g.rows), [allSections]);
+  const fullOrder = useMemo(() => [...slate, ...restOrder], [slate, restOrder]);
   // A market opened past the peek (shared link, search, keys) shows the whole list.
   // The default (today's pick, nothing in the URL) doesn't count.
   const selId = useSelectedId();
-  const focusIdx = selId ? fullOrder.findIndex((p) => p.id === selId) : -1;
+  const focusIdx = selId ? restOrder.findIndex((p) => p.id === selId) : -1;
   const limit = showAll || focusIdx >= DESK_PEEK ? Infinity : DESK_PEEK;
   const sections = useMemo(() => {
     const starts = allSections.map((_, i) => allSections.slice(0, i).reduce((n, g) => n + g.rows.length, 0));
@@ -243,9 +260,14 @@ function DeskBoard({ category }: { category: CategoryId }) {
         {!plays && !error && Array.from({ length: 8 }).map((_, i) => <div key={i} className="hp-dr hp-dr-skl" aria-hidden />)}
         {plays && list.length === 0 && <p className="hp-empty">Nothing worth a look in this category right now.</p>}
 
-        {sections.map((g) => (
-          <section key={g.id}>
-            {g.label && <h2 className={`hp-dgrp${g.id === "live" ? " is-live" : ""}`}>{g.label}</h2>}
+        {[...(feature && slate.length ? [{ id: "feature", label: feature.label, rows: slate }] : []), ...sections].map((g) => (
+          <section key={g.id} className={g.id === "feature" ? "hp-dfeature" : undefined}>
+            {g.label && (
+              <h2 className={`hp-dgrp${g.id === "live" ? " is-live" : ""}${g.id === "feature" ? " is-feature" : ""}`}>
+                {g.label}
+                {g.id === "feature" && <small>{g.rows.length} games today</small>}
+              </h2>
+            )}
             {g.rows.map((p) => (
               <button
                 key={p.id}
@@ -270,9 +292,9 @@ function DeskBoard({ category }: { category: CategoryId }) {
           </section>
         ))}
 
-        {list.length > DESK_PEEK && focusIdx < DESK_PEEK && (
+        {rest.length > DESK_PEEK && focusIdx < DESK_PEEK && (
           <button className="hp-showall hp-dshowall" onClick={() => setExpanded(showAll ? null : category)} aria-expanded={showAll}>
-            {showAll ? "Show fewer ▴" : `Show all ${list.length} markets ▾`}
+            {showAll ? "Show fewer ▴" : `Show all ${rest.length} markets ▾`}
           </button>
         )}
 
@@ -344,9 +366,10 @@ function PhoneBoard({ category }: { category: CategoryId }) {
     };
   }, [open]);
 
+  const { feature, slate, rest } = useSlate(list, category, now);
   const allGroups = TIME_GROUPS.map((g) => ({
     ...g,
-    rows: list.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
+    rows: rest.filter((p) => timeGroup(p, now) === g.id).sort((a, b) => whenMs(a) - whenMs(b)),
   })).filter((g) => g.rows.length > 0);
   // Peek: the first PHONE_PEEK markets in board order (groups are already soonest-first).
   const limit = showAll ? Infinity : PHONE_PEEK;
@@ -391,9 +414,9 @@ function PhoneBoard({ category }: { category: CategoryId }) {
         {!plays && !error && Array.from({ length: 4 }).map((_, i) => <div key={i} className="hp-fcard hp-fcard-skl" aria-hidden />)}
         {plays && list.length === 0 && <p className="hp-empty">Nothing worth a look in this category right now.</p>}
 
-        {groups.map((g) => (
-          <section key={g.id}>
-            <h2 className="hp-group">
+        {[...(feature && slate.length ? [{ id: "feature", label: feature.label, total: slate.length, rows: slate }] : []), ...groups].map((g) => (
+          <section key={g.id} className={g.id === "feature" ? "hp-pfeature" : undefined}>
+            <h2 className={`hp-group${g.id === "feature" ? " is-feature" : ""}`}>
               {g.id === "live" && <span className="hp-live-dot" aria-hidden />}
               {g.label} · {g.total}
             </h2>
@@ -428,9 +451,9 @@ function PhoneBoard({ category }: { category: CategoryId }) {
             })}
           </section>
         ))}
-        {list.length > PHONE_PEEK && (
+        {rest.length > PHONE_PEEK && (
           <button className="hp-showall" onClick={() => setShowAll((v) => !v)} aria-expanded={showAll}>
-            {showAll ? "Show fewer ▴" : `Show all ${list.length} markets ▾`}
+            {showAll ? "Show fewer ▴" : `Show all ${rest.length} markets ▾`}
           </button>
         )}
 

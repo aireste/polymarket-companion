@@ -176,3 +176,64 @@
 .lab input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.12); }
 .lab input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--paper-2); border: 3px solid var(--lab); }
 .lab input[type="range"]:focus-visible { outline: 2px solid var(--lab); outline-offset: 4px; }
+
+/* ══ Walking in ══
+   Once per visit (~1.9s): black, the flask draws in lemon, a hairline strikes across and bursts into a
+   lemon screen with one sharp shake, the name holds, then the lemon lifts like a shutter and the
+   Lab's panels rise in. Back in the same visit: just the rise. Transform/opacity only (the flask's line draw
+   is a tiny SVG stroke). */
+.lab-entry {
+  --le-ink: oklch(0.13 0.007 260);
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; overflow: hidden; cursor: pointer;
+  animation: le-shake 0.2s linear 0.98s both;
+}
+/* The black backdrop, gone once the lemon covers the screen so the lift reveals the Lab. */
+.lab-entry::before { content: ""; position: absolute; inset: 0; background: var(--le-ink); animation: le-hide 0.01s linear 1.05s both; }
+.le-stage { position: relative; display: grid; justify-items: center; gap: 18px; color: var(--lab); }
+.le-flask { width: clamp(64px, 8vw, 96px); height: auto; overflow: visible; }
+.le-flask path:first-child { stroke-dasharray: 1; stroke-dashoffset: 1; animation: le-draw 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both; }
+.le-spark { transform-box: fill-box; transform-origin: center; animation: le-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both; }
+.le-word {
+  font-family: var(--font-lab), var(--font-sans); font-weight: 700; font-size: clamp(28px, 4.4vw, 52px); letter-spacing: -0.04em; line-height: 1;
+  animation: le-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s both;
+}
+/* The strike: a hairline across the middle of the screen... */
+.le-line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: var(--lab); transform: scaleX(0); animation: le-strike 0.18s cubic-bezier(0.7, 0, 0.3, 1) 0.68s both; }
+/* ...that bursts open into the lemon screen, then lifts away. */
+.le-lift { position: absolute; inset: 0; animation: le-lift 0.55s cubic-bezier(0.83, 0, 0.17, 1) 1.5s both; }
+/* Hidden until the strike (no backwards fill), then it opens from the hairline's own height. */
+.le-slab { position: absolute; inset: 0; background: var(--lab); display: grid; place-items: center; transform: scaleY(0); animation: le-burst 0.2s cubic-bezier(0.7, 0, 0.84, 0) 0.84s forwards; }
+.le-slab-in { display: grid; justify-items: center; gap: 12px; color: var(--le-ink); animation: le-hold 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) 1.02s both; }
+.le-slab-in b { font-family: var(--font-lab), var(--font-sans); font-weight: 800; font-size: clamp(44px, 8vw, 104px); letter-spacing: -0.05em; line-height: 0.95; }
+.le-slab-in span { font-size: 15px; font-weight: 700; letter-spacing: 0.01em; }
+
+@keyframes le-draw { to { stroke-dashoffset: 0; } }
+@keyframes le-pop { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes le-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes le-strike { to { transform: scaleX(1); } }
+@keyframes le-burst { from { transform: scaleY(0.003); } to { transform: scaleY(1); } }
+@keyframes le-hold { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+@keyframes le-hide { to { opacity: 0; } }
+@keyframes le-lift { to { transform: translateY(-100%); } }
+@keyframes le-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translate(-6px, 3px); }
+  40% { transform: translate(5px, -4px); }
+  60% { transform: translate(-3px, 2px); }
+  80% { transform: translate(2px, -1px); }
+}
+
+/* The Lab's panels rise in one after another: as the shutter lifts, or straight away on later visits. */
+.hp-page:has(.lab-entry, .lab-entry-mark) .lab > * { animation: le-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.hp-page:has(.lab-entry, .lab-entry-mark) .lab > :nth-child(2) { animation-delay: 0.06s; }
+.hp-page:has(.lab-entry, .lab-entry-mark) .lab > :nth-child(3) { animation-delay: 0.12s; }
+.hp-page:has(.lab-entry, .lab-entry-mark) .lab > :nth-child(n + 4) { animation-delay: 0.18s; }
+.hp-page:has(.lab-entry) .lab > * { animation-delay: 1.62s; }
+.hp-page:has(.lab-entry) .lab > :nth-child(2) { animation-delay: 1.68s; }
+.hp-page:has(.lab-entry) .lab > :nth-child(3) { animation-delay: 1.74s; }
+.hp-page:has(.lab-entry) .lab > :nth-child(n + 4) { animation-delay: 1.8s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-entry { display: none; }
+  .hp-page .lab > * { animation: none !important; }
+}

@@ -356,6 +356,26 @@ export async function fetchMarkets(opts: FetchMarketsOptions = {}): Promise<Mark
 }
 
 /**
+ * One slate of games, e.g. every college football game today: games starting between `from` and
+ * `to` whose event slug starts with `prefix`, biggest first (Polymarket US orders by volume),
+ * each as its full-game winner. Finished games (one side 97%+) are left out. `pin` matchups
+ * (matched on the title) are included even when they fall below the `limit` cut.
+ */
+export async function fetchSlate(opts: { prefix: string; from: string; to: string; limit: number; pin?: string[]; timeoutMs?: number }): Promise<Market[]> {
+  const events = await fetchEvents(
+    { limit: "100", categories: "sports", startTimeMin: opts.from, startTimeMax: opts.to },
+    opts.timeoutMs ?? 10_000
+  );
+  const all = flatten(
+    events.filter((e) => e.slug?.startsWith(opts.prefix)),
+    1,
+    (m) => undecided(m) && m.gameStartTime != null
+  );
+  const pinned = (m: Market) => opts.pin?.some((p) => m.question.includes(p)) ?? false;
+  return all.filter((m, i) => i < opts.limit || pinned(m));
+}
+
+/**
  * Keyword-search everything on Polymarket US: a team, a candidate, "bitcoin". Search returns
  * events; we flatten them like the board does (a game's winner, a future's top picks), rank
  * markets that name the query's words first, and keep the search's own order to break ties.

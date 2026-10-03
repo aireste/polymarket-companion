@@ -3,7 +3,8 @@
  * the Market -> PlayDTO mapping every route shares (board, search, lookup).
  */
 
-import { fetchMarkets, type Market } from "./polymarket";
+import { fetchMarkets, fetchSlate, type Market } from "./polymarket";
+import { activeFeature } from "./featured";
 import { rankMarkets, type ScoredMarket, type Signals } from "./scoring";
 import type { PlayDTO } from "./dto";
 import { categoryById, type CategoryId } from "./filters";
@@ -25,7 +26,13 @@ export async function fetchBoard(category: CategoryId = "all"): Promise<ScoredMa
   // Category boards skip markets that are already settled in all but name (one side at 97%+,
   // same line as Jev's "Decided"), e.g. today's Bitcoin price brackets. The main board is unchanged.
   const pool = us == null ? markets : markets.filter((m) => m.outcomes.every((o) => o.price < 0.97));
-  return rankMarkets(pool, { limit: 18 });
+  const board = rankMarkets(pool, { limit: 18 });
+  // An event day (e.g. College Football Saturday) adds its slate on top; the board puts it first.
+  const feature = activeFeature(category);
+  if (!feature) return board;
+  const slate = await fetchSlate({ prefix: feature.eventPrefix, from: feature.from, to: feature.to, limit: feature.limit, pin: feature.pin }).catch(() => []);
+  const ids = new Set(board.map((m) => m.id));
+  return [...rankMarkets(slate.filter((m) => !ids.has(m.id)), { limit: slate.length }), ...board];
 }
 
 /**

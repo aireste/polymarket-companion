@@ -231,3 +231,9 @@
 .hp-app .hp-dh-link[href="/hedge"]:not(#_):not(#_) { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; color: var(--lab-ink); }
 .hp-app .hp-dh-link[href="/hedge"]:hover:not(#_):not(#_) { filter: brightness(1.12); }
 .hp-app .hp-dh-nav:has(.hp-dh-link[href="/hedge"][aria-current="page"]) .hp-dh-ind:not(#_):not(#_) { background: var(--lab); }
+
+/* Event day (e.g. College Football Saturday): its slate heads the list in the brand ice, with a count. */
+.hp-app .hp-dgrp.is-feature:not(#_):not(#_) { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--accent-ink); }
+.hp-dgrp.is-feature small { font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--ink-faint); }
+.hp-dfeature { border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+.hp-app .hp-group.is-feature:not(#_):not(#_) { color: var(--accent-ink); }
