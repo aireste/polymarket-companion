@@ -16,6 +16,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { OddsToggle } from "./OddsToggle";
 import { POLYMARKET_US } from "@/lib/links";
 import { TodaysPick } from "./TodaysPick";
+import { TipLine } from "./TipLine";
 import { SubscribeBox } from "./SubscribeBox";
 import { todaysPick } from "@/lib/pick";
 import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
@@ -256,6 +257,7 @@ function DeskBoard({ category }: { category: CategoryId }) {
 
         <DeskPick />
         {plays && <JevSummary plays={list} />}
+        <TipLine variant="row" />
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
         {!plays && !error && Array.from({ length: 8 }).map((_, i) => <div key={i} className="hp-dr hp-dr-skl" aria-hidden />)}
         {plays && list.length === 0 && <p className="hp-empty">Nothing worth a look in this category right now.</p>}
@@ -409,6 +411,7 @@ function PhoneBoard({ category }: { category: CategoryId }) {
 
         <TodaysPick variant="phone" onOpen={openSheet} />
         {plays && <NextUp plays={list} onOpen={openSheet} />}
+        <TipLine variant="row" />
 
         {error && <p className="state err">Couldn&apos;t load markets: {error}.</p>}
         {!plays && !error && Array.from({ length: 4 }).map((_, i) => <div key={i} className="hp-fcard hp-fcard-skl" aria-hidden />)}

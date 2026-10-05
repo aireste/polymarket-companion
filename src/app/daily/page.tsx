@@ -5,6 +5,7 @@ import { cachedPreview } from "@/lib/dailyPreview";
 import { SubscribeBox } from "@/components/SubscribeBox";
 import { EmailPreview, EmailPreviewSkeleton } from "@/components/EmailPreview";
 import Link from "next/link";
+import { TipLine } from "@/components/TipLine";
 
 export const metadata: Metadata = {
   title: "HedgePredict Daily",
@@ -57,6 +58,7 @@ export default function Page() {
           ))}
         </ol>
         <p className="hp-dl-note">The preview is the latest issue, exactly as it landed in inboxes. The board has every market, live; the Daily is the read.</p>
+        <TipLine />
       </div>
 
       <div className="hp-dl-preview">

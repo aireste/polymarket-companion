@@ -22,6 +22,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { DailyIssue, IssueMarket } from "@/lib/daily";
+import { TIP_URL } from "@/lib/links";
 
 const C = {
   canvas: "#eceef1",
@@ -167,6 +168,10 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
               <Link href={`${siteUrl}/hedge`} style={{ color: C.ink, fontWeight: 700 }}>Test a bet in Hedge Lab</Link>
               {"   ·   "}
               <Link href={`${siteUrl}/ask`} style={{ color: C.ink, fontWeight: 700 }}>Ask HedgePredict</Link>
+            </Text>
+            <Text style={{ margin: "14px 0 0", fontSize: 13.5, lineHeight: "20px", color: C.soft }}>
+              HedgePredict is free, and I want to keep it that way. Tips cover the data and AI costs.{" "}
+              <Link href={TIP_URL} style={{ color: C.ink, fontWeight: 700, textDecoration: "underline" }}>Leave a tip</Link>
             </Text>
           </Section>
 

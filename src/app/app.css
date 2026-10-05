@@ -963,6 +963,17 @@
 @keyframes hp-pop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: none; } }
 
 /* Maker credit at the bottom of the board */
+/* The tip jar line: same quiet weight as the credit, never a banner. */
+.hp-tip { font-size: 12.5px; line-height: 1.5; color: var(--ink-faint); margin: 0; }
+.hp-tip a { color: var(--ink-soft); text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; transition: color 0.15s var(--ease); }
+.hp-tip a:hover { color: var(--ink); }
+.hp-dl-note + .hp-tip { margin-top: 10px; }
+/* At the top of the board: one plain row between hairlines, the ask on the left, the link on the right. */
+.hp-tiprow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 13px; line-height: 1.45; color: var(--ink-soft); text-decoration: none; transition: background 0.15s var(--ease), color 0.15s var(--ease); }
+.hp-tiprow b { flex: none; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
+.hp-tiprow:hover { background: var(--paper-2); color: var(--ink); }
+/* Phone: it sits in the page's own gutter, between the cards. */
+.hp-phone-board .hp-tiprow { margin: 14px 0 4px; padding: 12px 14px; border: 1px solid var(--rule); background: var(--paper-2); }
 .hp-credit { font-size: 12px; color: var(--ink-faint); }
 .hp-credit a { color: var(--ink-soft); text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; transition: color 0.15s var(--ease); }
 .hp-credit a:hover { color: var(--ink); }
