@@ -213,19 +213,24 @@
   .hp-dshowall { display: block; width: calc(100% - 44px); margin: 14px 22px 6px; }
 }
 
-/* header Ask = the ✦ mark alone. Until it's opened once it twinkles every ~10s:
-   a quick quarter turn + pop (the 4-point spark looks the same after 90°). */
+/* header Ask = the HedgePredict mark alone. Until it's opened once, every ~10s the short and long
+   blocks in its top and bottom rows slide past each other, hold a beat, and slide back: the two
+   sides trading places. Transform only (the lengths are in the mark's own 48-unit grid). */
 @media (min-width: 900px) {
   .hp-dh .hp-ask-btn.is-icon { width: 36px; padding: 0; justify-content: center; }
-  .hp-dh .hp-ask-btn.is-icon .hp-ask-mark svg { width: 17px; height: 17px; }
-  .hp-dh .hp-ask-btn.is-new .hp-ask-mark svg { animation: hp-twinkle 10s var(--ease) 2.5s infinite; }
+  .hp-dh .hp-ask-btn.is-icon .hp-ask-mark svg { width: 19px; height: 19px; }
+  /* Each rule spells out the whole animation: the build's CSS minifier turns a shorthand with no
+     name into "animation: none". */
+  .hp-dh .hp-ask-btn.is-new .hp-ask-mark .lg-a { animation: hp-shift-a 10s cubic-bezier(0.65, 0, 0.35, 1) 2.5s infinite; }
+  .hp-dh .hp-ask-btn.is-new .hp-ask-mark .lg-b { animation: hp-shift-b 10s cubic-bezier(0.65, 0, 0.35, 1) 2.5s infinite; }
+  .hp-dh .hp-ask-btn.is-new .hp-ask-mark .lg-c { animation: hp-shift-c 10s cubic-bezier(0.65, 0, 0.35, 1) 2.5s infinite; }
+  .hp-dh .hp-ask-btn.is-new .hp-ask-mark .lg-d { animation: hp-shift-d 10s cubic-bezier(0.65, 0, 0.35, 1) 2.5s infinite; }
 }
-@keyframes hp-twinkle {
-  0%, 88% { transform: none; }
-  93% { transform: rotate(45deg) scale(1.3); }
-  100% { transform: rotate(90deg) scale(1); }
-}
-@media (prefers-reduced-motion: reduce) { .hp-dh .hp-ask-btn.is-new .hp-ask-mark svg { animation: none; } }
+@keyframes hp-shift-a { 0%, 80%, 100% { transform: none; } 86%, 94% { transform: translateX(13px); } }
+@keyframes hp-shift-b { 0%, 80%, 100% { transform: none; } 86%, 94% { transform: translateX(-24.5px); } }
+@keyframes hp-shift-c { 0%, 80%, 100% { transform: none; } 86%, 94% { transform: translateX(24.5px); } }
+@keyframes hp-shift-d { 0%, 80%, 100% { transform: none; } 86%, 94% { transform: translateX(-13px); } }
+@media (prefers-reduced-motion: reduce) { .hp-dh .hp-ask-btn.is-new .hp-ask-mark svg rect { animation: none; } }
 
 /* Hedge Lab in the top nav wears the Lab's own type and lemon, so it reads as its own room. */
 .hp-app .hp-dh-link[href="/hedge"]:not(#_):not(#_) { font-family: var(--font-lab), var(--font-sans); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; color: var(--lab-ink); }
