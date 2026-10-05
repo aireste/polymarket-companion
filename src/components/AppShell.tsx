@@ -144,7 +144,7 @@ function AskDropdown() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [used, setUsed] = useState(false);
-  // The mark's blocks trade sides now and then until Ask has been opened once (remembered per browser).
+  // The speech bubble pops now and then until Ask has been opened once (remembered per browser).
   const [fresh, setFresh] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -197,7 +197,7 @@ function AskDropdown() {
         aria-label="Ask HedgePredict"
         title="Ask HedgePredict"
       >
-        <span className="hp-ask-mark">{Icon.logo}</span>
+        <span className="hp-ask-mark">{Icon.ask}</span>
       </button>
       {used && (
         <div className={`hp-askdrop${open ? " is-open" : ""}`} role="dialog" aria-label="Ask HedgePredict" aria-hidden={!open}>

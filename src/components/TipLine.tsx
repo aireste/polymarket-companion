@@ -1,12 +1,12 @@
 import { TIP_URL } from "@/lib/links";
 import { Icon } from "./icons";
 
-const PITCH = "HedgePredict is free, and I want to keep it that way. Tips cover the data and AI costs.";
-
 /**
- * The tip jar. `row` sits at the top of the board, under the pick, so it's seen on every visit
+ * The coffee link. The wording is a thank-you option, never an ask: it says the site is free and
+ * leaves the coffee to anyone who found it useful. No "tips", no reasons why money is needed.
+ * `row` sits at the top of the board, under the pick, so it's seen on every visit
  * (one plain row, never a banner or a pop-up). `link` is just the cup and "Buy me a coffee", for
- * the board's footer beside the Polymarket mark, so the ask isn't repeated in full. The default
+ * the board's footer beside the Polymarket mark, so the line isn't repeated in full. The default
  * is a quiet line for other pages.
  */
 export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link" }) {
@@ -21,7 +21,7 @@ export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link
   if (variant === "row") {
     return (
       <a className="hp-tiprow" href={TIP_URL} target="_blank" rel="noopener noreferrer">
-        <span>{PITCH}</span>
+        <span>HedgePredict is free. Found it useful?</span>
         <b>
           {Icon.coffee}
           Buy me a coffee
@@ -31,10 +31,11 @@ export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link
   }
   return (
     <p className="hp-tip">
-      {PITCH}{" "}
+      HedgePredict is free. If it&apos;s been useful, you can{" "}
       <a href={TIP_URL} target="_blank" rel="noopener noreferrer">
-        Buy me a coffee
+        buy me a coffee
       </a>
+      .
     </p>
   );
 }

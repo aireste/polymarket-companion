@@ -9,7 +9,7 @@ export const Icon = {
    */
   logo: (
     <svg viewBox="0 0 48 48" aria-hidden>
-      {/* The classes let the Ask button slide the two rows' blocks past each other (see desk.css). */}
+      {/* The classes let the top bar slide the two rows' blocks past each other (see desk.css). */}
       <rect className="lg-a" x="7" y="7" width="21" height="9" fill="currentColor" />
       <rect className="lg-b" x="31.5" y="7" width="9.5" height="9" fill="currentColor" opacity="0.5" />
       <rect x="7" y="19.5" width="34" height="9" fill="currentColor" />

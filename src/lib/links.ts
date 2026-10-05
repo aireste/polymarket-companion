@@ -4,5 +4,5 @@
  */
 export const POLYMARKET_US = "https://polymarket.us";
 
-/** The tip jar (Ko-fi). The site is free; tips help cover data and AI costs. */
+/** The Ko-fi page behind "Buy me a coffee": an optional thank-you, since the site is free. */
 export const TIP_URL = "https://ko-fi.com/hedgepredict";
