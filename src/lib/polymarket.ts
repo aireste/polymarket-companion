@@ -70,6 +70,8 @@ interface Amount {
 interface RawSide {
   description?: string;
   long?: boolean;
+  /** A quote on the long instrument while the market trades; 1 or 0 for the side once it resolves. */
+  price?: string | number;
   team?: { safeName?: string; name?: string } | null;
 }
 interface RawMarket {
@@ -431,15 +433,35 @@ export async function fetchMarketById(id: string, timeoutMs = 10_000): Promise<M
 }
 
 /**
- * How a resolved market settled: 1 = the long side (outcome 0) won, 0 = the short side won.
- * Null while it's still open (the API 404s until settlement).
+ * How markets settled, for grading calls. Returns, per market slug, 1 if the long side
+ * (outcome 0) won, 0 if the short side won, or "void" if it resolved without a clear winner.
+ * Markets that haven't resolved are simply absent.
+ *
+ * This reads the events list, which marks a finished market MARKET_STATUS_RESOLVED and sets the
+ * winning side's price to 1. The per-market settlement endpoint would be the obvious source, but
+ * it shares the ~5-requests-a-minute limit with the order book, so grading a hundred open calls
+ * through it never gets past the first few.
  */
-export async function fetchSettlement(marketSlug: string, timeoutMs = 10_000): Promise<number | null> {
-  try {
-    const d = await get<{ settlement?: number | string }>(`/v1/markets/${encodeURIComponent(marketSlug)}/settlement`, timeoutMs);
-    const s = num(d.settlement);
-    return Number.isFinite(s) ? s : null;
-  } catch {
-    return null;
+export async function fetchResults(eventSlugs: string[], timeoutMs = 15_000): Promise<Map<string, 0 | 1 | "void">> {
+  const out = new Map<string, 0 | 1 | "void">();
+  const unique = [...new Set(eventSlugs)];
+  for (let i = 0; i < unique.length; i += 15) {
+    const q = new URLSearchParams();
+    for (const slug of unique.slice(i, i + 15)) q.append("slug", slug);
+    for (const t of BOARD_TYPES) q.append("marketTypes", t);
+    let events: RawEvent[];
+    try {
+      events = (await get<{ events?: RawEvent[] }>(`/v1/events?${q}`, timeoutMs)).events ?? [];
+    } catch {
+      continue; // try this batch again on the next run
+    }
+    for (const ev of events) {
+      for (const m of ev.markets ?? []) {
+        if (!m.slug || m.status !== "MARKET_STATUS_RESOLVED") continue;
+        const long = num(m.marketSides?.find((x) => x.long)?.price);
+        out.set(m.slug, long >= 0.99 ? 1 : long <= 0.01 ? 0 : "void");
+      }
+    }
   }
+  return out;
 }

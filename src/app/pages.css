@@ -432,3 +432,69 @@
 .ts-lab-title.is-big .hl-mark { width: 60px; height: 60px; }
 .ts-lab-title.is-big b { font-size: clamp(42px, 5.6vw, 66px); }
 .ts-lab-demo { animation: tp-in 0.45s var(--ease) both; }
+
+/* ══ Track record: the public scorecard ══
+   A summary in four tiles, one line chart (running profit at a flat $1 a call), two small tables
+   and the full list. Numbers are tabular; green and red only ever mean profit and loss. */
+/* minmax(0, …) on every grid here: otherwise the wide tables set the column width and push the
+   whole page past a phone's screen, instead of scrolling inside .tr-scroll. */
+.tr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; max-width: 980px; }
+.tr-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.tr-head h1 { font-size: clamp(30px, 3.4vw, 42px); font-weight: 900; letter-spacing: -0.04em; color: var(--accent-ink); }
+.tr-head p { max-width: 66ch; font-size: 16px; line-height: 1.55; color: var(--ink-soft); }
+.tr-early { max-width: 76ch; padding: 14px 18px; border-left: 3px solid var(--accent-ink); background: var(--paper-2); font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+.tr-early b { color: var(--ink); font-weight: 800; }
+.tr .is-pos { color: var(--pos-ink); }
+.tr .is-neg { color: var(--neg-ink); }
+
+.tr-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; background: var(--rule); }
+.tr-tile { display: grid; gap: 6px; align-content: start; padding: 18px 20px; background: var(--paper-2); }
+.tr-tile dt { font-size: 13px; font-weight: 700; color: var(--ink-faint); }
+.tr-tile dd { font-size: clamp(26px, 3vw, 36px); font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: var(--ink); }
+.tr-tile small { font-size: 12.5px; color: var(--ink-faint); }
+
+.tr-sec { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.tr-sec h2 { font-size: 21px; font-weight: 900; letter-spacing: -0.03em; color: var(--ink); }
+.tr-sub { font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); max-width: 72ch; }
+.tr-none { padding: 26px 0; font-size: 14.5px; color: var(--ink-faint); }
+
+/* The chart: one 2px line, hairline grid, a firmer zero line, the latest value labeled at the end. */
+.tr-chart { position: relative; margin-top: 8px; outline: none; touch-action: pan-y; }
+.tr-chart:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; }
+.tr-chart svg { display: block; overflow: visible; }
+.tr-grid { stroke: var(--rule); stroke-width: 1; }
+.tr-zero { stroke: var(--rule-strong, var(--ink-faint)); stroke-width: 1; }
+.tr-tick { font-size: 11.5px; font-weight: 600; fill: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.tr-line { fill: none; stroke: var(--accent-ink); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.tr-cross { stroke: var(--ink-faint); stroke-width: 1; }
+.tr-dot { fill: var(--accent-ink); stroke: var(--paper); stroke-width: 2; }
+.tr-endlabel { font-size: 14px; font-weight: 800; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.tr-tip { position: absolute; z-index: 2; transform: translate(-50%, -100%); width: max-content; max-width: 220px; display: grid; gap: 2px; padding: 9px 12px; background: var(--paper-2); border: 1px solid var(--rule-strong, var(--rule)); pointer-events: none; }
+.tr-tip b { font-size: 16px; font-weight: 900; letter-spacing: -0.02em; color: var(--ink); }
+.tr-tip span { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.tr-tip small { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.tr-scroll { overflow-x: auto; margin-top: 6px; }
+.tr-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.tr-table th, .tr-table td { padding: 11px 14px 11px 0; text-align: left; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.tr-table thead th { font-size: 12.5px; font-weight: 700; color: var(--ink-faint); }
+.tr-table tbody th { font-weight: 800; color: var(--ink); }
+.tr-table td { color: var(--ink-soft); }
+.tr-table td.num, .tr-table thead th:not(:first-child) { font-variant-numeric: tabular-nums; }
+.tr-calls .tr-q { white-space: normal; min-width: 220px; color: var(--ink); font-weight: 600; }
+.tr-calls .tr-q small { margin-left: 8px; font-size: 11.5px; font-weight: 700; color: var(--ink-faint); }
+.tr-calls tr.is-early td { opacity: 0.6; }
+.tr-wager { font-weight: 800; color: var(--ink); }
+.tr-lean { font-weight: 500; color: var(--ink); }
+.tr-open { color: var(--ink-faint); }
+.tr-more { margin-top: 14px; }
+
+.tr-how ul { display: grid; gap: 8px; margin: 6px 0 0; padding-left: 18px; max-width: 78ch; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
+.tr-disc { margin-top: 12px; max-width: 78ch; font-size: 12.5px; line-height: 1.5; color: var(--ink-faint); }
+
+@media (max-width: 760px) {
+  .tr { gap: 28px; }
+  .tr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.tr-caveat { max-width: 76ch; margin-top: 6px; padding: 12px 16px; border-left: 3px solid var(--ink-faint); font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
+.tr-caveat b { color: var(--ink); font-weight: 800; }

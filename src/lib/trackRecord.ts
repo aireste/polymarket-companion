@@ -9,7 +9,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { calls } from "@/db/schema";
 import { getBoardReads } from "./jevBoard";
-import { fetchSettlement, parseMarketId } from "./polymarket";
+import { fetchResults, parseMarketId } from "./polymarket";
 
 /** Calls logged before the switch to Polymarket US have numeric international ids; they're graded there. */
 const GAMMA = "https://gamma-api.polymarket.com";
@@ -65,20 +65,23 @@ async function settle(id: number, sidePrice: number, won: boolean | null) {
 export async function gradeOpenCalls() {
   const open = await db.select().from(calls).where(eq(calls.result, "open"));
   let graded = 0;
-  // One lookup per market, even if it has several open calls.
-  for (const marketId of new Set(open.map((c) => c.marketId))) {
-    const us = parseMarketId(marketId);
-    if (us) {
-      // Settlement is 1 when the long side (outcome 0) won, 0 when the short side did; anything
-      // in between is a refund-style settlement, graded void.
-      const s = await fetchSettlement(us.market);
-      if (s == null) continue;
-      for (const c of open.filter((x) => x.marketId === marketId)) {
-        await settle(c.id, c.sidePrice, s === 1 || s === 0 ? (c.sideIndex === 0) === (s === 1) : null);
-        graded++;
-      }
-      continue;
-    }
+
+  // Polymarket US calls: one batched look at their events tells us which markets have resolved.
+  const usCalls = open.flatMap((c) => {
+    const ref = parseMarketId(c.marketId);
+    return ref ? [{ c, ref }] : [];
+  });
+  const results = await fetchResults(usCalls.map((x) => x.ref.event));
+  for (const { c, ref } of usCalls) {
+    const r = results.get(ref.market);
+    if (r === undefined) continue; // still open
+    // 1 = the long side (outcome 0) won, 0 = the short side did; "void" = no clear winner.
+    await settle(c.id, c.sidePrice, r === "void" || c.sideIndex == null ? null : (c.sideIndex === 0) === (r === 1));
+    graded++;
+  }
+
+  // Calls from before the switch (numeric international ids): one Gamma lookup per market.
+  for (const marketId of new Set(open.filter((c) => !parseMarketId(c.marketId)).map((c) => c.marketId))) {
     let m: GammaMarket;
     try {
       const res = await fetch(`${GAMMA}/markets/${encodeURIComponent(marketId)}`, { cache: "no-store" });
@@ -118,4 +121,126 @@ export async function trackSummary() {
     hitRate: r.resolved ? r.won / r.resolved : null,
     returnPerCall: r.resolved ? r.profit / r.resolved : null,
   }));
+}
+
+/* ── The public scorecard ── */
+
+export interface RecordCall {
+  id: number;
+  loggedAt: string;
+  resolvedAt: string | null;
+  question: string;
+  call: "Wager" | "Lean";
+  side: string;
+  sidePrice: number;
+  howSure: number;
+  result: "open" | "won" | "lost" | "void";
+  profit: number | null;
+  /** Made before the switch to Polymarket US (international prices): listed, not counted. */
+  early: boolean;
+  /** When the call was made: before a game started, while it was being played, or on a market with no game. */
+  timing: "pre-game" | "live" | "other";
+}
+
+export interface RecordLine {
+  label: string;
+  logged: number;
+  resolved: number;
+  won: number;
+  lost: number;
+  /** Share of resolved calls that won. */
+  hitRate: number | null;
+  /** Average price paid on resolved calls: the hit rate needed just to break even. */
+  breakEven: number | null;
+  /** Profit per $1 staked, flat $1 on every resolved call. */
+  perDollar: number | null;
+  profit: number;
+}
+
+export interface TrackRecord {
+  since: string | null;
+  asOf: string;
+  all: RecordLine;
+  byCall: RecordLine[];
+  bySure: RecordLine[];
+  /** Pre-game, in-game and non-game calls behave differently, so they're shown apart. */
+  byTiming: RecordLine[];
+  /**
+   * Running profit at a flat $1 a call, one point per resolved call, in the order the calls were
+   * made. (Not the order they were graded: grading happens in batches, so many share a timestamp.)
+   */
+  curve: { t: number; v: number; question: string; call: string; side: string; won: boolean; profit: number }[];
+  /** How much of the total rests on a couple of results: the two biggest wins and the total without them. */
+  topWins: { names: string[]; sum: number; without: number } | null;
+  calls: RecordCall[];
+  earlyCount: number;
+}
+
+function line(label: string, rows: RecordCall[]): RecordLine {
+  const done = rows.filter((r) => r.result === "won" || r.result === "lost");
+  const won = done.filter((r) => r.result === "won").length;
+  const profit = done.reduce((s, r) => s + (r.profit ?? 0), 0);
+  return {
+    label,
+    logged: rows.length,
+    resolved: done.length,
+    won,
+    lost: done.length - won,
+    hitRate: done.length ? won / done.length : null,
+    breakEven: done.length ? done.reduce((s, r) => s + r.sidePrice, 0) / done.length : null,
+    perDollar: done.length ? profit / done.length : null,
+    profit,
+  };
+}
+
+/**
+ * Everything the scorecard page shows. Only calls made on Polymarket US count toward the
+ * numbers: the first few dozen were made on international Polymarket prices with different
+ * model inputs, so they're listed but kept out of the totals.
+ */
+export async function getTrackRecord(): Promise<TrackRecord> {
+  const rows = await db.select().from(calls).orderBy(sql`${calls.loggedAt} desc`);
+  const all: RecordCall[] = rows.map((r) => ({
+    id: r.id,
+    loggedAt: r.loggedAt.toISOString(),
+    resolvedAt: r.resolvedAt ? r.resolvedAt.toISOString() : null,
+    question: r.question,
+    call: r.call as RecordCall["call"],
+    side: r.side,
+    sidePrice: r.sidePrice,
+    howSure: r.howSure,
+    result: r.result as RecordCall["result"],
+    profit: r.profit,
+    early: !r.marketId.includes("~"),
+    timing: r.phase === "pre-game" || r.phase === "live" ? r.phase : "other",
+  }));
+  const counted = all.filter((c) => !c.early);
+  const done = counted
+    .filter((c) => c.result === "won" || c.result === "lost")
+    .sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt) || a.id - b.id);
+  let run = 0;
+  const curve = done.map((c) => {
+    run += c.profit ?? 0;
+    return { t: Date.parse(c.loggedAt), v: run, question: c.question, call: c.call, side: c.side, won: c.result === "won", profit: c.profit ?? 0 };
+  });
+  const wins = done.filter((c) => (c.profit ?? 0) > 0).sort((a, b) => (b.profit ?? 0) - (a.profit ?? 0)).slice(0, 2);
+  const topSum = wins.reduce((s, c) => s + (c.profit ?? 0), 0);
+  const topWins = done.length >= 5 && wins.length === 2 ? { names: wins.map((c) => `${c.side} at ${Math.round(c.sidePrice * 100)}¢`), sum: topSum, without: run - topSum } : null;
+  const band = (lo: number, hi: number) => counted.filter((c) => c.howSure >= lo && c.howSure < hi);
+  return {
+    since: counted.length ? counted[counted.length - 1].loggedAt : null,
+    asOf: new Date().toISOString(),
+    all: line("All calls", counted),
+    byCall: [line("Wager", counted.filter((c) => c.call === "Wager")), line("Lean", counted.filter((c) => c.call === "Lean"))],
+    bySure: [line("Under 35% sure", band(0, 0.35)), line("35 to 50% sure", band(0.35, 0.5)), line("50% sure or more", band(0.5, 2))],
+    byTiming: [
+      line("Before the game", counted.filter((c) => c.timing === "pre-game")),
+      line("During the game", counted.filter((c) => c.timing === "live")),
+      line("Futures and other", counted.filter((c) => c.timing === "other")),
+    ],
+    curve,
+    topWins,
+    calls: all,
+    earlyCount: all.length - counted.length,
+  };
 }
