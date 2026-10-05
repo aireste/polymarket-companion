@@ -300,13 +300,13 @@ function DeskBoard({ category }: { category: CategoryId }) {
           </button>
         )}
 
-        <TipLine variant="row" />
         <div className="hp-dlist-foot">
           <SubscribeBox compact source="board-desktop" />
           <div className="hp-keys">
             <a className="hp-pm-link" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">
               <span className="hp-pm-tile">{Icon.polymarket}</span>
             </a>
+            <TipLine variant="link" />
           </div>
           <Credit />
         </div>
@@ -473,12 +473,11 @@ function PhoneBoard({ category }: { category: CategoryId }) {
           <SubscribeBox compact source="board-phone" />
         </section>
 
-        <TipLine variant="row" />
-
         <nav className="hp-phone-links" aria-label="More">
           <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
           </a>
+          <TipLine variant="link" />
         </nav>
         <p className="hp-disc hp-phone-disc">
           Decision support, not financial advice. HedgePredict never places trades.

@@ -972,8 +972,10 @@
 .hp-tiprow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 13px; line-height: 1.45; color: var(--ink-soft); text-decoration: none; transition: background 0.15s var(--ease), color 0.15s var(--ease); }
 .hp-tiprow b { flex: none; display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
 .hp-tiprow b svg { width: 18px; height: 18px; flex: none; }
-/* The bottom copy sits right above the footer, which draws its own top hairline. */
-.hp-tiprow + .hp-dlist-foot { border-top: 0; }
+/* In the footer, beside the Polymarket mark: just the cup and the words. */
+.hp-app a.hp-tiplink:not(#_) { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--ink-soft); text-decoration: none; transition: color 0.15s var(--ease); }
+.hp-app a.hp-tiplink:hover:not(#_) { color: var(--accent-ink); }
+.hp-tiplink svg { width: 18px; height: 18px; flex: none; }
 .hp-tiprow:hover { background: var(--paper-2); color: var(--ink); }
 /* Phone: it sits in the page's own gutter, between the cards. */
 .hp-phone-board .hp-tiprow { margin: 14px 0 4px; padding: 12px 14px; border: 1px solid var(--rule); background: var(--paper-2); }
