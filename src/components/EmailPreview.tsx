@@ -1,3 +1,5 @@
+import { Icon } from "./icons";
+
 /**
  * Today's email, exactly as rendered for subscribers, in a simple desktop mail
  * window. The email HTML runs in a sandboxed iframe (no scripts); links open in
@@ -24,7 +26,7 @@ export function EmailPreview({ html, subject, from }: { html: string; subject: s
 function MailHead({ from, subject }: { from: string; subject: string }) {
   return (
     <div className="hp-ep-mailhead is-wide">
-      <span className="hp-ep-avatar" aria-hidden>✦</span>
+      <span className="hp-ep-avatar" aria-hidden>{Icon.logo}</span>
       <div>
         <b>{from}</b>
         <span>{subject}</span>

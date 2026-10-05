@@ -89,7 +89,7 @@ function DeskHeader() {
   return (
     <header className="hp-dh">
       <Link href="/" className="hp-dh-brand">
-        <span className="hp-dh-mark" aria-hidden>{Icon.spark}</span>
+        <span className="hp-dh-mark" aria-hidden>{Icon.logo}</span>
         HedgePredict
       </Link>
       <nav className="hp-dh-nav" aria-label="Sections" ref={navRef}>

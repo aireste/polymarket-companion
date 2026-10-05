@@ -402,7 +402,7 @@ function PhoneBoard({ category }: { category: CategoryId }) {
         </button>
 
         <Link href="/how-it-works" className="hp-howcard">
-          <span className="hp-howcard-ic" aria-hidden>{Icon.spark}</span>
+          <span className="hp-howcard-ic" aria-hidden>{Icon.logo}</span>
           <span className="hp-howcard-txt">
             <b>How HedgePredict works</b>
             <small>The calls, the odds, and the FAQ</small>

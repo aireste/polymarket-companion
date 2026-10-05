@@ -22,7 +22,7 @@
   }
   .hp-dh-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; font-size: 20px; letter-spacing: -0.05em; color: var(--accent-ink); white-space: nowrap; }
   .hp-dh-mark { display: grid; color: var(--accent-ink); }
-  .hp-dh-mark svg { width: 18px; height: 18px; }
+  .hp-dh-mark svg { width: 20px; height: 20px; }
   .hp-dh-nav { position: relative; display: flex; gap: 22px; height: var(--dh-h); }
   .hp-dh-link { display: flex; align-items: center; font-weight: 700; font-size: 14.5px; color: var(--ink-faint); white-space: nowrap; transition: color 0.2s var(--ease); }
   .hp-dh-link:hover, .hp-dh-link[aria-current="page"] { color: var(--ink); }

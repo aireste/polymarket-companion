@@ -90,7 +90,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
       <div className="hp-pick-main">
         <div className="hp-pick-top">
           <span className="hp-pick-k">
-            <span className="hp-pick-spark">{Icon.spark}</span>
+            <span className="hp-pick-spark">{Icon.logo}</span>
             {label}
           </span>
           <span className={`hp-pick-tag ${a.cls}`}>

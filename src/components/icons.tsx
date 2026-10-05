@@ -2,6 +2,21 @@
 const s = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true } as const;
 
 export const Icon = {
+  /**
+   * The HedgePredict mark, "Split": the three-part bar from every call card (bargain, fair,
+   * bargain) stacked three times, with the two sides trading places top to bottom. Both sides of
+   * a market, balanced. The short segments are a lighter tone of whatever color the mark is set in.
+   */
+  logo: (
+    <svg viewBox="0 0 48 48" aria-hidden>
+      <rect x="7" y="7" width="21" height="9" fill="currentColor" />
+      <rect x="31.5" y="7" width="9.5" height="9" fill="currentColor" opacity="0.5" />
+      <rect x="7" y="19.5" width="34" height="9" fill="currentColor" />
+      <rect x="7" y="32" width="9.5" height="9" fill="currentColor" opacity="0.5" />
+      <rect x="20" y="32" width="21" height="9" fill="currentColor" />
+    </svg>
+  ),
+  /** The four-point spark: the Ask button's mark (it was also the old logo). */
   spark: (
     <svg viewBox="0 0 24 24" aria-hidden>
       <path d="M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4L12 3z" fill="currentColor" />
