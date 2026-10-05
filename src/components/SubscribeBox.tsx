@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { track } from "@/lib/track";
 
 const JOINED_KEY = "hp_daily_joined";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -89,6 +90,7 @@ export function SubscribeBox({
       const d = (await res.json()) as { ok?: boolean; live?: boolean; error?: string };
       if (!d.ok) throw new Error(d.error ?? "Couldn't sign you up just now. Try again.");
       const clean = email.trim().toLowerCase();
+      track("daily_signup", source);
       try {
         localStorage.setItem(JOINED_KEY, clean);
         window.dispatchEvent(new Event(JOINED_EVENT));

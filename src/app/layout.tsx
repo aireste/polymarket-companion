@@ -7,6 +7,7 @@ import "./type.css";
 import "./shape.css";
 import "./pages.css";
 import { AppShell } from "@/components/AppShell";
+import { Analytics } from "@vercel/analytics/next";
 import { THEME_BOOT } from "@/components/ThemeToggle";
 
 // Only for real code (MCP URL, commands, key hints).
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body>
         <AppShell>{children}</AppShell>
+        <Analytics />
       </body>
     </html>
   );

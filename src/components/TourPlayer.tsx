@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { track } from "@/lib/track";
 import brielle from "@/lib/tour/brielle.json";
 import { HedgeLabMark } from "./HedgeLabMark";
 import { ExampleBoard, ExampleCalls, ExampleSure, LiveDaily, LiveSearch, prefetchTourLive } from "./TourLive";
@@ -65,6 +66,8 @@ export function TourPlayer() {
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
+  // Counted once per page view, the first time play is pressed.
+  const startedRef = useRef(false);
   const [sound, setSound] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const last = useRef<number | null>(null);
@@ -126,6 +129,8 @@ export function TourPlayer() {
   }, []);
 
   const toggle = useCallback(() => {
+    if (!startedRef.current) track("tour_play");
+    startedRef.current = true;
     setStarted(true);
     prefetchTourLive();
     if (t >= TOTAL) {

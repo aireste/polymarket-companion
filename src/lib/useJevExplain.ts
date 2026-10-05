@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { track } from "./track";
 import type { JevReadDTO, JevExplainDTO, JevExplainResponse } from "./dto";
 
 interface State {
@@ -25,6 +26,7 @@ export function useJevExplain(read: JevReadDTO | null): State {
 
   const run = useCallback(async () => {
     if (!read) return;
+    track("why_this_call");
     setLoading(true);
     setError(null);
     try {

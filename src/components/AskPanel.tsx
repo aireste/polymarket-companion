@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@/lib/track";
 
 /**
  * "Ask HedgePredict" — an on-site agentic chat over the same engine.
@@ -61,6 +62,7 @@ export function AskPanel({
       const next: Msg[] = [...messages, { role: "user", content: trimmed }];
       setMessages(next);
       setInput("");
+      track("ask");
       setLoading(true);
       try {
         const res = await fetch("/api/chat", {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { track } from "./track";
 import { useSearchParams } from "next/navigation";
 import { rememberMarket } from "./recent";
 
@@ -16,6 +17,7 @@ export function useSelectedId(): string | null {
  */
 export function selectMarket(id: string | null, mode: "replace" | "push" = "replace") {
   if (id) rememberMarket(id);
+  if (id) track("open_market");
   const url = new URL(window.location.href);
   if (id) url.searchParams.set("m", id);
   else url.searchParams.delete("m");

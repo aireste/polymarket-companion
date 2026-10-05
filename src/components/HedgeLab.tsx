@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { track } from "@/lib/track";
 import { useBoard } from "@/lib/boardStore";
 import { todaysPick } from "@/lib/pick";
 import type { PlayDTO } from "@/lib/dto";
@@ -97,10 +98,14 @@ export function HedgeLab() {
   const s = useMemo(() => summary(slip), [slip]);
   const update = (id: string, patch: Partial<LabPosition>) => setRaw((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   const remove = (id: string) => setRaw((list) => list.filter((p) => p.id !== id));
-  const add = (p: LabPosition) => setRaw((list) => (list.length >= MAX ? list : [...list, p]));
+  const add = (p: LabPosition) => {
+    track("lab_add_bet");
+    setRaw((list) => (list.length >= MAX ? list : [...list, p]));
+  };
 
   // An example slip from today's board: today's pick plus two other live markets.
   const loadExample = () => {
+    track("lab_example");
     const two = (plays ?? []).filter((p) => p.outcomes.length === 2 && reads[p.id] && !reads[p.id].settled);
     const pick = todaysPick(plays, reads)?.play;
     const chosen = [pick, ...two.filter((p) => p.id !== pick?.id)].filter((p): p is PlayDTO => !!p).slice(0, 3);

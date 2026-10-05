@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { track } from "./track";
 import type { RecommendationDTO, RecommendationResponse } from "./dto";
 
 interface State {
@@ -21,6 +22,7 @@ export function useRecommendation(marketId: string): State {
   const [error, setError] = useState<string | null>(null);
 
   const run = useCallback(async () => {
+    track("deep_read");
     setLoading(true);
     setError(null);
     try {

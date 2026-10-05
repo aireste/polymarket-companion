@@ -1,5 +1,8 @@
+"use client";
+
 import { TIP_URL } from "@/lib/links";
 import { Icon } from "./icons";
+import { track } from "@/lib/track";
 
 /**
  * The coffee link. The wording is a thank-you option, never an ask: it says the site is free and
@@ -12,7 +15,7 @@ import { Icon } from "./icons";
 export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link" }) {
   if (variant === "link") {
     return (
-      <a className="hp-tiplink" href={TIP_URL} target="_blank" rel="noopener noreferrer">
+      <a className="hp-tiplink" href={TIP_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("coffee_click", "footer")}>
         {Icon.coffee}
         Buy me a coffee
       </a>
@@ -20,7 +23,7 @@ export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link
   }
   if (variant === "row") {
     return (
-      <a className="hp-tiprow" href={TIP_URL} target="_blank" rel="noopener noreferrer">
+      <a className="hp-tiprow" href={TIP_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("coffee_click", "top")}>
         <span>HedgePredict is free. Found it useful?</span>
         <b>
           {Icon.coffee}
@@ -32,7 +35,7 @@ export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link
   return (
     <p className="hp-tip">
       HedgePredict is free. If it&apos;s been useful, you can{" "}
-      <a href={TIP_URL} target="_blank" rel="noopener noreferrer">
+      <a href={TIP_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("coffee_click", "line")}>
         buy me a coffee
       </a>
       .
