@@ -163,8 +163,14 @@ export interface TrackRecord {
   all: RecordLine;
   byCall: RecordLine[];
   bySure: RecordLine[];
-  /** Pre-game, in-game and non-game calls behave differently, so they're shown apart. */
+  /** The record split into calls on games (made before kickoff) and on everything else. */
   byTiming: RecordLine[];
+  /**
+   * Calls made while a game was being played. Kept out of the record above: mid-game prices swing
+   * hard and the model can land on both teams in one game, so they say little about whether it
+   * read the market right beforehand. Shown on their own.
+   */
+  live: { all: RecordLine; byCall: RecordLine[] };
   /**
    * Running profit at a flat $1 a call, one point per resolved call, in the order the calls were
    * made. (Not the order they were graded: grading happens in batches, so many share a timestamp.)
@@ -194,9 +200,14 @@ function line(label: string, rows: RecordCall[]): RecordLine {
 }
 
 /**
- * Everything the scorecard page shows. Only calls made on Polymarket US count toward the
- * numbers: the first few dozen were made on international Polymarket prices with different
- * model inputs, so they're listed but kept out of the totals.
+ * Everything the scorecard page shows.
+ *
+ * The record answers one question: did HedgePredict call it right BEFORE the event? So it counts
+ * calls made before a game started and calls on markets that aren't games (futures, elections).
+ * Calls made during a live game are reported separately and never mixed in.
+ *
+ * Only calls made on Polymarket US count at all: the first few dozen were made on international
+ * Polymarket prices with different model inputs, so they're listed but kept out of the totals.
  */
 export async function getTrackRecord(): Promise<TrackRecord> {
   const rows = await db.select().from(calls).orderBy(sql`${calls.loggedAt} desc`);
@@ -214,7 +225,9 @@ export async function getTrackRecord(): Promise<TrackRecord> {
     early: !r.marketId.includes("~"),
     timing: r.phase === "pre-game" || r.phase === "live" ? r.phase : "other",
   }));
-  const counted = all.filter((c) => !c.early);
+  const us = all.filter((c) => !c.early);
+  const counted = us.filter((c) => c.timing !== "live");
+  const inGame = us.filter((c) => c.timing === "live");
   const done = counted
     .filter((c) => c.result === "won" || c.result === "lost")
     .sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt) || a.id - b.id);
@@ -234,13 +247,16 @@ export async function getTrackRecord(): Promise<TrackRecord> {
     byCall: [line("Wager", counted.filter((c) => c.call === "Wager")), line("Lean", counted.filter((c) => c.call === "Lean"))],
     bySure: [line("Under 35% sure", band(0, 0.35)), line("35 to 50% sure", band(0.35, 0.5)), line("50% sure or more", band(0.5, 2))],
     byTiming: [
-      line("Before the game", counted.filter((c) => c.timing === "pre-game")),
-      line("During the game", counted.filter((c) => c.timing === "live")),
-      line("Futures and other", counted.filter((c) => c.timing === "other")),
+      line("Games, called before kickoff", counted.filter((c) => c.timing === "pre-game")),
+      line("Futures, elections and other", counted.filter((c) => c.timing === "other")),
     ],
+    live: {
+      all: line("All in-game calls", inGame),
+      byCall: [line("Wager", inGame.filter((c) => c.call === "Wager")), line("Lean", inGame.filter((c) => c.call === "Lean"))],
+    },
     curve,
     topWins,
     calls: all,
-    earlyCount: all.length - counted.length,
+    earlyCount: all.filter((c) => c.early).length,
   };
 }

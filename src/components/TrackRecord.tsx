@@ -5,9 +5,11 @@ import type { RecordCall, RecordLine, TrackRecord } from "@/lib/trackRecord";
 import { MARKET_TZ } from "@/lib/format";
 
 /**
- * The public scorecard: every Wager and Lean, graded when its market resolves, losses included.
- * A summary, the running profit at a flat $1 a call, the same numbers split by call and by how
- * sure we were, and the full list. Until enough calls have resolved it says so plainly.
+ * The public scorecard: did HedgePredict call it right before the event? Every Wager and Lean made
+ * before a game started (or on a market that isn't a game), graded when it resolves, losses
+ * included: a summary, the running profit at a flat $1 a call, the same numbers split by call, by
+ * how sure we were and by kind of market, then the full list. Calls made during a live game are
+ * shown in their own section and never counted. Until enough calls have resolved it says so.
  */
 
 /** Below this many resolved calls the numbers are noise, and the page says so. */
@@ -27,8 +29,8 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
       <header className="tr-head">
         <h1>Track record</h1>
         <p>
-          Every Wager and Lean HedgePredict makes is logged the moment it appears, at the price showing then, and graded when the market resolves. Losses stay
-          on the page.
+          Did HedgePredict call it right before the event? Every Wager and Lean made before a game starts is logged the moment it appears, at the price showing
+          then, and graded when the market resolves. Losses stay on the page.
         </p>
       </header>
 
@@ -53,8 +55,8 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
         {record.topWins && record.topWins.sum > Math.abs(all.profit) * 0.5 && (
           <p className="tr-caveat">
             <b>Read this with care.</b> The two biggest wins ({record.topWins.names.join(" and ")}) brought in {money(record.topWins.sum)} between them. Without
-            those two results the total would be {money(record.topWins.without)}. A record that leans this hard on a couple of long shots hasn&apos;t proved
-            anything yet.
+            those two results the total would be {money(record.topWins.without)}. A total that depends this much on two results hasn&apos;t proved anything
+            yet.
           </p>
         )}
       </section>
@@ -72,17 +74,29 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
       </section>
 
       <section className="tr-sec">
-        <h2>By timing</h2>
-        <p className="tr-sub">
-          Calls made while a game is being played ride big price swings, and the model can end up on both teams in the same game. They&apos;re kept apart from
-          calls made before kickoff.
-        </p>
+        <h2>By kind of market</h2>
+        <p className="tr-sub">Games resolve in hours. Futures and elections can stay open for months, so few of those have been graded yet.</p>
         <Lines rows={record.byTiming} />
+      </section>
+
+      <section className="tr-sec tr-live">
+        <h2>
+          In-game calls <small>not part of the record</small>
+        </h2>
+        <p className="tr-sub">
+          HedgePredict also makes calls while a game is being played. Prices swing hard mid-game, a team at 5¢ can be a &quot;call&quot;, and the model can end up
+          on both teams in the same game. That says little about whether it read the market right beforehand, so these are kept here and counted nowhere
+          above.
+        </p>
+        <Lines rows={[record.live.all, ...record.live.byCall]} />
       </section>
 
       <section className="tr-sec">
         <h2>Every call</h2>
-        <p className="tr-sub">Newest first.{record.earlyCount > 0 ? ` The ${record.earlyCount} marked "earlier" were made before the switch to Polymarket US and aren't counted above.` : ""}</p>
+        <p className="tr-sub">
+          Newest first. Calls marked &quot;in-game&quot; were made during a live game and aren&apos;t in the record.
+          {record.earlyCount > 0 ? ` The ${record.earlyCount} marked "earlier" were made before the switch to Polymarket US and aren't counted either.` : ""}
+        </p>
         <Calls calls={record.calls} />
       </section>
 
@@ -90,6 +104,7 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
         <h2>How this is kept</h2>
         <ul>
           <li>A call is logged once, the first time it shows on the board, with the price of the side we called at that moment. It is never edited afterward.</li>
+          <li>The record counts calls made before a game started, and calls on markets that aren&apos;t games. A call first made after kickoff goes in the in-game section instead.</li>
           <li>No call is logged after its market has ended.</li>
           <li>Profit assumes $1 on the called side at the logged price: a win pays $1 a share, a loss is the full $1. Fees and price slippage are not included.</li>
           <li>A market that settles with no clear winner is marked void and counts as zero.</li>
@@ -169,11 +184,11 @@ function Calls({ calls }: { calls: RecordCall[] }) {
           </thead>
           <tbody>
             {rows.map((c) => (
-              <tr key={c.id} className={c.early ? "is-early" : undefined}>
+              <tr key={c.id} className={c.early || c.timing === "live" ? "is-early" : undefined}>
                 <td className="num">{day(c.loggedAt)}</td>
                 <td className="tr-q">
                   {c.question}
-                  {c.early && <small>earlier</small>}
+                  {c.early ? <small>earlier</small> : c.timing === "live" ? <small>in-game</small> : null}
                 </td>
                 <td>
                   <span className={c.call === "Wager" ? "tr-wager" : "tr-lean"}>{c.call}</span> {c.side}

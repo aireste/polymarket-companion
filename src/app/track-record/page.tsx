@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const cached = unstable_cache(getTrackRecord, ["track-record", "v3"], { revalidate: 300 });
+const cached = unstable_cache(getTrackRecord, ["track-record", "v5"], { revalidate: 300 });
 
 export default async function Page() {
   await connection();
