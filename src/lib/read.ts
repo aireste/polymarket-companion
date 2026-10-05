@@ -14,6 +14,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { logUsage } from "./aiUsage";
 import { CLAUDE_DEEP, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import { activityText, type Market } from "./polymarket";
 
@@ -114,6 +115,7 @@ Estimate the probability that "${target.label}" resolves YES. The market implies
     },
     messages: [{ role: "user", content: prompt }],
   });
+  await logUsage("read", response);
   assertNotRefused(response);
 
   // Structured outputs guarantee a single valid-JSON text block.

@@ -18,6 +18,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { fetchMarkets, fetchMarketById, searchMarkets } from "@/lib/polymarket";
 import { fetchHistory } from "@/lib/history";
+import { logUsage } from "@/lib/aiUsage";
 import { rankMarkets, analyzePlay, type ScoredMarket } from "@/lib/scoring";
 import { jevRead, describeRead, MissingJevKeyError } from "@/lib/jev";
 import { JEV_ACTION_COPY } from "@/lib/jevDisplay";
@@ -274,6 +275,8 @@ export async function POST(request: Request) {
     let final: Anthropic.Beta.BetaMessage | undefined;
     for await (const message of runner) {
       final = message;
+      // Each loop turn is its own billed request.
+      await logUsage("ask", message);
       // The runner does not auto-resume paused server-tool turns.
       if (message.stop_reason === "pause_turn") {
         runner.pushMessages({ role: "assistant", content: message.content });

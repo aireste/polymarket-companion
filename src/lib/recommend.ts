@@ -8,6 +8,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { logUsage } from "./aiUsage";
 import { CLAUDE_DEEP, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import { activityText, type Market } from "./polymarket";
 import { MissingCredentialsError } from "./read";
@@ -106,6 +107,7 @@ Most efficient markets should be HOLD or SKIP. Ground the sentiment summary in w
     },
     messages: [{ role: "user", content: prompt }],
   });
+  await logUsage("deep-read", response);
   assertNotRefused(response);
 
   // The final structured answer is the last text block.

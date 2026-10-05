@@ -3,9 +3,9 @@ import { etDay, ISSUE_VERSION } from "./daily";
 import { renderIssueHtml, todaysIssue } from "./newsletter";
 
 /**
- * Today's rendered issue, shared across server instances for 10 minutes so most visits skip the
- * database read and the render. Keyed by the ET date and the issue format, so a new day or a new
- * layout never serves yesterday's email. Used by /daily and the How it works tour.
+ * The latest issue, rendered, shared across server instances for 10 minutes so most visits skip
+ * the database read and the render. It never builds an issue (see todaysIssue). Keyed by the ET
+ * date and the issue format, so a new layout never serves an old-format email. Used by /daily and the How it works tour.
  */
 const rendered = unstable_cache(
   async (date: string) => {

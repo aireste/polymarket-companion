@@ -13,7 +13,7 @@
 import { Resend } from "resend";
 import { render } from "@react-email/components";
 import { DailyEmail } from "@/emails/DailyEmail";
-import { buildDailyIssue, etDay, ISSUE_VERSION, SITE_URL, type DailyIssue } from "./daily";
+import { buildDailyIssue, ISSUE_VERSION, SITE_URL, type DailyIssue } from "./daily";
 
 export function newsletterConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_SEGMENT_ID && process.env.NEWSLETTER_FROM);
@@ -23,26 +23,24 @@ let resend: Resend | null = null;
 const client = () => (resend ??= new Resend(process.env.RESEND_API_KEY));
 
 /**
- * Today's issue. Building one costs board reads on five boards, a news lookup per play and a
- * writing pass, so it's built once and saved (the `issues` table, keyed by ET date): the send,
- * the Daily page and the tour all read the same edition. A saved issue is reused for 6 hours;
- * `fresh` (the 8 AM send) always rebuilds, so subscribers get that morning's prices.
+ * The current issue. Building one costs real money (board reads on five boards, web-searched news
+ * lookups, a writing pass), so it happens in exactly one place: the weekday 8 AM send, which
+ * passes `fresh`. Everyone else (the Daily page, the tour, the preview) reads the latest saved
+ * issue from the `issues` table and never triggers a build, so a busy page or a crawler costs
+ * nothing. On a weekend, or before 8 AM, "the current issue" is simply the last one sent.
+ * The only other build is the very first one, when no issue has ever been saved.
  */
-const MAX_AGE_MS = 6 * 3_600_000;
-const usable = (i: DailyIssue | null | undefined, date: string): i is DailyIssue =>
-  !!i && i.v === ISSUE_VERSION && i.date === date && Date.now() - Date.parse(i.generatedAt) < MAX_AGE_MS;
-
-let cached: DailyIssue | null = null;
 let building: Promise<DailyIssue> | null = null;
 
-async function loadIssue(date: string): Promise<DailyIssue | null> {
+async function latestIssue(): Promise<DailyIssue | null> {
   if (!process.env.DATABASE_URL) return null;
   try {
     const { db } = await import("@/db");
     const { issues } = await import("@/db/schema");
-    const { eq } = await import("drizzle-orm");
-    const [row] = await db.select().from(issues).where(eq(issues.date, date));
-    return (row?.issue as DailyIssue | undefined) ?? null;
+    const { desc } = await import("drizzle-orm");
+    const rows = await db.select().from(issues).orderBy(desc(issues.date)).limit(5);
+    const hit = rows.map((r) => r.issue as DailyIssue).find((i) => i?.v === ISSUE_VERSION);
+    return hit ?? null;
   } catch {
     return null;
   }
@@ -63,18 +61,15 @@ async function saveIssue(issue: DailyIssue): Promise<void> {
 }
 
 export async function todaysIssue({ fresh = false }: { fresh?: boolean } = {}): Promise<DailyIssue> {
-  const date = etDay().iso;
   if (!fresh) {
-    if (usable(cached, date)) return cached;
-    const saved = await loadIssue(date);
-    if (usable(saved, date)) return (cached = saved);
-    // Two readers arriving together share one build.
+    const saved = await latestIssue();
+    if (saved) return saved;
+    // Nothing saved yet: build once. Readers arriving together share that one build.
     if (building) return building;
   }
   building = (async () => {
     try {
       const issue = await buildDailyIssue();
-      cached = issue;
       await saveIssue(issue);
       return issue;
     } finally {

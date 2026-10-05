@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate"
+    "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
+    "ai:cost": "node --env-file=.env.local scripts/ai_cost.mjs"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^4.0.92",

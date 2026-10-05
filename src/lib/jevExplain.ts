@@ -7,6 +7,7 @@
  * the metrics Jev actually saw — no invented news, no re-deciding the call.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { logUsage } from "./aiUsage";
 import { CLAUDE_FAST, REFUSAL_FALLBACK, assertNotRefused } from "./claude";
 import { MissingCredentialsError } from "./read";
 import type { JevReadDTO } from "./dto";
@@ -57,6 +58,7 @@ Write 2-3 short sentences a smart bettor can skim. For a Wager or Lean, say whic
     output_config: { effort: "low" },
     messages: [{ role: "user", content: prompt }],
   });
+  await logUsage("explain", response);
   assertNotRefused(response);
 
   const text = response.content

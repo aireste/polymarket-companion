@@ -5,7 +5,7 @@
  *
  * The calls come from the same boards, Jev reads and pick rule as the site, so the email never
  * disagrees with the app. The words come from one writing pass over those numbers plus a news
- * lookup per play (see dailyWriter.ts); if that's unavailable the issue still goes out with plain
+ * lookup for the pick and each beat's lead play (see dailyWriter.ts); if that's unavailable the issue still goes out with plain
  * notes built from the numbers.
  */
 import { getBoardReads } from "./jevBoard";
@@ -297,9 +297,12 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
     })
   );
   const callText = (m: IssueMarket) => (m.call ? `${verb(m.call.action)} ${m.call.side} at ${cents(m.call.sidePrice)}` : "no call, priced fair");
+  // News lookups are what an issue costs, so only the plays that lead get one: the pick in full,
+  // and the first play of each beat in a line. The rest are written from their numbers.
+  const researched = [...(pick ? [pick] : []), ...beats.map((b) => b.plays[0])];
   const bg = await buildBackground(
     iso,
-    featured.map((m) => ({ id: m.id, question: m.question, call: callText(m), depth: m === pick ? ("pick" as const) : ("line" as const) }))
+    researched.map((m) => ({ id: m.id, question: m.question, call: callText(m), depth: m === pick ? ("pick" as const) : ("line" as const) }))
   );
   for (const m of featured) if (bg[m.id]) m.background = bg[m.id];
 

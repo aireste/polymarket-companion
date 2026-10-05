@@ -5,6 +5,7 @@
  * strictly factual: no predictions, no advice, no restated prices.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { logUsage } from "./aiUsage";
 import { CLAUDE_FAST, REFUSAL_FALLBACK } from "./claude";
 
 export interface Background {
@@ -77,10 +78,13 @@ Rules: facts only, from what you find. Do not predict the outcome, recommend a b
       model: CLAUDE_FAST,
       max_tokens: 4000,
       thinking: { type: "adaptive" },
-      tools: [{ type: "web_search_20260209", name: "web_search", max_uses: long ? 3 : 2 }],
+      // Searches are the cost of an issue ($10 per 1,000, plus every result billed as input), so
+      // they're rationed: two for the pick, one for a one-line note.
+      tools: [{ type: "web_search_20260209", name: "web_search", max_uses: long ? 2 : 1 }],
       output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
       messages: [{ role: "user", content: prompt }],
     });
+    await logUsage("daily-news", res);
     if (res.stop_reason === "refusal") return null;
     const text = [...res.content].reverse().find((b) => b.type === "text");
     if (!text || text.type !== "text") return null;

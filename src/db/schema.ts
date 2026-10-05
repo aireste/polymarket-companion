@@ -46,3 +46,19 @@ export const issues = pgTable("issues", {
   issue: jsonb("issue").notNull(),
   generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** One row per Anthropic API call: what it was for and what it cost. See src/lib/aiUsage.ts. */
+export const aiUsage = pgTable("ai_usage", {
+  id: serial("id").primaryKey(),
+  at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  /** "daily-news", "daily-writer", "ask", "explain", "deep-read", "read". */
+  feature: text("feature").notNull(),
+  model: text("model").notNull(),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  cacheRead: integer("cache_read").notNull().default(0),
+  cacheWrite: integer("cache_write").notNull().default(0),
+  webSearches: integer("web_searches").notNull().default(0),
+  /** List-price estimate in USD; null if the model's price isn't known. */
+  costUsd: doublePrecision("cost_usd"),
+});

@@ -8,6 +8,7 @@
  * news is why we made the call. An email can't be unsent: when in doubt it says less.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { logUsage } from "./aiUsage";
 import { CLAUDE_FAST, REFUSAL_FALLBACK } from "./claude";
 
 /** Everything the writer may say about one market. */
@@ -145,6 +146,7 @@ Return:
       output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
       messages: [{ role: "user", content: prompt }],
     });
+    await logUsage("daily-writer", res);
     if (res.stop_reason === "refusal") return null;
     const text = [...res.content].reverse().find((b) => b.type === "text");
     if (!text || text.type !== "text") return null;

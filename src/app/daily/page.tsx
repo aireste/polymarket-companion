@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "A 2-minute read on prediction markets: the day's pick, a few plays worth a look, and the week ahead. Weekdays at 8 AM ET.",
 };
 
-// The first visit of the day may build the issue (about a minute); later ones read the saved one.
+// Reads the latest saved issue. Only the very first issue ever is built here (about a minute).
 export const maxDuration = 300;
 
 const INSIDE = [
@@ -56,7 +56,7 @@ export default function Page() {
             </li>
           ))}
         </ol>
-        <p className="hp-dl-note">The preview is today&apos;s real issue, exactly as it lands in your inbox. The board has every market, live; the Daily is the read.</p>
+        <p className="hp-dl-note">The preview is the latest issue, exactly as it landed in inboxes. The board has every market, live; the Daily is the read.</p>
       </div>
 
       <div className="hp-dl-preview">
