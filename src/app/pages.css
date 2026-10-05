@@ -501,3 +501,29 @@
 /* In-game calls: their own section, visibly set apart from the record. */
 .tr-live { padding-top: 26px; border-top: 1px solid var(--rule); }
 .tr-live h2 small { margin-left: 10px; font-size: 13px; font-weight: 700; letter-spacing: 0; color: var(--ink-faint); }
+
+/* The filter: plain tabs with an underline, like the rest of the site. No pills. */
+.tr-filter { display: flex; gap: 22px; border-bottom: 1px solid var(--rule); }
+.tr-filter button { padding: 10px 0 11px; margin-bottom: -1px; font-size: 15px; font-weight: 700; color: var(--ink-faint); border-bottom: 2.5px solid transparent; transition: color 0.15s var(--ease), border-color 0.15s var(--ease); }
+.tr-filter button:hover { color: var(--ink); }
+.tr-filter button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent-ink); }
+
+/* Bars. Won and lost are green and red AND up and down, so the color is never the only cue.
+   Hit-rate bars wear the accent; the break-even marker is ink with a surface ring so it reads
+   across the bar. Hovering one mark dims the others. */
+.tr-bar { fill: var(--accent-ink); }
+.tr-bar-pos { fill: var(--pos-ink); }
+.tr-bar-neg { fill: var(--neg-ink); }
+.tr-chart .is-dim { opacity: 0.4; }
+.tr-chart rect, .tr-chart g { transition: opacity 0.12s var(--ease); }
+.tr-barlabel { font-size: 12.5px; font-weight: 800; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.tr-cat { font-size: 12.5px; font-weight: 700; fill: var(--ink-soft); }
+.tr-mark { stroke: var(--ink); stroke-width: 2; }
+.tr-mark-ring { stroke: var(--paper); stroke-width: 6; }
+.tr-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.tr-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.tr-key { display: inline-block; width: 12px; height: 12px; }
+.tr-key-pos { background: var(--pos-ink); }
+.tr-key-neg { background: var(--neg-ink); }
+.tr-key-bar { background: var(--accent-ink); }
+.tr-key-mark { width: 16px; height: 2px; background: var(--ink); }

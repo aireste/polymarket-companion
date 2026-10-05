@@ -10,6 +10,7 @@ import { db } from "@/db";
 import { calls } from "@/db/schema";
 import { getBoardReads } from "./jevBoard";
 import { fetchResults, parseMarketId } from "./polymarket";
+import type { RecordCall } from "./recordMath";
 
 /** Calls logged before the switch to Polymarket US have numeric international ids; they're graded there. */
 const GAMMA = "https://gamma-api.polymarket.com";
@@ -125,138 +126,29 @@ export async function trackSummary() {
 
 /* ── The public scorecard ── */
 
-export interface RecordCall {
-  id: number;
-  loggedAt: string;
-  resolvedAt: string | null;
-  question: string;
-  call: "Wager" | "Lean";
-  side: string;
-  sidePrice: number;
-  howSure: number;
-  result: "open" | "won" | "lost" | "void";
-  profit: number | null;
-  /** Made before the switch to Polymarket US (international prices): listed, not counted. */
-  early: boolean;
-  /** When the call was made: before a game started, while it was being played, or on a market with no game. */
-  timing: "pre-game" | "live" | "other";
-}
-
-export interface RecordLine {
-  label: string;
-  logged: number;
-  resolved: number;
-  won: number;
-  lost: number;
-  /** Share of resolved calls that won. */
-  hitRate: number | null;
-  /** Average price paid on resolved calls: the hit rate needed just to break even. */
-  breakEven: number | null;
-  /** Profit per $1 staked, flat $1 on every resolved call. */
-  perDollar: number | null;
-  profit: number;
-}
-
 export interface TrackRecord {
-  since: string | null;
   asOf: string;
-  all: RecordLine;
-  byCall: RecordLine[];
-  bySure: RecordLine[];
-  /** The record split into calls on games (made before kickoff) and on everything else. */
-  byTiming: RecordLine[];
-  /**
-   * Calls made while a game was being played. Kept out of the record above: mid-game prices swing
-   * hard and the model can land on both teams in one game, so they say little about whether it
-   * read the market right beforehand. Shown on their own.
-   */
-  live: { all: RecordLine; byCall: RecordLine[] };
-  /**
-   * Running profit at a flat $1 a call, one point per resolved call, in the order the calls were
-   * made. (Not the order they were graded: grading happens in batches, so many share a timestamp.)
-   */
-  curve: { t: number; v: number; question: string; call: string; side: string; won: boolean; profit: number }[];
-  /** How much of the total rests on a couple of results: the two biggest wins and the total without them. */
-  topWins: { names: string[]; sum: number; without: number } | null;
+  /** Every call, newest first. The page derives all its numbers from this (see recordMath.ts). */
   calls: RecordCall[];
-  earlyCount: number;
 }
 
-function line(label: string, rows: RecordCall[]): RecordLine {
-  const done = rows.filter((r) => r.result === "won" || r.result === "lost");
-  const won = done.filter((r) => r.result === "won").length;
-  const profit = done.reduce((s, r) => s + (r.profit ?? 0), 0);
-  return {
-    label,
-    logged: rows.length,
-    resolved: done.length,
-    won,
-    lost: done.length - won,
-    hitRate: done.length ? won / done.length : null,
-    breakEven: done.length ? done.reduce((s, r) => s + r.sidePrice, 0) / done.length : null,
-    perDollar: done.length ? profit / done.length : null,
-    profit,
-  };
-}
-
-/**
- * Everything the scorecard page shows.
- *
- * The record answers one question: did HedgePredict call it right BEFORE the event? So it counts
- * calls made before a game started and calls on markets that aren't games (futures, elections).
- * Calls made during a live game are reported separately and never mixed in.
- *
- * Only calls made on Polymarket US count at all: the first few dozen were made on international
- * Polymarket prices with different model inputs, so they're listed but kept out of the totals.
- */
 export async function getTrackRecord(): Promise<TrackRecord> {
   const rows = await db.select().from(calls).orderBy(sql`${calls.loggedAt} desc`);
-  const all: RecordCall[] = rows.map((r) => ({
-    id: r.id,
-    loggedAt: r.loggedAt.toISOString(),
-    resolvedAt: r.resolvedAt ? r.resolvedAt.toISOString() : null,
-    question: r.question,
-    call: r.call as RecordCall["call"],
-    side: r.side,
-    sidePrice: r.sidePrice,
-    howSure: r.howSure,
-    result: r.result as RecordCall["result"],
-    profit: r.profit,
-    early: !r.marketId.includes("~"),
-    timing: r.phase === "pre-game" || r.phase === "live" ? r.phase : "other",
-  }));
-  const us = all.filter((c) => !c.early);
-  const counted = us.filter((c) => c.timing !== "live");
-  const inGame = us.filter((c) => c.timing === "live");
-  const done = counted
-    .filter((c) => c.result === "won" || c.result === "lost")
-    .sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt) || a.id - b.id);
-  let run = 0;
-  const curve = done.map((c) => {
-    run += c.profit ?? 0;
-    return { t: Date.parse(c.loggedAt), v: run, question: c.question, call: c.call, side: c.side, won: c.result === "won", profit: c.profit ?? 0 };
-  });
-  const wins = done.filter((c) => (c.profit ?? 0) > 0).sort((a, b) => (b.profit ?? 0) - (a.profit ?? 0)).slice(0, 2);
-  const topSum = wins.reduce((s, c) => s + (c.profit ?? 0), 0);
-  const topWins = done.length >= 5 && wins.length === 2 ? { names: wins.map((c) => `${c.side} at ${Math.round(c.sidePrice * 100)}¢`), sum: topSum, without: run - topSum } : null;
-  const band = (lo: number, hi: number) => counted.filter((c) => c.howSure >= lo && c.howSure < hi);
   return {
-    since: counted.length ? counted[counted.length - 1].loggedAt : null,
     asOf: new Date().toISOString(),
-    all: line("All calls", counted),
-    byCall: [line("Wager", counted.filter((c) => c.call === "Wager")), line("Lean", counted.filter((c) => c.call === "Lean"))],
-    bySure: [line("Under 35% sure", band(0, 0.35)), line("35 to 50% sure", band(0.35, 0.5)), line("50% sure or more", band(0.5, 2))],
-    byTiming: [
-      line("Games, called before kickoff", counted.filter((c) => c.timing === "pre-game")),
-      line("Futures, elections and other", counted.filter((c) => c.timing === "other")),
-    ],
-    live: {
-      all: line("All in-game calls", inGame),
-      byCall: [line("Wager", inGame.filter((c) => c.call === "Wager")), line("Lean", inGame.filter((c) => c.call === "Lean"))],
-    },
-    curve,
-    topWins,
-    calls: all,
-    earlyCount: all.filter((c) => c.early).length,
+    calls: rows.map((r) => ({
+      id: r.id,
+      loggedAt: r.loggedAt.toISOString(),
+      resolvedAt: r.resolvedAt ? r.resolvedAt.toISOString() : null,
+      question: r.question,
+      call: r.call as RecordCall["call"],
+      side: r.side,
+      sidePrice: r.sidePrice,
+      howSure: r.howSure,
+      result: r.result as RecordCall["result"],
+      profit: r.profit,
+      early: !r.marketId.includes("~"),
+      timing: r.phase === "pre-game" || r.phase === "live" ? r.phase : "other",
+    })),
   };
 }

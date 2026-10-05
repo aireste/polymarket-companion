@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { RecordCall, RecordLine, TrackRecord } from "@/lib/trackRecord";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import type { TrackRecord } from "@/lib/trackRecord";
+import { buildRecord, type CallFilter, type CurvePoint, type RecordCall, type RecordLine } from "@/lib/recordMath";
 import { MARKET_TZ } from "@/lib/format";
 
 /**
  * The public scorecard: did HedgePredict call it right before the event? Every Wager and Lean made
  * before a game started (or on a market that isn't a game), graded when it resolves, losses
- * included: a summary, the running profit at a flat $1 a call, the same numbers split by call, by
- * how sure we were and by kind of market, then the full list. Calls made during a live game are
- * shown in their own section and never counted. Until enough calls have resolved it says so.
+ * included. A filter narrows the whole page to Wagers or Leans. Then: a summary, the running
+ * profit at a flat $1 a call, each call's result, hit rate against break-even by price paid, the
+ * same numbers in tables, and the full list. Calls made during a live game are shown in their own
+ * section and never counted. Until enough calls have resolved it says so plainly.
  */
 
 /** Below this many resolved calls the numbers are noise, and the page says so. */
@@ -19,11 +21,20 @@ const pct = (x: number | null) => (x == null ? "—" : `${Math.round(x * 100)}%`
 const cents = (x: number) => `${Math.max(1, Math.min(99, Math.round(x * 100)))}¢`;
 const money = (x: number, digits = 2) => `${x < 0 ? "−" : x > 0 ? "+" : ""}$${Math.abs(x).toFixed(digits)}`;
 const tone = (x: number | null) => (x == null || Math.abs(x) < 0.005 ? "" : x > 0 ? " is-pos" : " is-neg");
-const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { timeZone: MARKET_TZ, month: "short", day: "numeric" });
+const day = (iso: string | number) => new Date(iso).toLocaleDateString("en-US", { timeZone: MARKET_TZ, month: "short", day: "numeric" });
+
+const FILTERS: { id: CallFilter; label: string }[] = [
+  { id: "all", label: "All calls" },
+  { id: "Wager", label: "Wagers" },
+  { id: "Lean", label: "Leans" },
+];
 
 export function TrackRecordView({ record }: { record: TrackRecord }) {
-  const { all } = record;
+  const [filter, setFilter] = useState<CallFilter>("all");
+  const view = useMemo(() => buildRecord(record.calls, filter), [record.calls, filter]);
+  const { all } = view;
   const early = all.resolved < ENOUGH;
+  const what = filter === "all" ? "call" : filter;
   return (
     <div className="tr">
       <header className="tr-head">
@@ -34,15 +45,23 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
         </p>
       </header>
 
+      <div className="tr-filter" role="tablist" aria-label="Which calls to show">
+        {FILTERS.map((f) => (
+          <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {early && (
         <p className="tr-early">
-          <b>Early days.</b> {all.resolved} {all.resolved === 1 ? "call has" : "calls have"} resolved so far. That is too few to judge the model either way,
-          so read this as a running log, not a result. It will mean something at around {ENOUGH}.
+          <b>Early days.</b> {all.resolved} {all.resolved === 1 ? `${what} has` : `${what}s have`} resolved so far. That is too few to judge the model either
+          way, so read this as a running log, not a result. It will mean something at around {ENOUGH}.
         </p>
       )}
 
       <dl className="tr-tiles">
-        <Tile label="Calls logged" value={String(all.logged)} note={record.since ? `since ${day(record.since)}` : ""} />
+        <Tile label="Calls logged" value={String(all.logged)} note={view.since ? `since ${day(view.since)}` : ""} />
         <Tile label="Resolved" value={String(all.resolved)} note={`${all.won} won · ${all.lost} lost`} />
         <Tile label="Hit rate" value={pct(all.hitRate)} note={all.breakEven == null ? "" : `needs ${pct(all.breakEven)} to break even`} />
         <Tile label="Return per $1" value={all.perDollar == null ? "—" : money(all.perDollar)} note="flat $1 on every call" tone={tone(all.perDollar)} />
@@ -51,32 +70,51 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
       <section className="tr-sec">
         <h2>Running profit</h2>
         <p className="tr-sub">A flat $1 on every resolved call, added up in the order the calls were made.</p>
-        {record.curve.length >= 2 ? <ReturnChart curve={record.curve} /> : <p className="tr-none">The chart appears once two calls have resolved.</p>}
-        {record.topWins && record.topWins.sum > Math.abs(all.profit) * 0.5 && (
+        {view.curve.length >= 2 ? <ReturnChart curve={view.curve} /> : <p className="tr-none">This chart appears once two calls have resolved.</p>}
+        {view.topWins && view.topWins.sum > Math.abs(all.profit) * 0.5 && (
           <p className="tr-caveat">
-            <b>Read this with care.</b> The two biggest wins ({record.topWins.names.join(" and ")}) brought in {money(record.topWins.sum)} between them. Without
-            those two results the total would be {money(record.topWins.without)}. A total that depends this much on two results hasn&apos;t proved anything
+            <b>Read this with care.</b> The two biggest wins ({view.topWins.names.join(" and ")}) brought in {money(view.topWins.sum)} between them. Without
+            those two results the total would be {money(view.topWins.without)}. A total that depends this much on two results hasn&apos;t proved anything
             yet.
           </p>
         )}
       </section>
 
       <section className="tr-sec">
-        <h2>By call</h2>
-        <p className="tr-sub">A Wager is our strongest call. A Lean is a mild tilt.</p>
-        <Lines rows={record.byCall} />
+        <h2>Each call&apos;s result</h2>
+        <p className="tr-sub">
+          One bar per resolved call, in the order they were made. A win pays more the cheaper the side was, so a few tall bars can outweigh several losses.
+        </p>
+        {view.curve.length >= 1 ? <ResultBars curve={view.curve} /> : <p className="tr-none">This chart appears once a call has resolved.</p>}
       </section>
+
+      <section className="tr-sec">
+        <h2>Hit rate by price paid</h2>
+        <p className="tr-sub">
+          A side bought at 30¢ only has to win about 30% of the time to break even. If the bar reaches past the marker, calls at that price have been winning
+          more often than they needed to.
+        </p>
+        {all.resolved >= 1 ? <PriceBands rows={view.byPrice} /> : <p className="tr-none">This chart appears once a call has resolved.</p>}
+      </section>
+
+      {filter === "all" && (
+        <section className="tr-sec">
+          <h2>By call</h2>
+          <p className="tr-sub">A Wager is our strongest call. A Lean is a mild tilt.</p>
+          <Lines rows={view.byCall} />
+        </section>
+      )}
 
       <section className="tr-sec">
         <h2>By how sure we were</h2>
         <p className="tr-sub">If the model is any good, the calls it was surer about should do better.</p>
-        <Lines rows={record.bySure} />
+        <Lines rows={view.bySure} />
       </section>
 
       <section className="tr-sec">
         <h2>By kind of market</h2>
         <p className="tr-sub">Games resolve in hours. Futures and elections can stay open for months, so few of those have been graded yet.</p>
-        <Lines rows={record.byTiming} />
+        <Lines rows={view.byTiming} />
       </section>
 
       <section className="tr-sec tr-live">
@@ -88,16 +126,16 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
           on both teams in the same game. That says little about whether it read the market right beforehand, so these are kept here and counted nowhere
           above.
         </p>
-        <Lines rows={[record.live.all, ...record.live.byCall]} />
+        <Lines rows={filter === "all" ? [view.live.all, ...view.live.byCall] : [view.live.all]} />
       </section>
 
       <section className="tr-sec">
         <h2>Every call</h2>
         <p className="tr-sub">
           Newest first. Calls marked &quot;in-game&quot; were made during a live game and aren&apos;t in the record.
-          {record.earlyCount > 0 ? ` The ${record.earlyCount} marked "earlier" were made before the switch to Polymarket US and aren't counted either.` : ""}
+          {view.earlyCount > 0 ? ` The ${view.earlyCount} marked "earlier" were made before the switch to Polymarket US and aren't counted either.` : ""}
         </p>
-        <Calls calls={record.calls} />
+        <Calls key={filter} calls={view.calls} />
       </section>
 
       <section className="tr-sec tr-how">
@@ -211,9 +249,8 @@ function Calls({ calls }: { calls: RecordCall[] }) {
   );
 }
 
-/* ── The running-profit chart ── */
+/* ── Charts ── */
 
-const H = 240;
 const PAD = { l: 52, r: 68, t: 16, b: 28 };
 
 /** A step that gives about four clean gridlines for a range. */
@@ -224,10 +261,21 @@ function niceStep(range: number) {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
 }
 
-function ReturnChart({ curve }: { curve: TrackRecord["curve"] }) {
+/** A dollar scale that always includes $0, with clean ticks. */
+function dollarScale(values: number[], top: number, bottom: number) {
+  const step = niceStep(Math.max(...values, 0) - Math.min(...values, 0));
+  const lo = Math.floor(Math.min(...values, 0) / step) * step;
+  const hi = Math.ceil(Math.max(...values, 0) / step) * step || step;
+  const ticks: number[] = [];
+  for (let v = lo; v <= hi + step / 1000; v += step) ticks.push(Math.round(v / step) * step);
+  return { ticks, y: (v: number) => top + (1 - (v - lo) / (hi - lo)) * (bottom - top) };
+}
+const tickLabel = (v: number) => (v === 0 ? "$0" : money(v, Math.abs(v) < 1 ? 2 : 0));
+
+/** The chart's box, measured, so its text stays the same size at any width. */
+function useWidth() {
   const box = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(720);
-  const [at, setAt] = useState<number | null>(null);
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -235,80 +283,186 @@ function ReturnChart({ curve }: { curve: TrackRecord["curve"] }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  return { box, w };
+}
 
-  const g = useMemo(() => {
-    const n = curve.length;
-    const vs = curve.map((p) => p.v);
-    const step = niceStep(Math.max(...vs, 0) - Math.min(...vs, 0));
-    const lo = Math.floor(Math.min(...vs, 0) / step) * step;
-    const hi = Math.ceil(Math.max(...vs, 0) / step) * step || step;
-    // One even step per call: the origin ($0, before any call) sits at the left edge.
-    const x = (i: number) => PAD.l + ((i + 1) / n) * (w - PAD.l - PAD.r);
-    const y = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
-    const ticks: number[] = [];
-    for (let v = lo; v <= hi + step / 1000; v += step) ticks.push(Math.round(v / step) * step);
-    const pts = curve.map((p, i) => ({ ...p, n: i + 1, x: x(i), y: y(p.v) }));
-    return { pts, ticks, y, path: `M${PAD.l} ${y(0)}` + pts.map((p) => `L${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join("") };
-  }, [curve, w]);
-
-  const last = g.pts[g.pts.length - 1];
-  const cur = at == null ? null : g.pts[at];
-  // The crosshair finds the nearest resolved call by x, so the pointer only has to be close.
-  const nearest = (clientX: number) => {
-    const left = box.current?.getBoundingClientRect().left ?? 0;
-    const px = clientX - left;
-    let best = 0;
-    g.pts.forEach((p, i) => {
-      if (Math.abs(p.x - px) < Math.abs(g.pts[best].x - px)) best = i;
-    });
-    return best;
-  };
-  const fmt = (t: number) => new Date(t).toLocaleDateString("en-US", { timeZone: MARKET_TZ, month: "short", day: "numeric" });
-
+/** The hover/focus readout: value first, then what it is. */
+function Tip({ x, y, w, children }: { x: number; y: number; w: number; children: ReactNode }) {
   return (
-    <div
-      className="tr-chart"
-      ref={box}
-      tabIndex={0}
-      role="img"
-      aria-label={`Running profit at $1 a call: ${money(last.v)} after ${g.pts.length} resolved calls. The same figures are in the tables below.`}
-      onPointerMove={(e) => setAt(nearest(e.clientX))}
-      onPointerLeave={() => setAt(null)}
-      onFocus={() => setAt((i) => i ?? g.pts.length - 1)}
-      onBlur={() => setAt(null)}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowLeft") setAt((i) => Math.max(0, (i ?? g.pts.length - 1) - 1));
-        if (e.key === "ArrowRight") setAt((i) => Math.min(g.pts.length - 1, (i ?? 0) + 1));
-      }}
-    >
+    <div className="tr-tip" style={{ left: Math.min(Math.max(x, 112), w - 112), top: Math.max(8, y - 12) }}>
+      {children}
+    </div>
+  );
+}
+
+/** Pointer and keyboard both walk the marks: the nearest one by x, or arrow keys once focused. */
+function useWalk(xs: number[], box: React.RefObject<HTMLDivElement | null>) {
+  const [at, setAt] = useState<number | null>(null);
+  const n = xs.length;
+  return {
+    at: at != null && at < n ? at : null,
+    bind: {
+      tabIndex: 0,
+      onPointerMove: (e: React.PointerEvent) => {
+        const px = e.clientX - (box.current?.getBoundingClientRect().left ?? 0);
+        let best = 0;
+        xs.forEach((x, i) => {
+          if (Math.abs(x - px) < Math.abs(xs[best] - px)) best = i;
+        });
+        setAt(best);
+      },
+      onPointerLeave: () => setAt(null),
+      onFocus: () => setAt((i) => i ?? n - 1),
+      onBlur: () => setAt(null),
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (e.key === "ArrowLeft") setAt((i) => Math.max(0, (i ?? n - 1) - 1));
+        if (e.key === "ArrowRight") setAt((i) => Math.min(n - 1, (i ?? 0) + 1));
+      },
+    },
+  };
+}
+
+function CallTip({ p, lead }: { p: CurvePoint; lead: number }) {
+  return (
+    <>
+      <b className={`num${tone(lead)}`}>{money(lead)}</b>
+      <span>
+        Call {p.n} · {day(p.t)} · {p.call} {p.side} at {cents(p.price)} {p.won ? "won" : "lost"}
+      </span>
+      <small>{p.question}</small>
+    </>
+  );
+}
+
+/** Running profit: one 2px line, hairline grid, a firmer zero line, the latest value labeled at the end. */
+function ReturnChart({ curve }: { curve: CurvePoint[] }) {
+  const H = 240;
+  const { box, w } = useWidth();
+  const g = useMemo(() => {
+    const s = dollarScale(curve.map((p) => p.v), PAD.t, H - PAD.b);
+    // One even step per call: the origin ($0, before any call) sits at the left edge.
+    const pts = curve.map((p, i) => ({ p, x: PAD.l + ((i + 1) / curve.length) * (w - PAD.l - PAD.r), y: s.y(p.v) }));
+    return { ...s, pts, path: `M${PAD.l} ${s.y(0)}` + pts.map((q) => `L${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join("") };
+  }, [curve, w]);
+  const walk = useWalk(g.pts.map((q) => q.x), box);
+  const last = g.pts[g.pts.length - 1];
+  const cur = walk.at == null ? null : g.pts[walk.at];
+  return (
+    <div className="tr-chart" ref={box} role="img" aria-label={`Running profit at $1 a call: ${money(last.p.v)} after ${g.pts.length} resolved calls. The same figures are in the tables below.`} {...walk.bind}>
       <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} aria-hidden>
         {g.ticks.map((v) => (
           <g key={v}>
             <line className={v === 0 ? "tr-zero" : "tr-grid"} x1={PAD.l} x2={w - PAD.r} y1={g.y(v)} y2={g.y(v)} />
-            <text className="tr-tick" x={PAD.l - 10} y={g.y(v)} textAnchor="end" dominantBaseline="middle">
-              {v === 0 ? "$0" : money(v, Math.abs(v) < 1 ? 2 : 0)}
-            </text>
+            <text className="tr-tick" x={PAD.l - 10} y={g.y(v)} textAnchor="end" dominantBaseline="middle">{tickLabel(v)}</text>
           </g>
         ))}
-        <text className="tr-tick" x={PAD.l} y={H - 8}>First call, {fmt(g.pts[0].t)}</text>
-        <text className="tr-tick" x={w - PAD.r} y={H - 8} textAnchor="end">Call {g.pts.length}, {fmt(last.t)}</text>
+        <text className="tr-tick" x={PAD.l} y={H - 8}>First call, {day(g.pts[0].p.t)}</text>
+        <text className="tr-tick" x={w - PAD.r} y={H - 8} textAnchor="end">Call {g.pts.length}, {day(last.p.t)}</text>
         <path className="tr-line" d={g.path} />
         {cur && <line className="tr-cross" x1={cur.x} x2={cur.x} y1={PAD.t} y2={H - PAD.b} />}
         <circle className="tr-dot" cx={(cur ?? last).x} cy={(cur ?? last).y} r={4.5} />
-        {!cur && (
-          <text className="tr-endlabel" x={last.x + 10} y={last.y} dominantBaseline="middle">
-            {money(last.v)}
-          </text>
-        )}
+        {!cur && <text className="tr-endlabel" x={last.x + 10} y={last.y} dominantBaseline="middle">{money(last.p.v)}</text>}
       </svg>
       {cur && (
-        <div className="tr-tip" style={{ left: Math.min(Math.max(cur.x, 110), w - 110), top: Math.max(8, cur.y - 14) }}>
-          <b className={`num${tone(cur.v)}`}>{money(cur.v)}</b>
+        <Tip x={cur.x} y={cur.y} w={w}>
+          <CallTip p={cur.p} lead={cur.p.v} />
+        </Tip>
+      )}
+    </div>
+  );
+}
+
+/** Each call's own result: a bar up from $0 for a win, down for a loss. Green and red mean profit and loss here, nothing else. */
+function ResultBars({ curve }: { curve: CurvePoint[] }) {
+  const H = 220;
+  const { box, w } = useWidth();
+  const g = useMemo(() => {
+    const s = dollarScale(curve.map((p) => p.profit), PAD.t, H - PAD.b);
+    const slot = (w - PAD.l - PAD.r) / curve.length;
+    // Thin marks: at most 24px, and never the whole slot, so neighbors keep a gap.
+    const bw = Math.max(2, Math.min(24, slot - 2));
+    const bars = curve.map((p, i) => ({ p, x: PAD.l + slot * (i + 0.5), top: Math.min(s.y(p.profit), s.y(0)), h: Math.max(1, Math.abs(s.y(p.profit) - s.y(0))) }));
+    return { ...s, bars, bw };
+  }, [curve, w]);
+  const walk = useWalk(g.bars.map((b) => b.x), box);
+  const cur = walk.at == null ? null : g.bars[walk.at];
+  const won = curve.filter((p) => p.won).length;
+  return (
+    <div className="tr-chart" ref={box} role="img" aria-label={`Each resolved call's profit at $1: ${won} won and ${curve.length - won} lost. Every call is listed in the table below.`} {...walk.bind}>
+      <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} aria-hidden>
+        {g.ticks.map((v) => (
+          <g key={v}>
+            <line className={v === 0 ? "tr-zero" : "tr-grid"} x1={PAD.l} x2={w - PAD.r} y1={g.y(v)} y2={g.y(v)} />
+            <text className="tr-tick" x={PAD.l - 10} y={g.y(v)} textAnchor="end" dominantBaseline="middle">{tickLabel(v)}</text>
+          </g>
+        ))}
+        {g.bars.map((b, i) => (
+          <rect key={b.p.n} className={`${b.p.won ? "tr-bar-pos" : "tr-bar-neg"}${cur && walk.at !== i ? " is-dim" : ""}`} x={b.x - g.bw / 2} y={b.top} width={g.bw} height={b.h} rx={Math.min(2, g.bw / 2)} />
+        ))}
+        <text className="tr-tick" x={PAD.l} y={H - 8}>First call</text>
+        <text className="tr-tick" x={w - PAD.r} y={H - 8} textAnchor="end">Call {curve.length}</text>
+      </svg>
+      <p className="tr-legend">
+        <span><i className="tr-key tr-key-pos" /> Won</span>
+        <span><i className="tr-key tr-key-neg" /> Lost</span>
+      </p>
+      {cur && (
+        <Tip x={cur.x} y={cur.top} w={w}>
+          <CallTip p={cur.p} lead={cur.p.profit} />
+        </Tip>
+      )}
+    </div>
+  );
+}
+
+/** Hit rate against break-even, by price paid: a bar for how often calls won, a marker for how often they had to. */
+function PriceBands({ rows }: { rows: RecordLine[] }) {
+  const H = 232;
+  const P = { l: 52, r: 20, t: 22, b: 46 };
+  const { box, w } = useWidth();
+  const slot = (w - P.l - P.r) / rows.length;
+  const bw = Math.min(24, slot * 0.4);
+  const y = (v: number) => P.t + (1 - v) * (H - P.t - P.b);
+  const xs = rows.map((_, i) => P.l + slot * (i + 0.5));
+  const walk = useWalk(xs, box);
+  const cur = walk.at == null ? null : rows[walk.at];
+  return (
+    <div className="tr-chart" ref={box} role="img" aria-label="Hit rate and break-even rate by price paid. The same figures follow in the tables below." {...walk.bind}>
+      <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} aria-hidden>
+        {[0, 0.25, 0.5, 0.75, 1].map((v) => (
+          <g key={v}>
+            <line className={v === 0 ? "tr-zero" : "tr-grid"} x1={P.l} x2={w - P.r} y1={y(v)} y2={y(v)} />
+            <text className="tr-tick" x={P.l - 10} y={y(v)} textAnchor="end" dominantBaseline="middle">{Math.round(v * 100)}%</text>
+          </g>
+        ))}
+        {rows.map((r, i) => (
+          <g key={r.label} className={cur && walk.at !== i ? "is-dim" : undefined}>
+            {r.hitRate != null && (
+              <>
+                <rect className="tr-bar" x={xs[i] - bw / 2} y={y(r.hitRate)} width={bw} height={Math.max(1, y(0) - y(r.hitRate))} rx={2} />
+                <text className="tr-barlabel" x={xs[i]} y={y(r.hitRate) - 7} textAnchor="middle">{pct(r.hitRate)}</text>
+                {/* Break-even: a short ink marker across the bar's column, ringed so it reads over the bar. */}
+                <line className="tr-mark-ring" x1={xs[i] - bw / 2 - 7} x2={xs[i] + bw / 2 + 7} y1={y(r.breakEven!)} y2={y(r.breakEven!)} />
+                <line className="tr-mark" x1={xs[i] - bw / 2 - 7} x2={xs[i] + bw / 2 + 7} y1={y(r.breakEven!)} y2={y(r.breakEven!)} />
+              </>
+            )}
+            <text className="tr-cat" x={xs[i]} y={H - 26} textAnchor="middle">{r.label}</text>
+            <text className="tr-tick" x={xs[i]} y={H - 9} textAnchor="middle">{r.resolved ? `${r.resolved} resolved` : "none yet"}</text>
+          </g>
+        ))}
+      </svg>
+      <p className="tr-legend">
+        <span><i className="tr-key tr-key-bar" /> Hit rate</span>
+        <span><i className="tr-key tr-key-mark" /> Break-even (average price paid)</span>
+      </p>
+      {cur && walk.at != null && (
+        <Tip x={xs[walk.at]} y={cur.hitRate == null ? y(0.5) : y(cur.hitRate) - 14} w={w}>
+          <b className="num">{cur.hitRate == null ? "No results yet" : `${pct(cur.hitRate)} hit rate`}</b>
           <span>
-            Call {cur.n} · {fmt(cur.t)} · {cur.call} {cur.side} {cur.won ? "won" : "lost"} ({money(cur.profit)})
+            {cur.label} · {cur.resolved ? `${cur.won} won, ${cur.lost} lost` : `${cur.logged} logged, none resolved`}
           </span>
-          <small>{cur.question}</small>
-        </div>
+          {cur.breakEven != null && <small>Needs {pct(cur.breakEven)} to break even · {money(cur.perDollar ?? 0)} per $1</small>}
+        </Tip>
       )}
     </div>
   );
