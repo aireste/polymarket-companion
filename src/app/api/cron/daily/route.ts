@@ -1,4 +1,4 @@
-import { newsletterConfigured, sendIssue, todaysIssue } from "@/lib/newsletter";
+import { DAILY_PAUSED, newsletterConfigured, sendIssue, todaysIssue } from "@/lib/newsletter";
 import { MARKET_TZ } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,8 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // On hold: nothing is built or sent, even with ?force=1, until DAILY_PAUSED is turned off.
+  if (DAILY_PAUSED) return Response.json({ skipped: "the Daily is paused" });
   const force = new URL(request.url).searchParams.get("force") === "1";
 
   const parts = Object.fromEntries(

@@ -15,6 +15,13 @@ import { render } from "@react-email/components";
 import { DailyEmail } from "@/emails/DailyEmail";
 import { buildDailyIssue, ISSUE_VERSION, SITE_URL, type DailyIssue } from "./daily";
 
+/**
+ * Sends are on hold (2026-10-05) while the Daily's direction is being worked out. While this is
+ * true the weekday cron does nothing: no issue is built (so no AI spend) and nothing is emailed.
+ * Signups still work and the Daily page keeps showing the last issue. Set to false to resume.
+ */
+export const DAILY_PAUSED = true;
+
 export function newsletterConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_SEGMENT_ID && process.env.NEWSLETTER_FROM);
 }
