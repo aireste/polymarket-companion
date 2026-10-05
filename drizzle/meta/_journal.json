@@ -36,13 +36,6 @@
       "when": 1791213159856,
       "tag": "0004_ai_usage",
       "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1791217650984,
-      "tag": "0005_subscribers",
-      "breakpoints": true
     }
   ]
 }

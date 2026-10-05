@@ -1,4 +1,4 @@
-import { isEmail, joinWaitlist, newsletterConfigured, recordSignup, subscribe } from "@/lib/newsletter";
+import { isEmail, joinWaitlist, newsletterConfigured, subscribe } from "@/lib/newsletter";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +25,5 @@ export async function POST(request: Request) {
 
   // Before launch the list lives in Formspree; after, in Resend. Same UI either way.
   const res = newsletterConfigured() ? await subscribe(email) : await joinWaitlist(email, source);
-  if (res.ok && newsletterConfigured()) await recordSignup(email, source);
   return res.ok ? Response.json({ ok: true, live: newsletterConfigured() }) : Response.json({ error: "Couldn't sign you up just now. Try again." }, { status: 502 });
 }

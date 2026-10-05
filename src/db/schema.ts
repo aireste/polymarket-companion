@@ -1,4 +1,4 @@
-import { pgTable, serial, text, doublePrecision, integer, boolean, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, doublePrecision, integer, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 /**
  * HedgePredict's track record: every Wager and Lean, logged once per market + call + side the
@@ -61,18 +61,4 @@ export const aiUsage = pgTable("ai_usage", {
   webSearches: integer("web_searches").notNull().default(0),
   /** List-price estimate in USD; null if the model's price isn't known. */
   costUsd: doublePrecision("cost_usd"),
-});
-
-/**
- * Who has joined the Daily: a copy of the Resend segment, refreshed by the half-hourly cron, so
- * the list can be read without the Resend key (`npm run subs`). Resend stays the source of truth
- * for sending and unsubscribes; `source` (which signup box) is ours, recorded at signup.
- */
-export const subscribers = pgTable("subscribers", {
-  email: text("email").primaryKey(),
-  joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
-  unsubscribed: boolean("unsubscribed").notNull().default(false),
-  /** "daily-page", "board-desktop", "deep-read-unlock"…; null for people who joined before this table. */
-  source: text("source"),
-  syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
 });
