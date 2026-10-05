@@ -104,6 +104,49 @@ export async function subscribe(email: string): Promise<{ ok: true } | { ok: fal
   return { ok: true };
 }
 
+/** Note where a signup came from. Best effort: the signup itself already succeeded in Resend. */
+export async function recordSignup(email: string, source: string): Promise<void> {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    const { db } = await import("@/db");
+    const { subscribers } = await import("@/db/schema");
+    await db
+      .insert(subscribers)
+      .values({ email, source, unsubscribed: false })
+      .onConflictDoUpdate({ target: subscribers.email, set: { unsubscribed: false, syncedAt: new Date() } });
+  } catch {
+    /* the cron sync will pick them up */
+  }
+}
+
+/**
+ * Copy the Daily's Resend segment into the `subscribers` table (join date and unsubscribed
+ * status), so the list can be read from the database. Returns how many contacts Resend has.
+ */
+export async function syncSubscribers(): Promise<number> {
+  if (!newsletterConfigured() || !process.env.DATABASE_URL) return 0;
+  const { db } = await import("@/db");
+  const { subscribers } = await import("@/db/schema");
+  let after: string | undefined;
+  let total = 0;
+  // Pages of 100; the cap is a guard against a paging loop, far above any real list for now.
+  for (let page = 0; page < 200; page++) {
+    const { data, error } = await client().contacts.list({ segmentId: process.env.RESEND_SEGMENT_ID!, limit: 100, ...(after ? { after } : {}) });
+    if (error || !data) throw new Error(error?.message ?? "Couldn't list subscribers");
+    for (const c of data.data) {
+      const joinedAt = new Date(c.created_at);
+      await db
+        .insert(subscribers)
+        .values({ email: c.email.toLowerCase(), joinedAt, unsubscribed: c.unsubscribed })
+        .onConflictDoUpdate({ target: subscribers.email, set: { joinedAt, unsubscribed: c.unsubscribed, syncedAt: new Date() } });
+    }
+    total += data.data.length;
+    if (!data.has_more || data.data.length === 0) break;
+    after = data.data[data.data.length - 1].id;
+  }
+  return total;
+}
+
 /** Send one issue to the whole segment as a Resend broadcast. */
 export async function sendIssue(issue: DailyIssue): Promise<{ id: string }> {
   const { data, error } = await client().broadcasts.create({
