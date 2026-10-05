@@ -300,6 +300,7 @@ function DeskBoard({ category }: { category: CategoryId }) {
           </button>
         )}
 
+        <TipLine variant="row" />
         <div className="hp-dlist-foot">
           <SubscribeBox compact source="board-desktop" />
           <div className="hp-keys">
@@ -471,6 +472,8 @@ function PhoneBoard({ category }: { category: CategoryId }) {
           </Link>
           <SubscribeBox compact source="board-phone" />
         </section>
+
+        <TipLine variant="row" />
 
         <nav className="hp-phone-links" aria-label="More">
           <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">

@@ -171,7 +171,7 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
             </Text>
             <Text style={{ margin: "14px 0 0", fontSize: 13.5, lineHeight: "20px", color: C.soft }}>
               HedgePredict is free, and I want to keep it that way. Tips cover the data and AI costs.{" "}
-              <Link href={TIP_URL} style={{ color: C.ink, fontWeight: 700, textDecoration: "underline" }}>Leave a tip</Link>
+              <Link href={TIP_URL} style={{ color: C.ink, fontWeight: 700, textDecoration: "underline" }}>Buy me a coffee</Link>
             </Text>
           </Section>
 

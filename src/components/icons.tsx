@@ -50,6 +50,13 @@ export const Icon = {
       <path d="M8.1 10.9 15.9 7.1M8.1 13.1 15.9 16.9" strokeLinecap="round" />
     </svg>
   ),
+  /** A coffee cup with steam, for the tip jar. */
+  coffee: (
+    <svg viewBox="0 0 24 24" {...s}>
+      <path d="M5 10h11v4.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 14.5V10z" strokeLinejoin="round" />
+      <path d="M16 11.5h1.2a2.3 2.3 0 0 1 0 4.6H15.6M8 4v2.5M11.5 4v2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
   mail: (
     <svg viewBox="0 0 24 24" {...s}>
       <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
