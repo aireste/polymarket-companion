@@ -18,10 +18,15 @@ const geistMono = Geist_Mono({
 // Hedge Lab's display type (OFL): wide, rounded, chunky. Only the Lab and its tour scene use it.
 const labFont = Unbounded({ variable: "--font-lab", subsets: ["latin"], display: "swap", preload: false });
 
+const DESCRIPTION = "Free calls on Polymarket US markets: which prices look off and how sure we are, plus a sandbox to test a bet before you place it.";
+
+// What a shared link shows: the title, this description, and the card from opengraph-image.tsx.
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hedgepredict.co"),
   title: "HedgePredict",
-  description:
-    "A calm prediction-market companion. See today's markets worth a look, and where an honest read finds an edge worth hedging.",
+  description: DESCRIPTION,
+  openGraph: { title: "HedgePredict: find the price that's off", description: DESCRIPTION, siteName: "HedgePredict", type: "website", url: "/" },
+  twitter: { card: "summary_large_image", title: "HedgePredict: find the price that's off", description: DESCRIPTION },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

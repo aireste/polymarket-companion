@@ -307,6 +307,10 @@ function DeskBoard({ category }: { category: CategoryId }) {
               <span className="hp-pm-tile">{Icon.polymarket}</span>
             </a>
             <TipLine variant="link" />
+            <Link href="/feedback" className="hp-tiplink">
+              {Icon.ask}
+              Feedback
+            </Link>
           </div>
           <Credit />
         </div>
@@ -478,6 +482,10 @@ function PhoneBoard({ category }: { category: CategoryId }) {
             <span className="hp-pm-tile">{Icon.polymarket}</span>
           </a>
           <TipLine variant="link" />
+          <Link href="/feedback" className="hp-tiplink">
+            {Icon.ask}
+            Feedback
+          </Link>
         </nav>
         <p className="hp-disc hp-phone-disc">
           Decision support, not financial advice. HedgePredict never places trades.
