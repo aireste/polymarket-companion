@@ -16,6 +16,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { OddsToggle } from "./OddsToggle";
 import { POLYMARKET_US, X_PROFILE } from "@/lib/links";
 import { TodaysPick } from "./TodaysPick";
+import { FollowLine } from "./FollowLine";
 import { TipLine } from "./TipLine";
 import { SubscribeBox } from "./SubscribeBox";
 import { todaysPick } from "@/lib/pick";
@@ -256,6 +257,7 @@ function DeskBoard({ category }: { category: CategoryId }) {
         </div>
 
         <DeskPick />
+        <FollowLine variant="desk" />
         {plays && <JevSummary plays={list} />}
         <TipLine variant="row" />
         {error && <p className="state err">Couldn&apos;t load markets: {error}. Hit refresh to retry.</p>}
@@ -418,6 +420,7 @@ function PhoneBoard({ category }: { category: CategoryId }) {
         </Link>
 
         <TodaysPick variant="phone" onOpen={openSheet} />
+        <FollowLine variant="phone" />
         {plays && <NextUp plays={list} onOpen={openSheet} />}
         <TipLine variant="row" />
 

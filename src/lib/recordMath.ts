@@ -134,3 +134,35 @@ export function buildRecord(allCalls: RecordCall[], filter: CallFilter): RecordV
     earlyCount: calls.filter((c) => c.early).length,
   };
 }
+
+/** "If you'd followed every Wager / Lean": the record and the money at a flat $1 a call. */
+export interface FollowLine {
+  call: "Wager" | "Lean";
+  won: number;
+  lost: number;
+  /** Profit at a flat $1 on every resolved call. */
+  profit: number;
+  /** $ staked on resolved calls (one per call). */
+  staked: number;
+  /** Calls still waiting on their market. */
+  open: number;
+}
+
+/** Counted calls only (Polymarket US, made before the game), same as the rest of the scorecard. */
+export function followSummary(allCalls: RecordCall[]): { lines: FollowLine[]; resolved: number } {
+  const counted = allCalls.filter((c) => !c.early && c.timing !== "live");
+  const lines = (["Wager", "Lean"] as const).map((call) => {
+    const mine = counted.filter((c) => c.call === call);
+    const done = mine.filter((c) => c.result === "won" || c.result === "lost");
+    const won = done.filter((c) => c.result === "won").length;
+    return {
+      call,
+      won,
+      lost: done.length - won,
+      profit: done.reduce((s, c) => s + (c.profit ?? 0), 0),
+      staked: done.length,
+      open: mine.filter((c) => c.result === "open").length,
+    };
+  });
+  return { lines, resolved: lines.reduce((n, l) => n + l.won + l.lost, 0) };
+}

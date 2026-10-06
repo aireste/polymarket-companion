@@ -572,31 +572,35 @@
 .hp-x-tile { width: 20px; height: 20px; border-radius: 6px; background: var(--ink); color: var(--paper); display: grid; place-items: center; flex: none; }
 .hp-x-tile svg { width: 12px; height: 12px; }
 
-/* ───────── Track record: the call matrix (one row per market, cells colored by the call in force) ───────── */
-.cm-k { font-weight: 800; }
-.cm-k.is-wager { color: var(--wager-ink); } .cm-k.is-hold { color: var(--lean-ink); } .cm-k.is-skip { color: var(--fair-ink); }
-.cm-grid { display: grid; gap: 0; margin-top: 18px; }
-.cm-row, .cm-axis { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr) 170px; gap: 16px; align-items: center; }
-.cm-row { padding: 8px 0; border-top: 1px solid var(--rule); }
-.cm-q { font-weight: 700; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cm-cells { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; height: 18px; }
-.cm-cells i { display: block; height: 100%; background: var(--paper-3); position: relative; }
-.cm-cells i.is-wager { background: var(--wager); }
-.cm-cells i.is-hold { background: var(--lean); }
-.cm-cells i.is-skip, .cm-cells i.is-decided { background: var(--fair); }
-.cm-cells i.is-none { background: transparent; box-shadow: inset 0 0 0 1px var(--rule); }
-.cm-cells i.is-live::before { content: ""; position: absolute; left: -2px; top: -4px; bottom: -4px; width: 2px; background: var(--live); }
-.cm-st { font-size: 13px; font-weight: 700; line-height: 1.25; }
-.cm-st small { display: block; font-weight: 600; font-size: 11.5px; color: var(--ink-faint); }
-.cm-now.is-wager { color: var(--wager-ink); } .cm-now.is-hold { color: var(--lean-ink); } .cm-now.is-skip, .cm-now.is-decided { color: var(--fair-ink); }
-.cm-res.is-won { color: var(--pos-ink); } .cm-res.is-lost { color: var(--neg-ink); } .cm-res.is-void { color: var(--ink-faint); }
-.cm-res small { color: var(--ink-faint); }
-.cm-axis { padding-top: 6px; border-top: 1px solid var(--rule); }
-.cm-axis-t { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600; color: var(--ink-faint); }
-@media (max-width: 700px) {
-  .cm-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
-  .cm-q { grid-column: 1 / -1; }
-  .cm-cells { grid-column: 1 / 2; }
-  .cm-axis { grid-template-columns: minmax(0, 1fr) auto; }
-  .cm-axis > span:first-child { display: none; }
-}
+
+/* Track record: "If you'd followed every…" (Wager | Lean). The headline answer, readable in seconds. */
+.tr-follow { display: grid; gap: 14px; }
+.tr-follow-k { font-weight: 800; font-size: 15px; color: var(--ink-soft); }
+.tr-follow-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; background: var(--rule); }
+.tr-follow-col { display: grid; gap: 6px; align-content: start; padding: 22px 24px; background: var(--paper-2); border-top: 3px solid var(--fair); }
+.tr-follow-col.is-wager { border-top-color: var(--wager); }
+.tr-follow-col.is-hold { border-top-color: var(--lean); }
+.tr-follow-call { font-weight: 900; font-size: 22px; letter-spacing: -0.03em; }
+.tr-follow-col.is-wager .tr-follow-call { color: var(--wager-ink); }
+.tr-follow-col.is-hold .tr-follow-call { color: var(--lean-ink); }
+.tr-follow-rec { font-weight: 900; font-size: clamp(44px, 6vw, 64px); letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+.tr-follow-money { font-weight: 800; font-size: 18px; letter-spacing: -0.01em; }
+.tr-follow-col small { font-size: 13px; font-weight: 600; color: var(--ink-faint); }
+.tr-follow-note { font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); max-width: 80ch; }
+.tr-follow-note b { color: var(--ink); }
+.tr-details { margin-top: 10px; font-weight: 900; font-size: 22px; letter-spacing: -0.03em; }
+@media (max-width: 560px) { .tr-follow-col { padding: 18px 16px; } }
+
+/* Board one-liner: "If you'd followed every Wager: 2–0, +$2.33 · every Lean: 5–6, +$0.09 · Track record →" */
+.hp-follow { display: block; font-size: 13px; line-height: 1.5; font-weight: 500; color: var(--ink-soft); text-decoration: none; }
+.hp-follow.is-desk { padding: 12px 22px; border-bottom: 1px solid var(--rule); }
+.hp-follow.is-phone { margin: 10px 2px 14px; }
+.hp-follow b { font-weight: 800; }
+.hp-follow b.is-wager { color: var(--wager-ink); }
+.hp-follow b.is-hold { color: var(--lean-ink); }
+.hp-follow .is-pos { color: var(--pos-ink); font-weight: 700; }
+.hp-follow .is-neg { color: var(--neg-ink); font-weight: 700; }
+.hp-follow-go { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.hp-follow:hover .hp-follow-go { text-decoration: underline; text-underline-offset: 3px; }
+.tr-follow-rec { color: var(--ink); }
+.tr-follow-money { font-size: 22px; font-weight: 900; }

@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { TrackRecord } from "@/lib/trackRecord";
-import { buildRecord, type CallFilter, type CurvePoint, type RecordCall, type RecordLine } from "@/lib/recordMath";
+import { buildRecord, followSummary, type CallFilter, type FollowLine, type CurvePoint, type RecordCall, type RecordLine } from "@/lib/recordMath";
 import { MARKET_TZ } from "@/lib/format";
-import type { CallMatrix as Matrix } from "@/lib/callHistory";
-import { CallMatrix } from "./CallMatrix";
 
 /**
  * The public scorecard: did HedgePredict call it right before the event? Every Wager and Lean made
@@ -31,7 +29,7 @@ const FILTERS: { id: CallFilter; label: string }[] = [
   { id: "Lean", label: "Leans" },
 ];
 
-export function TrackRecordView({ record, matrix }: { record: TrackRecord; matrix?: Matrix | null }) {
+export function TrackRecordView({ record }: { record: TrackRecord }) {
   const [filter, setFilter] = useState<CallFilter>("all");
   const view = useMemo(() => buildRecord(record.calls, filter), [record.calls, filter]);
   const { all } = view;
@@ -47,6 +45,9 @@ export function TrackRecordView({ record, matrix }: { record: TrackRecord; matri
         </p>
       </header>
 
+      <FollowCard record={record} />
+
+      <h2 className="tr-details">The details</h2>
       <div className="tr-filter" role="tablist" aria-label="Which calls to show">
         {FILTERS.map((f) => (
           <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)}>
@@ -68,8 +69,6 @@ export function TrackRecordView({ record, matrix }: { record: TrackRecord; matri
         <Tile label="Hit rate" value={pct(all.hitRate)} note={all.breakEven == null ? "" : `needs ${pct(all.breakEven)} to break even`} />
         <Tile label="Return per $1" value={all.perDollar == null ? "—" : money(all.perDollar)} note="flat $1 on every call" tone={tone(all.perDollar)} />
       </dl>
-
-      {matrix && <CallMatrix matrix={matrix} />}
 
       <section className="tr-sec">
         <h2>Running profit</h2>
@@ -157,6 +156,50 @@ export function TrackRecordView({ record, matrix }: { record: TrackRecord; matri
           afford to lose.
         </p>
       </section>
+    </div>
+  );
+}
+
+/**
+ * The answer most people want: if you'd put $1 on every Wager (or every Lean) when HedgePredict
+ * made it, how often would you have been right, and what would you have made?
+ */
+function FollowCard({ record }: { record: TrackRecord }) {
+  const { lines, resolved } = useMemo(() => followSummary(record.calls), [record.calls]);
+  return (
+    <section className="tr-follow" aria-label="If you'd followed every call">
+      <p className="tr-follow-k">If you&apos;d followed every…</p>
+      <div className="tr-follow-grid">
+        {lines.map((l) => (
+          <FollowCol key={l.call} line={l} />
+        ))}
+      </div>
+      <p className="tr-follow-note">
+        $1 on each call, at the price when HedgePredict made it. Calls made before the game only.
+        {resolved < ENOUGH && (
+          <>
+            {" "}
+            <b>Early days:</b> {resolved} {resolved === 1 ? "call has" : "calls have"} resolved, too few to judge yet.
+          </>
+        )}
+      </p>
+    </section>
+  );
+}
+
+function FollowCol({ line: l }: { line: FollowLine }) {
+  const done = l.won + l.lost;
+  return (
+    <div className={`tr-follow-col is-${l.call === "Wager" ? "wager" : "hold"}`}>
+      <span className="tr-follow-call">{l.call}</span>
+      <b className="tr-follow-rec">
+        {l.won}–{l.lost}
+      </b>
+      <span className={`tr-follow-money${tone(done ? l.profit : null)}`}>{done ? money(l.profit) : "Nothing resolved yet"}</span>
+      <small>
+        {done ? `on $${l.staked} staked · ` : ""}
+        {l.open} more still open
+      </small>
     </div>
   );
 }
