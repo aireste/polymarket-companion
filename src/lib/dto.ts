@@ -78,6 +78,16 @@ export interface JevReadDTO {
   model: string;
 }
 
+/** One step in a market's call history (GET /api/jev/history). */
+export interface CallChangeDTO {
+  at: string;
+  action: "wager" | "hold" | "skip" | "decided";
+  /** The side the call backed; null on a Skip or Decided. */
+  side: string | null;
+  /** The backed side's price then (the leading side's on a Skip/Decided), 0–1. */
+  price: number | null;
+}
+
 /** `available:false` means the TypeSafe key isn't set; `error` means it failed. */
 export type JevResponse =
   | JevReadDTO

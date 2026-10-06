@@ -8,6 +8,7 @@ import { jevRead, toJevDTO, MissingJevKeyError } from "./jev";
 import type { ScoredMarket } from "./scoring";
 import type { JevReadDTO } from "./dto";
 import { LIVE_WINDOW_MS } from "./format";
+import { recordCallChangesLater } from "./callHistory";
 import type { CategoryId } from "./filters";
 
 const TTL_MS = 10 * 60 * 1000;
@@ -62,6 +63,9 @@ export async function getBoardReads(category: CategoryId = "all", limit?: number
       }
     })
   );
+
+  // Keep the call timeline: only fresh reads can differ from what's stored.
+  recordCallChangesLater(todo.map((m) => reads[m.id]).filter(Boolean));
 
   return { markets, reads };
 }

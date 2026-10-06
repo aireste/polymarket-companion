@@ -14,7 +14,7 @@ import { Odo } from "./Odo";
 import { useSlider } from "@/lib/useSlider";
 import { ThemeToggle } from "./ThemeToggle";
 import { OddsToggle } from "./OddsToggle";
-import { POLYMARKET_US } from "@/lib/links";
+import { POLYMARKET_US, X_PROFILE } from "@/lib/links";
 import { TodaysPick } from "./TodaysPick";
 import { TipLine } from "./TipLine";
 import { SubscribeBox } from "./SubscribeBox";
@@ -306,6 +306,9 @@ function DeskBoard({ category }: { category: CategoryId }) {
             <a className="hp-pm-link" href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">
               <span className="hp-pm-tile">{Icon.polymarket}</span>
             </a>
+            <a className="hp-pm-link" href={X_PROFILE} target="_blank" rel="noopener noreferrer" aria-label="HedgePredict on X" title="HedgePredict on X">
+              <span className="hp-x-tile">{Icon.x}</span>
+            </a>
             <TipLine variant="link" />
             <Link href="/feedback" className="hp-tiplink">
               {Icon.ask}
@@ -480,6 +483,9 @@ function PhoneBoard({ category }: { category: CategoryId }) {
         <nav className="hp-phone-links" aria-label="More">
           <a href={POLYMARKET_US} target="_blank" rel="noopener noreferrer" aria-label="Polymarket" title="Polymarket">
             <span className="hp-pm-tile">{Icon.polymarket}</span>
+          </a>
+          <a href={X_PROFILE} target="_blank" rel="noopener noreferrer" aria-label="HedgePredict on X" title="HedgePredict on X">
+            <span className="hp-x-tile">{Icon.x}</span>
           </a>
           <TipLine variant="link" />
           <Link href="/feedback" className="hp-tiplink">

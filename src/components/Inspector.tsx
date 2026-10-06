@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { CallTimeline } from "./CallTimeline";
 import Link from "next/link";
 import type { JevReadDTO, PlayDTO } from "@/lib/dto";
 import { useBoard, useNow } from "@/lib/boardStore";
@@ -87,6 +88,7 @@ function CallBig({ play }: { play: PlayDTO }) {
       <div className="hp-dd-big hp-dd-call is-skip">
         <b>Decided</b>
         <small>One side is already at 97% or more</small>
+        <CallTimeline play={play} variant="desk" />
       </div>
     );
   }
@@ -113,6 +115,7 @@ function CallBig({ play }: { play: PlayDTO }) {
       <small>
         {sure}% sure{side ? " it's too cheap" : " both prices are fair"}
       </small>
+      <CallTimeline play={play} variant="desk" />
     </div>
   );
 }
@@ -598,6 +601,7 @@ export function JevPass({ play }: { play: PlayDTO }) {
         <span> · {pct(r.strength)} sure</span>
       </p>
       <LeanBar read={r} shown compact />
+      <CallTimeline play={play} variant="phone" />
       <div className="hp-pass-foot">
         <span>
           Call<b>{side ? `${a.label} ${shortSide(side.label, 12)}` : "Skip"}</b>

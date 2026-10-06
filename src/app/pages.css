@@ -548,3 +548,26 @@
 .fb-done b { font-size: 20px; font-weight: 900; letter-spacing: -0.03em; color: var(--ink); }
 .fb-done p { font-size: 15.5px; line-height: 1.5; color: var(--ink-soft); }
 .fb-back { justify-self: start; margin-top: 4px; font-size: 14.5px; font-weight: 700; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ───────── Call timeline: how a market's call moved ("Earlier: Lean Falcons at 46¢ · 19h ago → now Skip").
+   Plain type in the call colors, no dots or pills; only shows once the call has changed. */
+.hp-ct { margin-top: 12px; display: grid; gap: 6px; justify-items: start; }
+.hp-ct-line { margin: 0; font-weight: 500; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); white-space: normal; }
+.hp-ct-k { font-weight: 700; color: var(--ink-faint); }
+.hp-ct-call { font-weight: 800; color: var(--ink); }
+.hp-ct-call.is-wager { color: var(--wager-ink); }
+.hp-ct-call.is-hold { color: var(--lean-ink); }
+.hp-ct-call.is-skip, .hp-ct-call.is-decided { color: var(--fair-ink); }
+.hp-ct-arrow, .hp-ct-more { color: var(--ink-faint); }
+.hp-ct-toggle { padding: 0; font-weight: 700; font-size: 12.5px; color: var(--ink-faint); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
+.hp-ct-toggle:hover { color: var(--ink); }
+.hp-ct-list { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; max-width: 420px; }
+.hp-ct-list li { display: grid; grid-template-columns: 120px 1fr auto; gap: 12px; padding: 7px 0; border-top: 1px solid var(--rule); font-size: 13px; font-variant-numeric: tabular-nums; }
+.hp-ct-time { color: var(--ink-faint); font-weight: 600; }
+.hp-ct-list .hp-ct-at { color: var(--ink-soft); text-align: right; }
+/* the desk call block sets nowrap on its sentence; the timeline wraps normally */
+.hp-dd-call .hp-ct { white-space: normal; }
+
+/* X (Twitter) tile beside the Polymarket one: same size, ink with the glyph in paper (flips in dark mode) */
+.hp-x-tile { width: 20px; height: 20px; border-radius: 6px; background: var(--ink); color: var(--paper); display: grid; place-items: center; flex: none; }
+.hp-x-tile svg { width: 12px; height: 12px; }

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, doublePrecision, integer, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, doublePrecision, integer, timestamp, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
 
 /**
  * HedgePredict's track record: every Wager and Lean, logged once per market + call + side the
@@ -62,3 +62,28 @@ export const aiUsage = pgTable("ai_usage", {
   /** List-price estimate in USD; null if the model's price isn't known. */
   costUsd: doublePrecision("cost_usd"),
 });
+
+/**
+ * How each market's call moved over time: one row whenever a fresh read differs from the last
+ * one (Wager / Lean / Skip / Decided, or a different side). Written after board reads, never
+ * on the request's critical path. Shown as the "Earlier:" line under a call. See src/lib/callHistory.ts.
+ */
+export const callChanges = pgTable(
+  "call_changes",
+  {
+    id: serial("id").primaryKey(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    marketId: text("market_id").notNull(),
+    question: text("question").notNull().default(""),
+    /** "wager", "hold" (Lean), "skip" or "decided". */
+    action: text("action").notNull(),
+    /** The side the call backs; null on a Skip or Decided. */
+    side: text("side"),
+    /** Price of the backed side (or the leading side on a Skip/Decided), 0–1. */
+    sidePrice: doublePrecision("side_price"),
+    howSure: doublePrecision("how_sure"),
+  },
+  (t) => [index("call_changes_market_at").on(t.marketId, t.at)]
+);
+
+export type CallChange = typeof callChanges.$inferSelect;
