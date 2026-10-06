@@ -43,6 +43,13 @@
       "when": 1791246670092,
       "tag": "0005_call_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791322676345,
+      "tag": "0006_call_changes_game_start",
+      "breakpoints": true
     }
   ]
 }

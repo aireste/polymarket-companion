@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { TrackRecord } from "@/lib/trackRecord";
 import { buildRecord, type CallFilter, type CurvePoint, type RecordCall, type RecordLine } from "@/lib/recordMath";
 import { MARKET_TZ } from "@/lib/format";
+import type { CallMatrix as Matrix } from "@/lib/callHistory";
+import { CallMatrix } from "./CallMatrix";
 
 /**
  * The public scorecard: did HedgePredict call it right before the event? Every Wager and Lean made
@@ -29,7 +31,7 @@ const FILTERS: { id: CallFilter; label: string }[] = [
   { id: "Lean", label: "Leans" },
 ];
 
-export function TrackRecordView({ record }: { record: TrackRecord }) {
+export function TrackRecordView({ record, matrix }: { record: TrackRecord; matrix?: Matrix | null }) {
   const [filter, setFilter] = useState<CallFilter>("all");
   const view = useMemo(() => buildRecord(record.calls, filter), [record.calls, filter]);
   const { all } = view;
@@ -66,6 +68,8 @@ export function TrackRecordView({ record }: { record: TrackRecord }) {
         <Tile label="Hit rate" value={pct(all.hitRate)} note={all.breakEven == null ? "" : `needs ${pct(all.breakEven)} to break even`} />
         <Tile label="Return per $1" value={all.perDollar == null ? "—" : money(all.perDollar)} note="flat $1 on every call" tone={tone(all.perDollar)} />
       </dl>
+
+      {matrix && <CallMatrix matrix={matrix} />}
 
       <section className="tr-sec">
         <h2>Running profit</h2>

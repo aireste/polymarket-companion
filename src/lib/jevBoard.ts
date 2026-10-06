@@ -65,7 +65,7 @@ export async function getBoardReads(category: CategoryId = "all", limit?: number
   );
 
   // Keep the call timeline: only fresh reads can differ from what's stored.
-  recordCallChangesLater(todo.map((m) => reads[m.id]).filter(Boolean));
+  recordCallChangesLater(todo.filter((m) => reads[m.id]).map((m) => ({ read: reads[m.id], gameStart: m.gameStartTime ?? null })));
 
   return { markets, reads };
 }

@@ -82,6 +82,8 @@ export const callChanges = pgTable(
     /** Price of the backed side (or the leading side on a Skip/Decided), 0–1. */
     sidePrice: doublePrecision("side_price"),
     howSure: doublePrecision("how_sure"),
+    /** When the game starts (sports), so the timeline can mark where it went live. */
+    gameStart: timestamp("game_start", { withTimezone: true }),
   },
   (t) => [index("call_changes_market_at").on(t.marketId, t.at)]
 );

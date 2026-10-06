@@ -571,3 +571,32 @@
 /* X (Twitter) tile beside the Polymarket one: same size, ink with the glyph in paper (flips in dark mode) */
 .hp-x-tile { width: 20px; height: 20px; border-radius: 6px; background: var(--ink); color: var(--paper); display: grid; place-items: center; flex: none; }
 .hp-x-tile svg { width: 12px; height: 12px; }
+
+/* ───────── Track record: the call matrix (one row per market, cells colored by the call in force) ───────── */
+.cm-k { font-weight: 800; }
+.cm-k.is-wager { color: var(--wager-ink); } .cm-k.is-hold { color: var(--lean-ink); } .cm-k.is-skip { color: var(--fair-ink); }
+.cm-grid { display: grid; gap: 0; margin-top: 18px; }
+.cm-row, .cm-axis { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr) 170px; gap: 16px; align-items: center; }
+.cm-row { padding: 8px 0; border-top: 1px solid var(--rule); }
+.cm-q { font-weight: 700; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-cells { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; height: 18px; }
+.cm-cells i { display: block; height: 100%; background: var(--paper-3); position: relative; }
+.cm-cells i.is-wager { background: var(--wager); }
+.cm-cells i.is-hold { background: var(--lean); }
+.cm-cells i.is-skip, .cm-cells i.is-decided { background: var(--fair); }
+.cm-cells i.is-none { background: transparent; box-shadow: inset 0 0 0 1px var(--rule); }
+.cm-cells i.is-live::before { content: ""; position: absolute; left: -2px; top: -4px; bottom: -4px; width: 2px; background: var(--live); }
+.cm-st { font-size: 13px; font-weight: 700; line-height: 1.25; }
+.cm-st small { display: block; font-weight: 600; font-size: 11.5px; color: var(--ink-faint); }
+.cm-now.is-wager { color: var(--wager-ink); } .cm-now.is-hold { color: var(--lean-ink); } .cm-now.is-skip, .cm-now.is-decided { color: var(--fair-ink); }
+.cm-res.is-won { color: var(--pos-ink); } .cm-res.is-lost { color: var(--neg-ink); } .cm-res.is-void { color: var(--ink-faint); }
+.cm-res small { color: var(--ink-faint); }
+.cm-axis { padding-top: 6px; border-top: 1px solid var(--rule); }
+.cm-axis-t { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600; color: var(--ink-faint); }
+@media (max-width: 700px) {
+  .cm-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
+  .cm-q { grid-column: 1 / -1; }
+  .cm-cells { grid-column: 1 / 2; }
+  .cm-axis { grid-template-columns: minmax(0, 1fr) auto; }
+  .cm-axis > span:first-child { display: none; }
+}
