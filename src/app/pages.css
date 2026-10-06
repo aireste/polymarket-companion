@@ -591,16 +591,22 @@
 .tr-details { margin-top: 10px; font-weight: 900; font-size: 22px; letter-spacing: -0.03em; }
 @media (max-width: 560px) { .tr-follow-col { padding: 18px 16px; } }
 
-/* Board one-liner: "If you'd followed every Wager: 2–0, +$2.33 · every Lean: 5–6, +$0.09 · Track record →" */
-.hp-follow { display: block; font-size: 13px; line-height: 1.5; font-weight: 500; color: var(--ink-soft); text-decoration: none; }
-.hp-follow.is-desk { padding: 12px 22px; border-bottom: 1px solid var(--rule); }
-.hp-follow.is-phone { margin: 10px 2px 14px; }
-.hp-follow b { font-weight: 800; }
-.hp-follow b.is-wager { color: var(--wager-ink); }
-.hp-follow b.is-hold { color: var(--lean-ink); }
-.hp-follow .is-pos { color: var(--pos-ink); font-weight: 700; }
-.hp-follow .is-neg { color: var(--neg-ink); font-weight: 700; }
-.hp-follow-go { font-weight: 700; color: var(--ink); white-space: nowrap; }
-.hp-follow:hover .hp-follow-go { text-decoration: underline; text-underline-offset: 3px; }
 .tr-follow-rec { color: var(--ink); }
 .tr-follow-money { font-size: 22px; font-weight: 900; }
+
+/* Six nav links: tighten the header on narrow laptops so nothing overlaps */
+@media (min-width: 900px) and (max-width: 1180px) {
+  .hp-dh { gap: 14px; }
+  .hp-dh-nav { gap: 14px; }
+  .hp-dh-link { font-size: 13px; }
+  .hp-dh-brand { font-size: 17px; }
+}
+/* Phone footer: wrap to a second row instead of breaking a link across two lines */
+.hp-phone-links { flex-wrap: wrap; row-gap: 12px; }
+.hp-phone-links a { white-space: nowrap; }
+@media (min-width: 900px) and (max-width: 1080px) {
+  .hp-dh .hp-search { flex: 0 0 36px; width: 36px; max-width: 36px; height: 36px; }
+}
+@media (min-width: 900px) { .hp-dh .hp-askwrap, .hp-dh .hp-oddsfmt { flex: none; } }
+/* Narrowest laptops: the theme already follows the system, so its toggle steps aside to make room */
+@media (min-width: 900px) and (max-width: 1000px) { .hp-dh .hp-theme { display: none; } }

@@ -24,7 +24,7 @@ export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link
   if (variant === "row") {
     return (
       <a className="hp-tiprow" href={TIP_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("coffee_click", "top")}>
-        <span>HedgePredict is free. Found it useful?</span>
+        <span>I&apos;d love to keep HedgePredict free. Support helps cover the AI costs I pay out of pocket.</span>
         <b>
           {Icon.coffee}
           Buy me a coffee
@@ -34,11 +34,11 @@ export function TipLine({ variant = "line" }: { variant?: "line" | "row" | "link
   }
   return (
     <p className="hp-tip">
-      HedgePredict is free. If it&apos;s been useful, you can{" "}
+      I&apos;d love to keep HedgePredict free. If it&apos;s been useful, you can{" "}
       <a href={TIP_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("coffee_click", "line")}>
         buy me a coffee
-      </a>
-      .
+      </a>{" "}
+      to help cover the AI costs I pay out of pocket.
     </p>
   );
 }

@@ -68,6 +68,7 @@ function PaletteHotkey() {
 const DESK_NAV = [
   { href: "/", label: "Board" },
   { href: "/how-it-works", label: "How it works" },
+  { href: "/track-record", label: "Track record" },
   { href: "/daily", label: "The Daily" },
   { href: "/connect", label: "Connect your AI" },
   // Last and set apart: the extra room you go to after the board.
