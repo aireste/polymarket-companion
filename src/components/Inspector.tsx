@@ -9,7 +9,7 @@ import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
-import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
+import { AGAINST_NOTE, JEV_ACTION_COPY, isAgainst, leanSide, shortSide } from "@/lib/jevDisplay";
 import { clockLabel, countdownShort, isLive, price, resolveAt, usd, whenMs } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
@@ -115,6 +115,7 @@ function CallBig({ play }: { play: PlayDTO }) {
       <small>
         {sure}% sure{side ? " it's too cheap" : " both prices are fair"}
       </small>
+      {isAgainst(side) && <small>{AGAINST_NOTE}</small>}
       <CallTimeline play={play} variant="desk" />
     </div>
   );

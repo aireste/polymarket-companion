@@ -23,6 +23,7 @@ import {
 } from "@react-email/components";
 import type { DailyIssue, IssueMarket } from "@/lib/daily";
 import { TIP_URL } from "@/lib/links";
+import { AGAINST_NOTE, isAgainst } from "@/lib/jevDisplay";
 
 const C = {
   canvas: "#eceef1",
@@ -103,6 +104,9 @@ export function DailyEmail({ issue, siteUrl, address, welcome }: { issue: DailyI
               <Text style={{ margin: "10px 0 0", fontSize: 13, lineHeight: "19px", fontWeight: 700, color: C.onDarkSoft }}>
                 {pct(pick.call.strength)} sure it&apos;s too cheap · {pick.game ? "starts" : "resolves"} {pick.when}
               </Text>
+              {isAgainst({ label: pick.call.side }) && (
+                <Text style={{ margin: "6px 0 0", fontSize: 13, lineHeight: "19px", fontWeight: 700, color: C.onDarkSoft }}>{AGAINST_NOTE}</Text>
+              )}
               {issue.pickWhy && <Text style={{ margin: "16px 0 0", fontSize: 16, lineHeight: "25px", color: C.onDark }}>{issue.pickWhy}</Text>}
               <Section style={{ marginTop: 18 }}>
                 <Button href={pick.href} style={{ background: C.ice, color: C.dark, fontWeight: 700, fontSize: 14, borderRadius: 3, padding: "12px 18px" }}>
@@ -282,6 +286,9 @@ function Play({ m, first, kicker }: { m: IssueMarket; first: boolean; kicker?: s
           <span style={{ color: C.skip }}>Priced fair</span>
         )}
       </Text>
+      {m.call && isAgainst({ label: m.call.side }) && (
+        <Text style={{ margin: "3px 0 0", fontSize: 13, lineHeight: "19px", fontWeight: 700, color: C.soft }}>{AGAINST_NOTE}</Text>
+      )}
       <Text style={{ margin: "3px 0 0", fontSize: 13.5, lineHeight: "20px", fontWeight: 700, color: C.soft }}>
         <Link href={m.href} style={{ color: C.soft, textDecoration: "none" }}>{m.question}</Link>
         {" · "}

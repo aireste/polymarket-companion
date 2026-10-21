@@ -26,6 +26,10 @@ export function shortSide(label: string, max = 14): string {
   return label.length > max ? `${label.slice(0, max - 1)}…` : label;
 }
 
+/** A call on "No" reads backwards at a glance, so every surface adds this plain note next to it. */
+export const AGAINST_NOTE = "This is a call against it happening: Jev thinks it's less likely than the market says.";
+export const isAgainst = (side: { label: string } | null | undefined) => side?.label === "No";
+
 /** The side Jev leans toward, or null. */
 export function leanSide(read: Pick<JevReadDTO, "sides" | "lean">) {
   return read.lean == null ? null : read.sides[read.lean] ?? null;
