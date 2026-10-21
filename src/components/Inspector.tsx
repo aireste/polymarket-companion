@@ -110,7 +110,11 @@ function CallBig({ play }: { play: PlayDTO }) {
     );
   return (
     <div className={`hp-dd-big hp-dd-call is-${a.cls}`}>
-      <b>{a.label}</b>
+      {/* A Yes/No call names its side in the headline, same size, so "Lean No" can't be misread as "Lean" on the price beside it. */}
+      <b>
+        {a.label}
+        {side && (side.label === "Yes" || side.label === "No") && ` ${side.label}`}
+      </b>
       <span className="hp-dd-mean">{meaning}</span>
       <small>
         {sure}% sure{side ? " it's too cheap" : " both prices are fair"}
