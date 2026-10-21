@@ -9,7 +9,7 @@ import { usePriceHistory } from "@/lib/usePriceHistory";
 import { useRecommendation } from "@/lib/useRecommendation";
 import { useJev } from "@/lib/useJev";
 import { useJevExplain } from "@/lib/useJevExplain";
-import { JEV_ACTION_COPY, leanSide, shortSide } from "@/lib/jevDisplay";
+import { AGAINST_NOTE, JEV_ACTION_COPY, isAgainst, leanSide, shortSide } from "@/lib/jevDisplay";
 import { clockLabel, countdownShort, isLive, price, resolveAt, usd, whenMs } from "@/lib/format";
 import { PriceChart } from "./PriceChart";
 import { Recommendation } from "./Recommendation";
@@ -110,11 +110,16 @@ function CallBig({ play }: { play: PlayDTO }) {
     );
   return (
     <div className={`hp-dd-big hp-dd-call is-${a.cls}`}>
-      <b>{a.label}</b>
+      {/* A Yes/No call names its side in the headline, same size, so "Lean No" can't be misread as "Lean" on the price beside it. */}
+      <b>
+        {a.label}
+        {side && (side.label === "Yes" || side.label === "No") && ` ${side.label}`}
+      </b>
       <span className="hp-dd-mean">{meaning}</span>
       <small>
         {sure}% sure{side ? " it's too cheap" : " both prices are fair"}
       </small>
+      {isAgainst(side) && <small>{AGAINST_NOTE}</small>}
       <CallTimeline play={play} variant="desk" />
     </div>
   );
@@ -154,7 +159,7 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
             <Odo value={price(current, fmt, "pct")} />
           </b>
           <small>
-            {target?.label}
+            Market chance of {target?.label}
             {history && Math.abs(delta) >= 0.05 && (
               <>
                 {" · "}

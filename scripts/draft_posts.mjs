@@ -10,6 +10,8 @@ const SEND = process.argv.includes("--send");
 
 const board = await (await fetch(`${SITE}/api/jev/board`)).json();
 const CALL = { wager: "Wager", hold: "Lean" };
+// X counts every link as 23 characters, whatever its length.
+const xLen = (t) => t.replace(/https?:\/\/\S+/g, "x".repeat(23)).length;
 const pct = (p) => `${Math.round(p * 100)}%`;
 
 const calls = Object.values(board.reads)
@@ -24,9 +26,15 @@ if (!calls.length) {
 
 calls.forEach((r, i) => {
   const side = r.sides[r.lean];
+  const p = pct(side.price);
+  // Always name the side Jev likes and ITS price, then say what that means, so a "No" is never misread as backing the thing named.
+  const meaning = side.label === "No"
+    ? `Jev thinks No is more likely than the market's ${p}, so it thinks this is less likely to happen than the market does.`
+    : `Jev thinks ${side.label} is more likely than the market's ${p}.`;
   const draft = [
-    `${CALL[r.action]}: ${r.marketName}`,
-    `Jev's read is ${side.label}. Polymarket has it at ${pct(side.price)}.`,
+    `${CALL[r.action]}: ${side.label} at ${Math.round(side.price * 100)}¢`,
+    r.marketName,
+    meaning,
     `Decision support, not advice.\n${SITE}/share/${encodeURIComponent(r.marketId)}`,
   ].join("\n\n");
   if (SEND) {
@@ -34,6 +42,6 @@ calls.forEach((r, i) => {
     const msg = `X draft ${i + 1} of ${calls.length}\n\n${draft}\n\nTap to open in X, edit, post:\n${link}`;
     execFileSync("ssh", ["agent@134.209.112.34", "notify-esteban"], { input: msg, stdio: ["pipe", "inherit", "inherit"] }); // message goes over stdin so the remote shell never parses it
   }
-  console.log(`--- Draft ${i + 1} (${draft.length} chars${draft.length > 280 ? ", OVER 280, trim" : ""}) ---\n${draft}\n`);
+  console.log(`--- Draft ${i + 1} (${xLen(draft)} chars on X${xLen(draft) > 280 ? ", OVER 280, trim" : ""}) ---\n${draft}\n`);
 });
 console.log(SEND ? "Queued to Telegram. Nothing was posted." : "Review every draft. Post only calls made before the event. Nothing was posted.");

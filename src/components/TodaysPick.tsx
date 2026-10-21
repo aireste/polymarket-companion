@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useBoard } from "@/lib/boardStore";
 import { todaysPick } from "@/lib/pick";
-import { JEV_ACTION_COPY } from "@/lib/jevDisplay";
+import { AGAINST_NOTE, JEV_ACTION_COPY, isAgainst } from "@/lib/jevDisplay";
 import { selectMarket } from "@/lib/useSelection";
 import { pct, price } from "@/lib/format";
 import { Sparkline } from "./Sparkline";
@@ -101,6 +101,7 @@ export function TodaysPick({ variant, onOpen }: { variant: "desk" | "phone"; onO
           {verb} <em>{side.label}</em> at <span className="num">{price(side.price, fmt)}</span>
         </h2>
         <p className="hp-pick-q">{play.question}</p>
+        {isAgainst(side) && <p className="hp-pick-meta">{AGAINST_NOTE}</p>}
         <p className="hp-pick-meta">
           {pct(read.strength, 0)} sure it&apos;s too cheap ·{" "}
           <Countdown play={play} />
