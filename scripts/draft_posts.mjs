@@ -27,7 +27,7 @@ calls.forEach((r, i) => {
   const draft = [
     `${CALL[r.action]}: ${r.marketName}`,
     `Jev's read is ${side.label}. Polymarket has it at ${pct(side.price)}.`,
-    `Decision support, not advice. Full record, losses included: ${SITE}/track-record`,
+    `Decision support, not advice.\n${SITE}/share/${encodeURIComponent(r.marketId)}`,
   ].join("\n\n");
   if (SEND) {
     const link = "https://x.com/intent/post?text=" + encodeURIComponent(draft);

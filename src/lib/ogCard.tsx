@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import type { JevReadDTO } from "./dto";
 
 /**
  * The share card (iMessage, X, Slack, Discord): 1200×630. It shows the product's
@@ -100,4 +101,42 @@ export async function renderOg() {
       { name: "Inter", data: medium, weight: 500, style: "normal" },
     ],
   });
+}
+
+/** A card for one real call (the /share/[id] link): the market, the leaned side's price, and the call. */
+function MarketCard({ read }: { read: JevReadDTO }) {
+  const side = read.sides[read.lean ?? 0];
+  const call = read.action === "wager" ? "Wager" : "Lean";
+  const tone = read.action === "wager" ? WAGER : ICE;
+  return (
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: BG, padding: "60px 72px" }}>
+      <Logo size={42} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 28, padding: "40px 44px", background: PANEL, border: `2px solid ${RULE}` }}>
+        <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.15, color: INK }}>{read.marketName}</div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 40 }}>
+          <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: INK }}>{`${Math.round(side.price * 100)}¢`}</div>
+          <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: tone }}>{call}</div>
+        </div>
+        <div style={{ display: "flex", fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em", color: INK }}>
+          Jev likes&nbsp;<span style={{ color: tone }}>{side.label}</span>&nbsp;at this price.
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+async function fonts() {
+  const [bold, medium] = await Promise.all([
+    readFile(join(process.cwd(), "src/app/fonts/Inter-800.ttf")),
+    readFile(join(process.cwd(), "src/app/fonts/Inter-500.ttf")),
+  ]);
+  return [
+    { name: "Inter", data: bold, weight: 800 as const, style: "normal" as const },
+    { name: "Inter", data: medium, weight: 500 as const, style: "normal" as const },
+  ];
+}
+
+export async function renderMarketOg(read: JevReadDTO) {
+  return new ImageResponse(<MarketCard read={read} />, { ...OG_SIZE, fonts: await fonts() });
 }
