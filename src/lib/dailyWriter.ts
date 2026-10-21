@@ -72,7 +72,7 @@ const SCHEMA = {
   required: ["hook", "opener", "pickWhy", "notes", "weekIntro", "signoff"],
 } as const;
 
-const RULES = `You write HedgePredict Daily, a 2-minute morning email about prediction markets on Polymarket US. The model is Morning Brew: a smart friend catching you up over coffee. Conversational, quick, a little wry, never hype, never a report.
+const RULES = `You write HedgePredict Daily, a 2-minute morning email (about 350 words in all) about prediction markets on Polymarket US. The model is Morning Brew: a smart friend catching you up over coffee. Conversational, quick, a little wry, never hype, never a report.
 
 Voice
 - First person plural: "we like Kentucky here", "we're passing", "we'd wait".
@@ -130,11 +130,11 @@ ${sheet(facts)}
 
 Return:
 - hook: the subject-line hook, 3 to 7 words, no period, about today's most interesting thing.
-- opener: 2 or 3 sentences, 55 words max. What today is about and the one thing worth knowing, the way you'd say it out loud. Do not count markets or list calls.
-- pickWhy: 2 or 3 sentences, 60 words max. What the crowd is saying with this price, why we think it's off, and an honest line on how strong the call is. If there is no pick, say why sitting out is a real answer.
-- notes: one note for EACH of these ids: ${ids.join(", ") || "(none)"}. Two sentences is the norm, three at most, 45 words max. Story first, our take last. For the passing-on market, say why we're leaving it alone. No two notes may start the same way.
-- weekIntro: one sentence, 20 words max, setting up the week-ahead list without restating it.
-- signoff: one short line to close, 12 words max. If you say when we're back, use the "Next issue" day exactly.`;
+- opener: 1 or 2 sentences, 35 words max. What today is about, the way you'd say it out loud. Do not count markets, list calls, or say how strong, quiet or mild the board is.
+- pickWhy: 2 sentences, 45 words max. What the crowd is saying with this price, why we think it's off, and an honest line on how strong the call is. If there is no pick, say why sitting out is a real answer.
+- notes: one note for EACH of these ids: ${ids.join(", ") || "(none)"}. One sentence, two at most, 25 words max. These are quick radar items for the reader to keep an eye on, not mini articles. Our take, briefly. For the passing-on market, say why we're leaving it alone. No two notes may start the same way.
+- weekIntro: one sentence, 12 words max, setting up the week-ahead list without restating it.
+- signoff: one short line to close, 10 words max. If you say when we're back, use the "Next issue" day exactly.`;
   try {
     // If the writing pass stalls, the issue goes out with plain notes rather than not at all.
     const client = new Anthropic({ timeout: 120_000, maxRetries: 1 });

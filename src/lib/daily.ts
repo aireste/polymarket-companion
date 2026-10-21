@@ -1,7 +1,7 @@
 /**
  * HedgePredict Daily: a conversational 2-minute read, not a copy of the board. One issue =
- * an opener, the pick and the case for it, a couple of plays per beat (sports, politics, economy &
- * crypto, culture) with a note on each, one popular market we're passing on, and the week ahead.
+ * an opener, the pick and the case for it, one "on our radar" play per beat (sports, politics, economy &
+ * crypto, culture) with a one-line note, one popular market we're passing on, and the week ahead.
  *
  * The calls come from the same boards, Jev reads and pick rule as the site, so the email never
  * disagrees with the app. The words come from one writing pass over those numbers plus a news
@@ -21,7 +21,7 @@ import { writeDaily, type PlayFacts } from "./dailyWriter";
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hedgepredict.co";
 /** Bump when the stored issue's shape changes, so older saved issues are rebuilt, not rendered. */
-export const ISSUE_VERSION = 2;
+export const ISSUE_VERSION = 3;
 
 export interface IssueMarket {
   id: string;
@@ -158,7 +158,7 @@ const BEATS: { id: string; label: string; boards: CategoryId[]; categories: stri
 ];
 /** Calls are read on each beat's top markets only, to keep TypeSafe use down. */
 const BEAT_READS = 8;
-const PER_BEAT = 2;
+const PER_BEAT = 1;
 const TIER = { wager: 2, hold: 1, skip: 0 } as const;
 
 /** What the writer may say about a play. */
@@ -281,7 +281,7 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
       const d = at(m);
       return d != null && d.getTime() < t + 7 * 86_400_000 && dayFmt.format(d) !== dayFmt.format(now);
     })
-    .slice(0, 5)
+    .slice(0, 4)
     .sort((a, b) => at(a)!.getTime() - at(b)!.getTime())
     .map((m) => {
       const fav = [...m.outcomes].sort((a, b) => b.price - a.price)[0];
@@ -297,12 +297,12 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
     })
   );
   const callText = (m: IssueMarket) => (m.call ? `${verb(m.call.action)} ${m.call.side} at ${cents(m.call.sidePrice)}` : "no call, priced fair");
-  // News lookups are what an issue costs, so only the plays that lead get one: the pick in full,
-  // and the first play of each beat in a line. The rest are written from their numbers.
-  const researched = [...(pick ? [pick] : []), ...beats.map((b) => b.plays[0])];
+  // News lookups are what an issue costs, so only the pick gets one (2-3 sentences). The radar
+  // items and the pass are written from their numbers.
+  const researched = pick ? [pick] : [];
   const bg = await buildBackground(
     iso,
-    researched.map((m) => ({ id: m.id, question: m.question, call: callText(m), depth: m === pick ? ("pick" as const) : ("line" as const) }))
+    researched.map((m) => ({ id: m.id, question: m.question, call: callText(m), depth: "pick" as const }))
   );
   for (const m of featured) if (bg[m.id]) m.background = bg[m.id];
 

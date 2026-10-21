@@ -22,6 +22,9 @@ import { buildDailyIssue, ISSUE_VERSION, SITE_URL, type DailyIssue } from "./dai
  */
 export const DAILY_PAUSED = true;
 
+/** The issue (ET date) that carries the one-time welcome note from Esteban. */
+export const WELCOME_DATE = "2026-10-21";
+
 export function newsletterConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_SEGMENT_ID && process.env.NEWSLETTER_FROM);
 }
@@ -87,7 +90,7 @@ export async function todaysIssue({ fresh = false }: { fresh?: boolean } = {}): 
 }
 
 export async function renderIssueHtml(issue: DailyIssue): Promise<string> {
-  return render(<DailyEmail issue={issue} siteUrl={SITE_URL} address={process.env.NEWSLETTER_ADDRESS} />);
+  return render(<DailyEmail issue={issue} siteUrl={SITE_URL} address={process.env.NEWSLETTER_ADDRESS} welcome={issue.date === WELCOME_DATE} />);
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -109,6 +112,8 @@ export async function sendIssue(issue: DailyIssue): Promise<{ id: string }> {
   const { data, error } = await client().broadcasts.create({
     segmentId: process.env.RESEND_SEGMENT_ID!,
     from: process.env.NEWSLETTER_FROM!,
+    // Replies reach a real inbox when NEWSLETTER_REPLY_TO is set (the welcome note invites them).
+    ...(process.env.NEWSLETTER_REPLY_TO ? { replyTo: process.env.NEWSLETTER_REPLY_TO } : {}),
     subject: issue.subject,
     html: await renderIssueHtml(issue),
     name: `HedgePredict Daily ${issue.date}`,
