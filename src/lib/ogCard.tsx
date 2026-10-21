@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import type { JevReadDTO } from "./dto";
 
 /**
  * The share card (iMessage, X, Slack, Discord): 1200×630. It shows the product's
@@ -104,18 +103,35 @@ export async function renderOg() {
 }
 
 /** A card for one real call (the /share/[id] link): the market, the leaned side's price, and the call. */
-function MarketCard({ read }: { read: JevReadDTO }) {
-  const side = read.sides[read.lean ?? 0];
+export interface CardCall {
+  marketName: string;
+  action: "wager" | "hold";
+  side: { label: string; price: number };
+}
+
+function MarketCard({ read }: { read: CardCall }) {
+  const side = read.side;
   const call = read.action === "wager" ? "Wager" : "Lean";
   const tone = read.action === "wager" ? WAGER : ICE;
+  const yesNo = side.label === "Yes" || side.label === "No";
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: BG, padding: "60px 72px" }}>
       <Logo size={42} />
       <div style={{ display: "flex", flexDirection: "column", gap: 28, padding: "40px 44px", background: PANEL, border: `2px solid ${RULE}` }}>
         <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.15, color: INK }}>{read.marketName}</div>
+        {/* A Yes/No call puts its side in the big type ("Lean No"), same as the board; named sides keep the price first. */}
         <div style={{ display: "flex", alignItems: "flex-end", gap: 40 }}>
-          <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: INK }}>{`${Math.round(side.price * 100)}¢`}</div>
-          <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: tone }}>{call}</div>
+          {yesNo ? (
+            <>
+              <div style={{ display: "flex", flexShrink: 0, fontSize: 104, fontWeight: 800, letterSpacing: "-0.05em", lineHeight: 0.92, color: tone }}>{`${call} ${side.label}`}</div>
+              <div style={{ display: "flex", flexShrink: 0, marginLeft: 36, fontSize: 104, fontWeight: 800, letterSpacing: "-0.05em", lineHeight: 0.92, color: INK }}>{`${Math.round(side.price * 100)}¢`}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: INK }}>{`${Math.round(side.price * 100)}¢`}</div>
+              <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.055em", lineHeight: 0.92, color: tone }}>{call}</div>
+            </>
+          )}
         </div>
         <div style={{ display: "flex", fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em", color: INK }}>
           Jev likes&nbsp;<span style={{ color: tone }}>{side.label}</span>&nbsp;at this price.
@@ -140,6 +156,6 @@ async function fonts() {
   ];
 }
 
-export async function renderMarketOg(read: JevReadDTO) {
+export async function renderMarketOg(read: CardCall) {
   return new ImageResponse(<MarketCard read={read} />, { ...OG_SIZE, fonts: await fonts() });
 }
