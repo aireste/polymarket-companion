@@ -71,7 +71,7 @@ Today is ${today}. Report only the current season, race or cycle. If all you can
 Market: "${s.question}"
 (HedgePredict's model says: ${s.call}. Do not comment on this.)
 
-Rules: facts only, from what you find. Do not predict the outcome, recommend a bet, or restate prices or percentages. Never describe your research, your sources' quality, or yourself ("I found", "a source check", "the snippet", "I can't confirm", "not established"); write like a news brief, and simply leave out anything you aren't sure of. Give any times in US Eastern (ET). If there's little news, say plainly what the event is and when it happens, then stop. ${long ? "Two or three sentences." : "Exactly one sentence, under 30 words."} Plain text, no markdown, no em dashes, no hype. ${long ? "Give 1-2 sources (title + URL) you actually used." : "Give at most 1 source."} If you find nothing current and relevant, return an empty story.`;
+Rules: facts only, from what you find. Do not predict the outcome, recommend a bet, or restate prices or percentages. Never describe your research, your sources' quality, or yourself ("I found", "a source check", "the snippet", "I can't confirm", "not established"); write like a news brief, and simply leave out anything you aren't sure of. Give any times in US Eastern (ET). If there's little news, say plainly what the event is and when it happens, then stop. ${long ? "Two sentences, 50 words max." : "Exactly one sentence, under 30 words."} Plain text, no markdown, no em dashes, no hype. ${long ? "Give 1-2 sources (title + URL) you actually used." : "Give at most 1 source."} If you find nothing current and relevant, return an empty story.`;
   try {
     const res = await client.beta.messages.create({
       ...REFUSAL_FALLBACK,

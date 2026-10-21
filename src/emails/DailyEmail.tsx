@@ -1,6 +1,6 @@
 /**
  * HedgePredict Daily, the email: a conversational read (opener, the play and the case for it, a
- * couple of plays per beat with a note each, what we're passing on, the week ahead), not a copy
+ * quick radar item per beat, what we're passing on, the week ahead), not a copy
  * of the board. React Email components render to
  * table-based HTML with inline styles that survive Gmail, Apple Mail and
  * Outlook. Brand colors are the site's OKLCH tokens converted to hex (email
@@ -54,9 +54,14 @@ const cents = (x: number) => `${Math.max(1, Math.min(99, Math.round(x * 100)))}Â
 const word = (a: string) => (a === "wager" ? "Wager" : a === "hold" ? "Lean" : "Skip");
 const callColor = (a?: string, onDark = false) =>
   a === "wager" ? (onDark ? C.wagerOnDark : C.wager) : a === "hold" ? (onDark ? C.leanOnDark : C.lean) : C.skip;
+const WELCOME = [
+  "Hi, and welcome to HedgePredict. Thanks for subscribing to the newsletter. I'm Esteban, I built HedgePredict, and I wanted to introduce myself and what it is: a free tool that reads the prices on Polymarket US and tells you which side, if any, looks underpriced.",
+  "This email is meant to help you every morning. You'll get a play or two, some of what's moving in sports, politics and the markets, and what's coming up this week, all in about two minutes. When I'm working on something new, I'll let you know about features and app updates I think are worth sharing.",
+  "If you have feedback, comments or concerns, just reply to this email. I'd love to have a conversation and hear how you'd use this better.",
+];
 const K = { margin: 0, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const };
 
-export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; siteUrl: string; address?: string }) {
+export function DailyEmail({ issue, siteUrl, address, welcome }: { issue: DailyIssue; siteUrl: string; address?: string; welcome?: boolean }) {
   const { pick } = issue;
   const a = pick?.call?.action;
   return (
@@ -76,6 +81,17 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
             <Text style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: C.faint }}>2-minute read</Text>
             {issue.opener && <Text style={{ margin: "16px 0 0", fontSize: 17, lineHeight: "26px", color: C.ink }}>{issue.opener}</Text>}
           </Section>
+
+          {/* A one-time note from the founder, only on the issue flagged as the welcome. */}
+          {welcome && (
+            <Sheet top={18}>
+              <Text style={{ ...K, color: C.faint }}>A note from me</Text>
+              {WELCOME.map((t) => (
+                <Text key={t} style={{ margin: "10px 0 0", fontSize: 15.5, lineHeight: "24px", color: C.ink }}>{t}</Text>
+              ))}
+              <Text style={{ margin: "12px 0 0", fontSize: 15.5, fontWeight: 900, color: C.ink }}>Esteban</Text>
+            </Sheet>
+          )}
 
           {/* The play: the one pick, then the case for it. */}
           <Label text="The play" />
@@ -114,16 +130,17 @@ export function DailyEmail({ issue, siteUrl, address }: { issue: DailyIssue; sit
             </Sheet>
           )}
 
-          {/* Around the markets: a couple of plays per beat, each with a note. */}
-          {issue.beats.length > 0 && <Label text="Around the markets" />}
-          {issue.beats.map((beat) => (
-            <Sheet key={beat.id} top={6}>
-              <Text style={{ ...K, color: C.faint }}>{beat.label}</Text>
-              {beat.plays.map((m, i) => (
-                <Play key={m.id} m={m} first={i === 0} />
-              ))}
-            </Sheet>
-          ))}
+          {/* On our radar: one quick item per beat, a line each. */}
+          {issue.beats.length > 0 && (
+            <>
+              <Label text="On our radar" />
+              <Sheet>
+                {issue.beats.flatMap((beat) => beat.plays.map((m) => ({ beat, m }))).map(({ beat, m }, i) => (
+                  <Play key={m.id} m={m} first={i === 0} kicker={beat.label} />
+                ))}
+              </Sheet>
+            </>
+          )}
 
           {/* Passing on: one popular market we think is priced fair. */}
           {issue.pass && (
@@ -221,9 +238,10 @@ function Sources({ list }: { list: { title: string; url: string }[] }) {
 }
 
 /** One play as a short read: the call in bold, the market, then the note. */
-function Play({ m, first }: { m: IssueMarket; first: boolean }) {
+function Play({ m, first, kicker }: { m: IssueMarket; first: boolean; kicker?: string }) {
   return (
     <Section style={{ borderTop: first ? undefined : `1px solid ${C.rule}`, padding: first ? "10px 0 2px" : "14px 0 2px", marginTop: first ? 0 : 12 }}>
+      {kicker && <Text style={{ ...K, color: C.faint, marginBottom: 4 }}>{kicker}</Text>}
       <Text style={{ margin: 0, fontSize: 17, lineHeight: "22px", fontWeight: 900, letterSpacing: "-0.02em", color: C.ink }}>
         {m.call ? (
           <>
