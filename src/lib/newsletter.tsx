@@ -20,7 +20,7 @@ import { buildDailyIssue, ISSUE_VERSION, SITE_URL, type DailyIssue } from "./dai
  * true the weekday cron does nothing: no issue is built (so no AI spend) and nothing is emailed.
  * Signups still work and the Daily page keeps showing the last issue. Set to false to resume.
  */
-export const DAILY_PAUSED = true;
+export const DAILY_PAUSED = false;
 
 /** The issue (ET date) that carries the one-time welcome note from Esteban. */
 export const WELCOME_DATE = "2026-10-21";
