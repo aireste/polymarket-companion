@@ -152,6 +152,37 @@ export function DailyEmail({ issue, siteUrl, address, welcome }: { issue: DailyI
             </>
           )}
 
+          {/* Our record: the running result if you'd followed every Wager / Lean, same numbers as the site. */}
+          {issue.record && (
+            <>
+              <Label text="Our record" />
+              <Sheet>
+                <Row>
+                  {issue.record.lines.map((l) => {
+                    const done = l.won + l.lost;
+                    return (
+                      <Column key={l.call} style={{ width: "50%", verticalAlign: "top" }}>
+                        <Text style={{ ...K, color: callColor(l.call === "Wager" ? "wager" : "hold") }}>{l.call}</Text>
+                        <Text style={{ margin: "4px 0 0", fontSize: 28, lineHeight: "30px", fontWeight: 900, letterSpacing: "-0.04em", color: C.ink }}>
+                          {l.won}–{l.lost}
+                        </Text>
+                        <Text style={{ margin: "4px 0 0", fontSize: 13.5, lineHeight: "20px", fontWeight: 700, color: done ? (l.profit >= 0 ? C.pos : C.neg) : C.faint }}>
+                          {done ? `${l.profit >= 0 ? "+" : "-"}$${Math.abs(l.profit).toFixed(2)} on $${l.staked}` : "Nothing resolved yet"}
+                        </Text>
+                        <Text style={{ margin: "2px 0 0", fontSize: 12.5, color: C.faint, fontWeight: 700 }}>{l.open} still open</Text>
+                      </Column>
+                    );
+                  })}
+                </Row>
+                <Text style={{ margin: "12px 0 0", fontSize: 13, lineHeight: "19px", color: C.soft }}>
+                  $1 on every call at the price we made it, calls made before the game only.
+                  {issue.record.resolved < 50 && <b> Early days: {issue.record.resolved} calls have resolved, too few to judge yet.</b>}{" "}
+                  <Link href={`${siteUrl}/track-record`} style={{ color: C.ink, fontWeight: 700, textDecoration: "underline" }}>See every call</Link>
+                </Text>
+              </Sheet>
+            </>
+          )}
+
           {/* The week ahead */}
           {issue.week.length > 0 && (
             <>
@@ -177,7 +208,6 @@ export function DailyEmail({ issue, siteUrl, address, welcome }: { issue: DailyI
 
           {/* Sign-off */}
           <Section style={{ padding: "26px 2px 4px" }}>
-            {issue.scorecard && <Text style={{ margin: "0 0 10px", fontSize: 14, lineHeight: "21px", fontWeight: 700, color: C.soft }}>{issue.scorecard}</Text>}
             {issue.signoff && <Text style={{ margin: 0, fontSize: 16, lineHeight: "24px", color: C.ink }}>{issue.signoff}</Text>}
             <Text style={{ margin: "14px 0 0", fontSize: 14, fontWeight: 700, color: C.faint }}>
               <Link href={`${siteUrl}/`} style={{ color: C.ink, fontWeight: 700 }}>Open the board</Link>

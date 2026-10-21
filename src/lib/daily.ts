@@ -18,6 +18,7 @@ import type { CategoryId } from "./filters";
 import type { JevReadDTO, PlayDTO } from "./dto";
 import { buildBackground, type Background } from "./background";
 import { writeDaily, type PlayFacts } from "./dailyWriter";
+import { followSummary, type FollowLine } from "./recordMath";
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hedgepredict.co";
 /** Bump when the stored issue's shape changes, so older saved issues are rebuilt, not rendered. */
@@ -82,8 +83,8 @@ export interface DailyIssue {
   pass: IssueMarket | null;
   weekIntro: string | null;
   week: WeekItem[];
-  /** One line on how recent calls did, once there are enough graded to mean something. */
-  scorecard: string | null;
+  /** The running record if you'd followed every Wager / Lean (same counted calls as /track-record). */
+  record: { lines: FollowLine[]; resolved: number } | null;
   signoff: string | null;
   counts: { wager: number; lean: number; skip: number; decided: number };
   generatedAt: string;
@@ -184,22 +185,16 @@ function plainNote(m: IssueMarket): string {
     : "Both prices look fair to us, so we're leaving it alone.";
 }
 
-/** One line on recent results, only once enough Polymarket US calls have been graded to mean something. */
-async function scorecardLine(): Promise<string | null> {
+/**
+ * The running record, the same numbers as /track-record: Polymarket US calls made before the
+ * event, graded, at a flat $1 a call. In-game calls are never counted.
+ */
+async function recordSummary(): Promise<DailyIssue["record"]> {
   if (!process.env.DATABASE_URL) return null;
   try {
-    const { db } = await import("@/db");
-    const { calls } = await import("@/db/schema");
-    const { sql } = await import("drizzle-orm");
-    const [r] = await db
-      .select({
-        graded: sql<number>`count(*) filter (where ${calls.result} in ('won','lost'))::int`,
-        won: sql<number>`count(*) filter (where ${calls.result} = 'won')::int`,
-      })
-      .from(calls)
-      .where(sql`${calls.marketId} like '%~%'`);
-    if (!r || r.graded < 20) return null;
-    return `Scorecard: ${r.won} of our last ${r.graded} graded calls landed.`;
+    const { getTrackRecord } = await import("./trackRecord");
+    const { calls } = await getTrackRecord();
+    return followSummary(calls);
   } catch {
     return null;
   }
@@ -342,7 +337,7 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
     pass,
     weekIntro: copy?.weekIntro ?? null,
     week,
-    scorecard: await scorecardLine(),
+    record: await recordSummary(),
     signoff: copy?.signoff ?? null,
     counts,
     generatedAt: now.toISOString(),
