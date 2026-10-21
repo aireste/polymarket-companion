@@ -213,9 +213,6 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
   const main = await getBoardReads();
   const plays = main.markets.map(toPlayDTO);
   const reads = { ...main.reads };
-  const pickRes = todaysPick(plays, reads);
-  const pick = pickRes ? toItem(pickRes.play, pickRes.read) : null;
-
   const counts = { wager: 0, lean: 0, skip: 0, decided: 0 };
   for (const p of plays) {
     const r = reads[p.id];
@@ -226,11 +223,10 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
     else counts.skip++;
   }
 
-  // Each beat: up to two plays from its boards. Calls first (Wager, then the strongest Leans);
-  // a beat with no call shows its top market as one we looked at and left alone.
-  const used = new Set<string>(pick ? [pick.id] : []);
+  // Load every beat's board first, so the pick can be the strongest call across all of them
+  // (any Wager beats any Lean; within a tier, the more sure one), not just the main board.
   const byId = new Map<string, PlayDTO>(plays.map((p) => [p.id, p]));
-  const beats: IssueBeat[] = [];
+  const pools = new Map<string, PlayDTO[]>();
   for (const beat of BEATS) {
     // Start from the main board's markets on this beat (already read), then add the beat's own boards.
     const pool: PlayDTO[] = plays.filter(
@@ -247,6 +243,20 @@ export async function buildDailyIssue(now = new Date()): Promise<DailyIssue> {
         if (!pool.some((x) => x.id === p.id)) pool.push(p);
       }
     }
+    pools.set(beat.id, pool);
+  }
+  const pickRes = todaysPick(
+    [...byId.values()].filter((p) => !isLive(p.gameStartTime, t)),
+    reads
+  );
+  const pick = pickRes ? toItem(pickRes.play, pickRes.read) : null;
+
+  // Each beat: one play from its boards. Calls first (Wager, then the strongest Leans);
+  // a beat with no call shows its top market as one we looked at and left alone.
+  const used = new Set<string>(pick ? [pick.id] : []);
+  const beats: IssueBeat[] = [];
+  for (const beat of BEATS) {
+    const pool = pools.get(beat.id) ?? [];
     const fresh = pool.filter((p) => !used.has(p.id));
     const called = fresh
       .filter((p) => reads[p.id].action !== "skip" && reads[p.id].lean != null)

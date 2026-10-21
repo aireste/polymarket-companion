@@ -57,7 +57,7 @@ const callColor = (a?: string, onDark = false) =>
 const WELCOME = [
   "Hi, and welcome to HedgePredict. Thanks for subscribing to the newsletter. I'm Esteban, I built HedgePredict, and I wanted to introduce myself and what it is: a free tool that reads the prices on Polymarket US and tells you which side, if any, looks underpriced.",
   "This email is meant to help you every morning. You'll get a play or two, some of what's moving in sports, politics and the markets, and what's coming up this week, all in about two minutes. When I'm working on something new, I'll let you know about features and app updates I think are worth sharing.",
-  "If you have feedback, comments or concerns, just reply to this email. I'd love to have a conversation and hear how you'd use this better.",
+  "If you have feedback, comments or concerns, use the contact link at the bottom of this email. I read every message, and I'd love to have a conversation and hear how you'd use this better.",
 ];
 const K = { margin: 0, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const };
 
@@ -185,6 +185,8 @@ export function DailyEmail({ issue, siteUrl, address, welcome }: { issue: DailyI
               <Link href={`${siteUrl}/hedge`} style={{ color: C.ink, fontWeight: 700 }}>Test a bet in Hedge Lab</Link>
               {"   ·   "}
               <Link href={`${siteUrl}/ask`} style={{ color: C.ink, fontWeight: 700 }}>Ask HedgePredict</Link>
+              {"   ·   "}
+              <Link href={`${siteUrl}/feedback`} style={{ color: C.ink, fontWeight: 700 }}>Contact us</Link>
             </Text>
             <Text style={{ margin: "14px 0 0", fontSize: 13.5, lineHeight: "20px", color: C.soft }}>
               HedgePredict is free. If it&apos;s been useful, you can{" "}
