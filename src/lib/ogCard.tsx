@@ -120,6 +120,9 @@ function MarketCard({ read }: { read: JevReadDTO }) {
         <div style={{ display: "flex", fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em", color: INK }}>
           Jev likes&nbsp;<span style={{ color: tone }}>{side.label}</span>&nbsp;at this price.
         </div>
+        <div style={{ fontSize: 26, fontWeight: 500, lineHeight: 1.3, color: SOFT }}>
+          {`The market gives ${side.label} ${Math.round(side.price * 100)}%. Jev thinks it's more likely than that.`}
+        </div>
       </div>
       <Footer />
     </div>
