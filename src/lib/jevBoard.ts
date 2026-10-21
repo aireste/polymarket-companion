@@ -8,7 +8,7 @@ import { jevRead, toJevDTO, MissingJevKeyError } from "./jev";
 import type { ScoredMarket } from "./scoring";
 import type { JevReadDTO } from "./dto";
 import { LIVE_WINDOW_MS } from "./format";
-import { recordCallChangesLater } from "./callHistory";
+import { steadyReads, type FreshRead } from "./callStability";
 import type { CategoryId } from "./filters";
 
 const TTL_MS = 10 * 60 * 1000;
@@ -48,15 +48,14 @@ export async function getBoardReads(category: CategoryId = "all", limit?: number
 
   // Small worker pool: fast, but gentle on TypeSafe's rate limits. A market
   // that fails just has no read (the UI shows its "Ask Jev" button).
+  const fresh: FreshRead[] = [];
   let next = 0;
   await Promise.all(
     Array.from({ length: Math.min(CONCURRENCY, todo.length) }, async () => {
       while (next < todo.length) {
         const m = todo[next++];
         try {
-          const dto = toJevDTO(m, await jevRead(m));
-          cache.set(m.id, { at: Date.now(), dto });
-          reads[m.id] = dto;
+          fresh.push({ read: toJevDTO(m, await jevRead(m)), gameStart: m.gameStartTime ?? null });
         } catch {
           /* leave this market without a read */
         }
@@ -64,8 +63,12 @@ export async function getBoardReads(category: CategoryId = "all", limit?: number
     })
   );
 
-  // Keep the call timeline: only fresh reads can differ from what's stored.
-  recordCallChangesLater(todo.filter((m) => reads[m.id]).map((m) => ({ read: reads[m.id], gameStart: m.gameStartTime ?? null })));
+  // Steady calls: a call that just changed shows (and logs) only once it has held; see callStability.ts.
+  const steady = await steadyReads(fresh);
+  steady.forEach((dto) => {
+    cache.set(dto.marketId, { at: Date.now(), dto });
+    reads[dto.marketId] = dto;
+  });
 
   return { markets, reads };
 }

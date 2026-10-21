@@ -89,3 +89,14 @@ export const callChanges = pgTable(
 );
 
 export type CallChange = typeof callChanges.$inferSelect;
+
+/**
+ * A call that differs from the market's confirmed one, and since when. The board only switches to it (and logs it)
+ * once every read has agreed for the hold time, so a number wobbling at the Skip/Lean line doesn't flicker. See callStability.ts.
+ */
+export const callPending = pgTable("call_pending", {
+  marketId: text("market_id").primaryKey(),
+  action: text("action").notNull(),
+  side: text("side"),
+  since: timestamp("since", { withTimezone: true }).notNull().defaultNow(),
+});

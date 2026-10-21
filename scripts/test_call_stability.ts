@@ -1,0 +1,21 @@
+// Run: node --experimental-strip-types scripts/test_call_stability.ts
+import { step, showConfirmed, HOLD_MS } from "../src/lib/callStabilityCore.ts";
+const T = 1_000_000_000_000; let fails = 0;
+const eq = (name: string, got: unknown, want: unknown) => { const g = JSON.stringify(got), w = JSON.stringify(want); if (g !== w) { fails++; console.log("FAIL", name, g, "!=", w); } else console.log("ok  ", name); };
+const lean = { action: "hold", side: "Yes", price: 0.6, howSure: 0.4 }, skip = { action: "skip", side: null, price: 0.6, howSure: 0.5 };
+eq("same as confirmed", step(lean, { action: "hold", side: "Yes" }, undefined, T), { show: "raw", clear: false });
+eq("same clears challenger", step(lean, { action: "hold", side: "Yes" }, { ...skip, since: T - 5 }, T), { show: "raw", clear: true });
+eq("new challenger starts pending, shows confirmed", step(skip, { action: "hold", side: "Yes" }, undefined, T), { show: "confirmed", pend: true });
+eq("young challenger: keeps showing confirmed, no reset", step(skip, { action: "hold", side: "Yes" }, { action: "skip", side: null, since: T - 10 * 60000 }, T), { show: "confirmed", pend: false });
+eq("challenger held 30m: logs + shows raw", step(skip, { action: "hold", side: "Yes" }, { action: "skip", side: null, since: T - HOLD_MS }, T), { show: "raw", log: true, clear: true });
+eq("different challenger resets", step({ ...lean, side: "No" }, { action: "skip", side: null }, { action: "hold", side: "Yes", since: T - HOLD_MS * 2 }, T), { show: "confirmed", pend: true });
+eq("decided is immediate", step({ action: "decided", side: null, price: 0.98, howSure: 1 }, { action: "hold", side: "Yes" }, undefined, T), { show: "raw", log: true, clear: false });
+eq("brand-new market, skip: nothing", step(skip, undefined, undefined, T), { show: "raw", clear: false });
+eq("brand-new call flickered away: clear pending", step(skip, undefined, { action: "hold", side: "Yes", since: T - 60000 }, T), { show: "raw", clear: true });
+eq("brand-new market, call: shows raw, pending", step(lean, undefined, undefined, T), { show: "raw", pend: true });
+eq("brand-new call held: logs", step(lean, undefined, { action: "hold", side: "Yes", since: T - HOLD_MS }, T), { show: "raw", log: true, clear: true });
+const raw: any = { marketId: "m", marketName: "m", sides: [{ label: "Yes", price: 0.6 }, { label: "No", price: 0.4 }], lean: null, strength: 0.5, distribution: { sides: [0.3, 0.2], neither: 0.5 }, action: "skip", model: "x" };
+const pick = ({ action, lean, strength }: any) => ({ action, lean, strength });
+eq("override to confirmed Lean Yes", pick(showConfirmed(raw, { action: "hold", side: "Yes" })), { action: "hold", lean: 0, strength: 0.3 });
+eq("override to confirmed Skip", pick(showConfirmed({ ...raw, action: "hold", lean: 1, strength: 0.2 }, { action: "skip", side: null })), { action: "skip", lean: null, strength: 0.5 });
+console.log(fails ? `${fails} FAILED` : "all passed"); if (fails) process.exit(1);
