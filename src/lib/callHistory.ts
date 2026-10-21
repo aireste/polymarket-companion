@@ -4,7 +4,7 @@
  * nothing. Recording runs after the response (next/server `after`), never on the request path.
  */
 import { after } from "next/server";
-import { asc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { callChanges } from "@/db/schema";
 import type { CallChangeDTO, JevReadDTO } from "./dto";
@@ -54,14 +54,16 @@ export function recordCallChangesLater(fresh: FreshRead[]) {
   }
 }
 
-/** A market's changes, oldest first. */
+/** A market's latest 50 changes, oldest first. (Newest first in the query: capping the oldest-first list would show the first 50 ever and hide where the call is now.) */
 export async function getCallHistory(marketId: string): Promise<CallChangeDTO[]> {
-  const rows = await db
-    .select()
-    .from(callChanges)
-    .where(eq(callChanges.marketId, marketId))
-    .orderBy(asc(callChanges.at))
-    .limit(50);
+  const rows = (
+    await db
+      .select()
+      .from(callChanges)
+      .where(eq(callChanges.marketId, marketId))
+      .orderBy(desc(callChanges.at))
+      .limit(50)
+  ).reverse();
   return rows.map((r) => ({
     at: r.at.toISOString(),
     action: r.action as CallChangeDTO["action"],
