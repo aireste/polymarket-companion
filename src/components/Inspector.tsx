@@ -159,7 +159,7 @@ export function DeskDetail({ play }: { play: PlayDTO }) {
             <Odo value={price(current, fmt, "pct")} />
           </b>
           <small>
-            {target?.label}
+            Market chance of {target?.label}
             {history && Math.abs(delta) >= 0.05 && (
               <>
                 {" · "}
