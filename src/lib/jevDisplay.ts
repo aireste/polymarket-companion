@@ -27,7 +27,7 @@ export function shortSide(label: string, max = 14): string {
 }
 
 /** A call on "No" reads backwards at a glance, so every surface adds this plain note next to it. */
-export const AGAINST_NOTE = "This is a call against it happening: Jev thinks it's less likely than the market says.";
+export const AGAINST_NOTE = "This is a call against it happening: we think it's less likely than the market says.";
 export const isAgainst = (side: { label: string } | null | undefined) => side?.label === "No";
 
 /** The side Jev leans toward, or null. */
