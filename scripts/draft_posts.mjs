@@ -12,6 +12,7 @@ const SITE = arg("--site", "https://hedgepredict.co");
 const N = Number(arg("--n", 3));
 const SEND = process.argv.includes("--send");
 const PNG = process.argv.includes("--png");
+const CARD_SITE = arg("--card-site", SITE); // where the PNG is fetched from (a local server shows card changes before they deploy)
 const OUT = join(homedir(), "Documents", "HedgePredict X drafts");
 
 const board = await (await fetch(`${SITE}/api/jev/board`)).json();
@@ -45,8 +46,8 @@ for (const [i, r] of calls.entries()) {
   const p = pct(side.price);
   // Always name the side Jev likes and ITS price, then say what that means, so a "No" is never misread as backing the thing named.
   const meaning = side.label === "No"
-    ? `Jev thinks No is more likely than the market's ${p}, so it thinks this is less likely to happen than the market does.`
-    : `Jev thinks ${side.label} is more likely than the market's ${p}.`;
+    ? `We think No is more likely than the market's ${p}, so we think this is less likely to happen than the market does.`
+    : `We think ${side.label} is more likely than the market's ${p}.`;
   const draft = [
     `${CALL[r.action]}: ${side.label} at ${Math.round(side.price * 100)}¢`,
     r.marketName,
@@ -60,7 +61,7 @@ for (const [i, r] of calls.entries()) {
   }
   if (PNG) {
     // The same card X would show for the link, fetched from the live site and saved as a plain file.
-    const res = await fetch(`${SITE}/share/${encodeURIComponent(r.marketId)}/opengraph-image`);
+    const res = await fetch(`${CARD_SITE}/share/${encodeURIComponent(r.marketId)}/opengraph-image`);
     if (!res.ok) throw new Error(`card ${res.status} for ${r.marketId}`);
     mkdirSync(OUT, { recursive: true });
     const file = join(OUT, `${new Date().toISOString().slice(0, 10)}-draft${i + 1}-${r.marketId.split("~")[0]}.png`);

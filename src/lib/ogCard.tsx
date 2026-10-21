@@ -16,6 +16,7 @@ const BG = "#0c0f13";
 const PANEL = "#151a20";
 const RULE = "#252b33";
 const WAGER = "#5cd47f";
+const LEAN = "#f0b54a"; // amber, the same Lean color as the board and the Daily
 
 /** The Split mark: the call bar's three parts, stacked, the sides trading places. */
 function Mark({ size, color = ICE }: { size: number; color?: string }) {
@@ -112,7 +113,7 @@ export interface CardCall {
 function MarketCard({ read }: { read: CardCall }) {
   const side = read.side;
   const call = read.action === "wager" ? "Wager" : "Lean";
-  const tone = read.action === "wager" ? WAGER : ICE;
+  const tone = read.action === "wager" ? WAGER : LEAN;
   const yesNo = side.label === "Yes" || side.label === "No";
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: BG, padding: "60px 72px" }}>
@@ -134,10 +135,10 @@ function MarketCard({ read }: { read: CardCall }) {
           )}
         </div>
         <div style={{ display: "flex", fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em", color: INK }}>
-          Jev likes&nbsp;<span style={{ color: tone }}>{side.label}</span>&nbsp;at this price.
+          We like&nbsp;<span style={{ color: tone }}>{side.label}</span>&nbsp;at this price.
         </div>
         <div style={{ fontSize: 26, fontWeight: 500, lineHeight: 1.3, color: SOFT }}>
-          {`The market gives ${side.label} ${Math.round(side.price * 100)}%. Jev thinks it's more likely than that.`}
+          {`The market gives ${side.label} ${Math.round(side.price * 100)}%. We think it's more likely than that.`}
         </div>
       </div>
       <Footer />
