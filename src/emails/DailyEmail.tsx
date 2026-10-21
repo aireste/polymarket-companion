@@ -1,5 +1,5 @@
 /**
- * HedgePredict Daily, the email: a conversational read (opener, the play and the case for it, a
+ * HedgePredict Daily, the email: a conversational read (the play and the case for it, a
  * quick radar item per beat, what we're passing on, the week ahead), not a copy
  * of the board. React Email components render to
  * table-based HTML with inline styles that survive Gmail, Apple Mail and
@@ -69,17 +69,16 @@ export function DailyEmail({ issue, siteUrl, address, welcome }: { issue: DailyI
       <Head>
         <link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet" />
       </Head>
-      <Preview>{issue.opener ?? issue.subject}</Preview>
+      <Preview>{issue.subject}</Preview>
       <Body style={{ background: C.canvas, margin: 0, padding: "24px 0", fontFamily: SANS, fontWeight: 500, color: C.ink }}>
         <Container style={{ width: "100%", maxWidth: 600, margin: "0 auto", padding: "0 16px" }}>
-          {/* Masthead and the opener: what today is about, in a couple of sentences. */}
+          {/* Masthead */}
           <Section style={{ padding: "4px 2px 6px" }}>
             <Text style={{ ...K, color: C.soft }}>
               <span style={{ color: C.ink }}>HedgePredict</span> Daily
             </Text>
             <Text style={{ margin: "8px 0 0", fontSize: 34, lineHeight: "36px", fontWeight: 900, letterSpacing: "-0.045em" }}>{issue.title}</Text>
             <Text style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: C.faint }}>2-minute read</Text>
-            {issue.opener && <Text style={{ margin: "16px 0 0", fontSize: 17, lineHeight: "26px", color: C.ink }}>{issue.opener}</Text>}
           </Section>
 
           {/* A one-time note from the founder, only on the issue flagged as the welcome. */}
